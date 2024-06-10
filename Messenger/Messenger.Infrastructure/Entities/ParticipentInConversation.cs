@@ -1,0 +1,15 @@
+﻿
+using Messenger.Infrastructure.Enums;
+
+namespace Messenger.Infrastructure.Entities
+{
+    public class ParticipentInConversation : BaseEntity
+    {
+        public User User { get; set; }
+        public int UserId {  get; set; }
+        public DateTime JoinedAt { get; set; }
+        public Conversation Conversation { get; set; }
+        public int ConversationId { get; set; }
+        public Role Role { get; set; }
+    }
+}
