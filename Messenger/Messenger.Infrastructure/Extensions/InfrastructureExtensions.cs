@@ -9,7 +9,7 @@ namespace Messenger.Infrastructure.Extensions
     {
         public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
         {
-            string connectionString = configuration.GetConnectionString("DefaultConnection");
+            string connectionString = configuration.GetConnectionString("DefaultConnection")!;
 
             services.AddDbContext<ApplicationContext>(options =>
                 options.UseSqlServer(connectionString));

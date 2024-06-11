@@ -3,17 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.34928.147
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Presentation", "Presentation", "{11C59B2B-B5DE-4DDD-8941-238561FC84DC}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Messenger.Api", "Messenger.Api\Messenger.Api.csproj", "{A476F0DF-20C5-480E-BFB4-30992BD7361B}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Business", "Business", "{980000EB-64D7-48CB-9985-400D712785EB}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Messenger.Business", "Messenger.Business\Messenger.Business.csproj", "{C8AEDF8A-AB06-489B-A8C7-ED0CFF1FC413}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infrastructure", "Infrastructure", "{7BD80B69-1588-4600-A123-CD13B707E313}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Messenger.Infrastructure", "Messenger.Infrastructure\Messenger.Infrastructure.csproj", "{0FA36CE0-A46C-490F-AB4B-83C5A4297DE6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Messenger.Infrastructure", "Messenger.Infrastructure\Messenger.Infrastructure.csproj", "{0FA36CE0-A46C-490F-AB4B-83C5A4297DE6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,11 +30,6 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{A476F0DF-20C5-480E-BFB4-30992BD7361B} = {11C59B2B-B5DE-4DDD-8941-238561FC84DC}
-		{C8AEDF8A-AB06-489B-A8C7-ED0CFF1FC413} = {980000EB-64D7-48CB-9985-400D712785EB}
-		{0FA36CE0-A46C-490F-AB4B-83C5A4297DE6} = {7BD80B69-1588-4600-A123-CD13B707E313}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {395EA2A2-4AC0-4A30-A3D0-DE223D8095C5}
