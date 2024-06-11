@@ -6,7 +6,7 @@ namespace Messenger.Infrastructure.Entities
     public class ParticipentInConversation : BaseEntity
     {
         public User User { get; set; }
-        public int UserId {  get; set; }
+        public int UserId {  get; set; }//todo remove foreign keys
         public DateTime JoinedAt { get; set; }
         public Conversation Conversation { get; set; }
         public int ConversationId { get; set; }

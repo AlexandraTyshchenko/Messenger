@@ -1,3 +1,5 @@
+using System.Reflection;
+using MediatR;
 using Messenger.Business.Extensions;
 using Messenger.Infrastructure.Extensions;
 var builder = WebApplication.CreateBuilder(args);
@@ -12,13 +14,11 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
+    app.UseSwagger();//todo ????????
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
+app.UseHttpsRedirection();//todo ???????? ?? ??????
 
 app.MapControllers();
 
