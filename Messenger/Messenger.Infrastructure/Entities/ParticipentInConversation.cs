@@ -11,5 +11,7 @@ namespace Messenger.Infrastructure.Entities
         public Conversation Conversation { get; set; }
         public int ConversationId { get; set; }
         public Role Role { get; set; }
+        public ICollection<Message> Messages { get; set; } = new List<Message>();
+
     }
 }

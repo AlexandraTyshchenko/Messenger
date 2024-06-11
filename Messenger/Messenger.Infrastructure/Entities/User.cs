@@ -11,6 +11,5 @@
         public bool IsActive { get; set; }
         public ICollection<UserContact> Contacts { get; set; } = new List<UserContact>();
         public ICollection<ParticipentInConversation> ParticipentInConversation { get; set; } = new List<ParticipentInConversation>();
-        public ICollection<Message> Messages { get; set; } = new List<Message>();
     }
 }

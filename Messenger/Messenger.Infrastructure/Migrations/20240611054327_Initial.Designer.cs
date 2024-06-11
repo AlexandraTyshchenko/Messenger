@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Messenger.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    [Migration("20240610175829_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20240611054327_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,21 +33,12 @@ namespace Messenger.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ConversationType")
-                        .HasColumnType("int");
-
                     b.Property<int>("GroupId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PrivateConversationId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("GroupId")
-                        .IsUnique();
-
-                    b.HasIndex("PrivateConversationId")
                         .IsUnique();
 
                     b.ToTable("Conversations");
@@ -86,35 +77,30 @@ namespace Messenger.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("ConversationId")
-                        .HasColumnType("int");
-
                     b.Property<bool>("IsSeen")
                         .HasColumnType("bit");
 
-                    b.Property<int>("SenderId")
+                    b.Property<string>("MessageText")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ParticipentInConversationId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("SentAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("Text")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ConversationId");
-
-                    b.HasIndex("SenderId");
+                    b.HasIndex("ParticipentInConversationId");
 
                     b.ToTable("Messages");
                 });
 
-            modelBuilder.Entity("Messenger.Infrastructure.Entities.ParticipentInGroup", b =>
+            modelBuilder.Entity("Messenger.Infrastructure.Entities.ParticipentInConversation", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -122,7 +108,7 @@ namespace Messenger.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("GroupId")
+                    b.Property<int>("ConversationId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("JoinedAt")
@@ -136,37 +122,11 @@ namespace Messenger.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("GroupId");
+                    b.HasIndex("ConversationId");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ParticipentsInGroups");
-                });
-
-            modelBuilder.Entity("Messenger.Infrastructure.Entities.PrivateConversation", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("Member1Id")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Member2Id")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ParticipantsInPrivateConversationId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Member1Id");
-
-                    b.HasIndex("Member2Id");
-
-                    b.ToTable("PrivateConversations");
+                    b.ToTable("ParticipentInConversation");
                 });
 
             modelBuilder.Entity("Messenger.Infrastructure.Entities.User", b =>
@@ -243,72 +203,37 @@ namespace Messenger.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Messenger.Infrastructure.Entities.PrivateConversation", "PrivateConversation")
-                        .WithOne("Conversation")
-                        .HasForeignKey("Messenger.Infrastructure.Entities.Conversation", "PrivateConversationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Group");
-
-                    b.Navigation("PrivateConversation");
                 });
 
             modelBuilder.Entity("Messenger.Infrastructure.Entities.Message", b =>
                 {
-                    b.HasOne("Messenger.Infrastructure.Entities.Conversation", "Conversation")
+                    b.HasOne("Messenger.Infrastructure.Entities.ParticipentInConversation", "Sender")
                         .WithMany("Messages")
+                        .HasForeignKey("ParticipentInConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Sender");
+                });
+
+            modelBuilder.Entity("Messenger.Infrastructure.Entities.ParticipentInConversation", b =>
+                {
+                    b.HasOne("Messenger.Infrastructure.Entities.Conversation", "Conversation")
+                        .WithMany("ParticipantsInGroup")
                         .HasForeignKey("ConversationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Messenger.Infrastructure.Entities.User", "Sender")
-                        .WithMany("Messages")
-                        .HasForeignKey("SenderId")
+                    b.HasOne("Messenger.Infrastructure.Entities.User", "User")
+                        .WithMany("ParticipentInConversation")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Conversation");
 
-                    b.Navigation("Sender");
-                });
-
-            modelBuilder.Entity("Messenger.Infrastructure.Entities.ParticipentInGroup", b =>
-                {
-                    b.HasOne("Messenger.Infrastructure.Entities.Group", "Group")
-                        .WithMany("ParticipantsInGroup")
-                        .HasForeignKey("GroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Messenger.Infrastructure.Entities.User", "User")
-                        .WithMany("ParticipantsInGroup")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Group");
-
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Messenger.Infrastructure.Entities.PrivateConversation", b =>
-                {
-                    b.HasOne("Messenger.Infrastructure.Entities.User", "Member1")
-                        .WithMany()
-                        .HasForeignKey("Member1Id")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("Messenger.Infrastructure.Entities.User", "Member2")
-                        .WithMany()
-                        .HasForeignKey("Member2Id")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("Member1");
-
-                    b.Navigation("Member2");
                 });
 
             modelBuilder.Entity("Messenger.Infrastructure.Entities.UserContact", b =>
@@ -330,28 +255,24 @@ namespace Messenger.Infrastructure.Migrations
 
             modelBuilder.Entity("Messenger.Infrastructure.Entities.Conversation", b =>
                 {
-                    b.Navigation("Messages");
+                    b.Navigation("ParticipantsInGroup");
                 });
 
             modelBuilder.Entity("Messenger.Infrastructure.Entities.Group", b =>
                 {
                     b.Navigation("Conversation");
-
-                    b.Navigation("ParticipantsInGroup");
                 });
 
-            modelBuilder.Entity("Messenger.Infrastructure.Entities.PrivateConversation", b =>
+            modelBuilder.Entity("Messenger.Infrastructure.Entities.ParticipentInConversation", b =>
                 {
-                    b.Navigation("Conversation");
+                    b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("Messenger.Infrastructure.Entities.User", b =>
                 {
                     b.Navigation("Contacts");
 
-                    b.Navigation("Messages");
-
-                    b.Navigation("ParticipantsInGroup");
+                    b.Navigation("ParticipentInConversation");
                 });
 #pragma warning restore 612, 618
         }

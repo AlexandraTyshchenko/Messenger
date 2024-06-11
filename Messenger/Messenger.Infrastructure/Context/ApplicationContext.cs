@@ -35,39 +35,17 @@ namespace Messenger.Infrastructure.Context
             modelBuilder.Entity<ParticipentInConversation>()
                 .HasOne(p => p.Conversation)
                 .WithMany(g => g.ParticipantsInGroup)
-                .HasForeignKey(p => p.GroupId);
-
-
-            modelBuilder.Entity<ParticipantsInPrivateConversation>()
-                .HasOne(pc => pc.PrivateConversation)
-                .WithMany()
-                .HasForeignKey(pc => pc.PrivateConversationId);
-
-            modelBuilder.Entity<ParticipantsInPrivateConversation>()
-                .HasOne(pc => pc.Member)
-                .WithMany()
-                .HasForeignKey(pc => pc.MemberId)
-                .OnDelete(DeleteBehavior.NoAction);
+                .HasForeignKey(p => p.ConversationId);
 
             modelBuilder.Entity<Group>()
                 .HasOne(g => g.Conversation)
                 .WithOne(c => c.Group)
                 .HasForeignKey<Conversation>(c => c.GroupId);
 
-            modelBuilder.Entity<PrivateConversation>()
-                .HasOne(c => c.Conversation)
-                .WithOne(pc => pc.PrivateConversation)
-                .HasForeignKey<Conversation>(pc => pc.PrivateConversationId);
-
             modelBuilder.Entity<Message>()
-                .HasOne(m => m.Conversation)
+                .HasOne(m => m.Sender)
                 .WithMany(c => c.Messages)
-                .HasForeignKey(m => m.ConversationId);
-
-            modelBuilder.Entity<Message>()
-               .HasOne(m => m.Sender)
-               .WithMany(u => u.Messages)
-               .HasForeignKey(m => m.SenderId);
+                .HasForeignKey(m => m.ParticipentInConversationId);
 
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.UserName)

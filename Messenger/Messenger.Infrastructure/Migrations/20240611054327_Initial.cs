@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Messenger.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -45,56 +45,22 @@ namespace Messenger.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ParticipentsInGroups",
+                name: "Conversations",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<int>(type: "int", nullable: false),
-                    JoinedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    GroupId = table.Column<int>(type: "int", nullable: false),
-                    Role = table.Column<int>(type: "int", nullable: false)
+                    GroupId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ParticipentsInGroups", x => x.Id);
+                    table.PrimaryKey("PK_Conversations", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ParticipentsInGroups_Groups_GroupId",
+                        name: "FK_Conversations_Groups_GroupId",
                         column: x => x.GroupId,
                         principalTable: "Groups",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_ParticipentsInGroups_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "PrivateConversations",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Member1Id = table.Column<int>(type: "int", nullable: false),
-                    Member2Id = table.Column<int>(type: "int", nullable: false),
-                    ParticipantsInPrivateConversationId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_PrivateConversations", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_PrivateConversations_Users_Member1Id",
-                        column: x => x.Member1Id,
-                        principalTable: "Users",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_PrivateConversations_Users_Member2Id",
-                        column: x => x.Member2Id,
-                        principalTable: "Users",
-                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -122,28 +88,29 @@ namespace Messenger.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Conversations",
+                name: "ParticipentInConversation",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    GroupId = table.Column<int>(type: "int", nullable: false),
-                    PrivateConversationId = table.Column<int>(type: "int", nullable: false),
-                    ConversationType = table.Column<int>(type: "int", nullable: false)
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    JoinedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ConversationId = table.Column<int>(type: "int", nullable: false),
+                    Role = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Conversations", x => x.Id);
+                    table.PrimaryKey("PK_ParticipentInConversation", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Conversations_Groups_GroupId",
-                        column: x => x.GroupId,
-                        principalTable: "Groups",
+                        name: "FK_ParticipentInConversation_Conversations_ConversationId",
+                        column: x => x.ConversationId,
+                        principalTable: "Conversations",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Conversations_PrivateConversations_PrivateConversationId",
-                        column: x => x.PrivateConversationId,
-                        principalTable: "PrivateConversations",
+                        name: "FK_ParticipentInConversation_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -154,27 +121,20 @@ namespace Messenger.Infrastructure.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    ConversationId = table.Column<int>(type: "int", nullable: false),
-                    Text = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    SenderId = table.Column<int>(type: "int", nullable: false),
-                    AttachmentUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    MessageText = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ParticipentInConversationId = table.Column<int>(type: "int", nullable: false),
                     SentAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    IsSeen = table.Column<bool>(type: "bit", nullable: false)
+                    IsSeen = table.Column<bool>(type: "bit", nullable: false),
+                    AttachmentUrl = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Messages", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Messages_Conversations_ConversationId",
-                        column: x => x.ConversationId,
-                        principalTable: "Conversations",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Messages_Users_SenderId",
-                        column: x => x.SenderId,
-                        principalTable: "Users",
+                        name: "FK_Messages_ParticipentInConversation_ParticipentInConversationId",
+                        column: x => x.ParticipentInConversationId,
+                        principalTable: "ParticipentInConversation",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -186,40 +146,19 @@ namespace Messenger.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Conversations_PrivateConversationId",
-                table: "Conversations",
-                column: "PrivateConversationId",
-                unique: true);
+                name: "IX_Messages_ParticipentInConversationId",
+                table: "Messages",
+                column: "ParticipentInConversationId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Messages_ConversationId",
-                table: "Messages",
+                name: "IX_ParticipentInConversation_ConversationId",
+                table: "ParticipentInConversation",
                 column: "ConversationId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Messages_SenderId",
-                table: "Messages",
-                column: "SenderId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ParticipentsInGroups_GroupId",
-                table: "ParticipentsInGroups",
-                column: "GroupId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ParticipentsInGroups_UserId",
-                table: "ParticipentsInGroups",
+                name: "IX_ParticipentInConversation_UserId",
+                table: "ParticipentInConversation",
                 column: "UserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_PrivateConversations_Member1Id",
-                table: "PrivateConversations",
-                column: "Member1Id");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_PrivateConversations_Member2Id",
-                table: "PrivateConversations",
-                column: "Member2Id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserContacts_UserContactId",
@@ -245,22 +184,19 @@ namespace Messenger.Infrastructure.Migrations
                 name: "Messages");
 
             migrationBuilder.DropTable(
-                name: "ParticipentsInGroups");
+                name: "UserContacts");
 
             migrationBuilder.DropTable(
-                name: "UserContacts");
+                name: "ParticipentInConversation");
 
             migrationBuilder.DropTable(
                 name: "Conversations");
 
             migrationBuilder.DropTable(
-                name: "Groups");
-
-            migrationBuilder.DropTable(
-                name: "PrivateConversations");
-
-            migrationBuilder.DropTable(
                 name: "Users");
+
+            migrationBuilder.DropTable(
+                name: "Groups");
         }
     }
 }
