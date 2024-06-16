@@ -4,6 +4,7 @@ using Messenger.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Messenger.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    partial class ApplicationContextModelSnapshot : ModelSnapshot
+    [Migration("20240615205813_UserRoleConfiguretionMigration")]
+    partial class UserRoleConfiguretionMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -89,8 +92,6 @@ namespace Messenger.Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ConversationId");
 
                     b.HasIndex("SenderId");
 
@@ -212,68 +213,6 @@ namespace Messenger.Infrastructure.Migrations
                         .HasFilter("[UserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("d0ad5c81-c337-4564-9c16-44ae029a2e4d"),
-                            AccessFailedCount = 0,
-                            Bio = "Hello, I'm John.",
-                            ConcurrencyStamp = "a973b181-1012-449e-a063-d5c84972714e",
-                            Email = "john.doe@example.com",
-                            EmailConfirmed = true,
-                            FirstName = "John",
-                            ImgUrl = "https://example.com/images/john.jpg",
-                            IsActive = true,
-                            LastName = "Doe",
-                            LockoutEnabled = false,
-                            NormalizedEmail = "JOHN.DOE@EXAMPLE.COM",
-                            NormalizedUserName = "JOHN.DOE",
-                            PhoneNumber = "1234567890",
-                            PhoneNumberConfirmed = false,
-                            TwoFactorEnabled = false,
-                            UserName = "john.doe"
-                        },
-                        new
-                        {
-                            Id = new Guid("5830e58e-a820-49c8-b1c2-3d45a7ec60c7"),
-                            AccessFailedCount = 0,
-                            Bio = "Hi, I'm Jane.",
-                            ConcurrencyStamp = "8397d190-ed2f-4ee5-a677-2a0b370a473a",
-                            Email = "jane.smith@example.com",
-                            EmailConfirmed = true,
-                            FirstName = "Jane",
-                            ImgUrl = "https://example.com/images/jane.jpg",
-                            IsActive = true,
-                            LastName = "Smith",
-                            LockoutEnabled = false,
-                            NormalizedEmail = "JANE.SMITH@EXAMPLE.COM",
-                            NormalizedUserName = "JANE.SMITH",
-                            PhoneNumber = "9876543210",
-                            PhoneNumberConfirmed = false,
-                            TwoFactorEnabled = false,
-                            UserName = "jane.smith"
-                        },
-                        new
-                        {
-                            Id = new Guid("b7cffcf1-d9a4-415f-bc92-e3749e006b60"),
-                            AccessFailedCount = 0,
-                            Bio = "Hey, I'm Michael.",
-                            ConcurrencyStamp = "961f09fb-1c79-44ba-ac56-b2ba0a68321d",
-                            Email = "michael.johnson@example.com",
-                            EmailConfirmed = true,
-                            FirstName = "Michael",
-                            ImgUrl = "https://example.com/images/michael.jpg",
-                            IsActive = true,
-                            LastName = "Johnson",
-                            LockoutEnabled = false,
-                            NormalizedEmail = "MICHAEL.JOHNSON@EXAMPLE.COM",
-                            NormalizedUserName = "MICHAEL.JOHNSON",
-                            PhoneNumber = "5556667777",
-                            PhoneNumberConfirmed = false,
-                            TwoFactorEnabled = false,
-                            UserName = "michael.johnson"
-                        });
                 });
 
             modelBuilder.Entity("Messenger.Infrastructure.Entities.UserContact", b =>
@@ -327,15 +266,15 @@ namespace Messenger.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("2e41c542-256a-4ca3-8078-82462ed06e33"),
+                            Id = new Guid("9c1bb2c4-8f27-468b-8621-befa76787c8a"),
                             Name = "User",
-                            NormalizedName = "USER"
+                            NormalizedName = "User"
                         },
                         new
                         {
-                            Id = new Guid("45335723-f8b0-4a0a-b1e7-498904fc4033"),
+                            Id = new Guid("74fd615e-c2db-4642-915b-0ddaff065487"),
                             Name = "Admin",
-                            NormalizedName = "ADMIN"
+                            NormalizedName = "Admin"
                         });
                 });
 
@@ -421,23 +360,6 @@ namespace Messenger.Infrastructure.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("AspNetUserRoles", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            UserId = new Guid("d0ad5c81-c337-4564-9c16-44ae029a2e4d"),
-                            RoleId = new Guid("45335723-f8b0-4a0a-b1e7-498904fc4033")
-                        },
-                        new
-                        {
-                            UserId = new Guid("5830e58e-a820-49c8-b1c2-3d45a7ec60c7"),
-                            RoleId = new Guid("2e41c542-256a-4ca3-8078-82462ed06e33")
-                        },
-                        new
-                        {
-                            UserId = new Guid("b7cffcf1-d9a4-415f-bc92-e3749e006b60"),
-                            RoleId = new Guid("2e41c542-256a-4ca3-8078-82462ed06e33")
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
@@ -473,7 +395,7 @@ namespace Messenger.Infrastructure.Migrations
                 {
                     b.HasOne("Messenger.Infrastructure.Entities.Conversation", "Conversation")
                         .WithMany("Messages")
-                        .HasForeignKey("ConversationId")
+                        .HasForeignKey("SenderId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 

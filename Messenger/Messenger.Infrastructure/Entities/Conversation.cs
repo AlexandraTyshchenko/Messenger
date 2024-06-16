@@ -1,12 +1,9 @@
-﻿using Messenger.Infrastructure.Enums;
-
-namespace Messenger.Infrastructure.Entities
+﻿namespace Messenger.Infrastructure.Entities
 {
-    public class Conversation:BaseEntity
+    public class Conversation : BaseEntity
     {
-        public int? GroupId {  get; set; }//todo set null and update migration
-        public Group Group { get; set; }//todo remove grupId
-        public ICollection<ParticipentInConversation> ParticipantsInGroup { get; set; } = new List<ParticipentInConversation>();
-
+        public Group Group { get; set; }
+        public ICollection<ParticipantInConversation> ParticipantsInConversation { get; set; } = new List<ParticipantInConversation>();
+        public ICollection<Message> Messages { get; set; } = new List<Message>();
     }
 }

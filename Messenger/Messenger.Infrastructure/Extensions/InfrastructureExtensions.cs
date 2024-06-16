@@ -1,7 +1,10 @@
 ﻿using Messenger.Infrastructure.Context;
-using Microsoft.Extensions.DependencyInjection;
+using Messenger.Infrastructure.Interfaces;
+using Messenger.Infrastructure.Repositories;
+using Messenger.Infrastructure.Repositories.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Messenger.Infrastructure.Extensions
 {
@@ -14,6 +17,10 @@ namespace Messenger.Infrastructure.Extensions
             services.AddDbContext<ApplicationContext>(options =>
                 options.UseSqlServer(connectionString));
 
+            services.AddScoped<IUserAuthenticationRepository, UserAuthenticationRepository>();
+            services.AddScoped<IConversationRepository, ConversationRepository>();
+            services.AddScoped<IMessageRepository, MessageRepository>();
+            services.AddScoped<IParticipantRepository, ParticipantRepository>();
             return services;
         }
     }

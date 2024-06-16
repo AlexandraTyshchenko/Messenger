@@ -2,13 +2,13 @@
 {
     public class Message : BaseEntity
     {
-        public string MessageText {  get; set; }
-        public ParticipentInConversation Sender { get; set; }
-        public int ParticipentInConversationId { get; set; }
+        public string MessageText {  get; set; }//todo rename to text
+        public User Sender { get; set; }
+        public Conversation Conversation { get; set; }
         public DateTime SentAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
-        public bool IsSeen { get; set; }
-        public string AttachmentUrl {  get; set; }
+        public DateTime UpdatedAt { get; set; }//todo remove update field
+        public bool IsSeen { get; set; }//todo isseen подумати
+        public string AttachmentUrl {  get; set; }//todo remove
 
     }
 }

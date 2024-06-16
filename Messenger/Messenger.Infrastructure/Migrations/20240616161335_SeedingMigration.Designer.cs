@@ -4,6 +4,7 @@ using Messenger.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Messenger.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    partial class ApplicationContextModelSnapshot : ModelSnapshot
+    [Migration("20240616161335_SeedingMigration")]
+    partial class SeedingMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -89,8 +92,6 @@ namespace Messenger.Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ConversationId");
 
                     b.HasIndex("SenderId");
 
@@ -216,10 +217,10 @@ namespace Messenger.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("d0ad5c81-c337-4564-9c16-44ae029a2e4d"),
+                            Id = new Guid("158da52e-b441-49b6-9c2b-f49016b48f58"),
                             AccessFailedCount = 0,
                             Bio = "Hello, I'm John.",
-                            ConcurrencyStamp = "a973b181-1012-449e-a063-d5c84972714e",
+                            ConcurrencyStamp = "627f84d1-2814-45f4-8b58-afb33b1558e6",
                             Email = "john.doe@example.com",
                             EmailConfirmed = true,
                             FirstName = "John",
@@ -236,10 +237,10 @@ namespace Messenger.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("5830e58e-a820-49c8-b1c2-3d45a7ec60c7"),
+                            Id = new Guid("16d9c791-0848-421f-8bf0-96c16563fdcc"),
                             AccessFailedCount = 0,
                             Bio = "Hi, I'm Jane.",
-                            ConcurrencyStamp = "8397d190-ed2f-4ee5-a677-2a0b370a473a",
+                            ConcurrencyStamp = "71213803-5d22-47b3-a97e-4a48c90db428",
                             Email = "jane.smith@example.com",
                             EmailConfirmed = true,
                             FirstName = "Jane",
@@ -256,10 +257,10 @@ namespace Messenger.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("b7cffcf1-d9a4-415f-bc92-e3749e006b60"),
+                            Id = new Guid("0578f87f-80a0-42ac-838b-3e4ae82a31dc"),
                             AccessFailedCount = 0,
                             Bio = "Hey, I'm Michael.",
-                            ConcurrencyStamp = "961f09fb-1c79-44ba-ac56-b2ba0a68321d",
+                            ConcurrencyStamp = "e23a2e1b-4ebb-428e-b7f3-f9263359bb66",
                             Email = "michael.johnson@example.com",
                             EmailConfirmed = true,
                             FirstName = "Michael",
@@ -327,13 +328,13 @@ namespace Messenger.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("2e41c542-256a-4ca3-8078-82462ed06e33"),
+                            Id = new Guid("7805a370-4064-4206-ae91-4fa0e690133d"),
                             Name = "User",
                             NormalizedName = "USER"
                         },
                         new
                         {
-                            Id = new Guid("45335723-f8b0-4a0a-b1e7-498904fc4033"),
+                            Id = new Guid("445a07b5-a530-422d-9e6c-c7316f0cc1ba"),
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         });
@@ -425,18 +426,18 @@ namespace Messenger.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            UserId = new Guid("d0ad5c81-c337-4564-9c16-44ae029a2e4d"),
-                            RoleId = new Guid("45335723-f8b0-4a0a-b1e7-498904fc4033")
+                            UserId = new Guid("158da52e-b441-49b6-9c2b-f49016b48f58"),
+                            RoleId = new Guid("445a07b5-a530-422d-9e6c-c7316f0cc1ba")
                         },
                         new
                         {
-                            UserId = new Guid("5830e58e-a820-49c8-b1c2-3d45a7ec60c7"),
-                            RoleId = new Guid("2e41c542-256a-4ca3-8078-82462ed06e33")
+                            UserId = new Guid("16d9c791-0848-421f-8bf0-96c16563fdcc"),
+                            RoleId = new Guid("7805a370-4064-4206-ae91-4fa0e690133d")
                         },
                         new
                         {
-                            UserId = new Guid("b7cffcf1-d9a4-415f-bc92-e3749e006b60"),
-                            RoleId = new Guid("2e41c542-256a-4ca3-8078-82462ed06e33")
+                            UserId = new Guid("0578f87f-80a0-42ac-838b-3e4ae82a31dc"),
+                            RoleId = new Guid("7805a370-4064-4206-ae91-4fa0e690133d")
                         });
                 });
 
@@ -473,7 +474,7 @@ namespace Messenger.Infrastructure.Migrations
                 {
                     b.HasOne("Messenger.Infrastructure.Entities.Conversation", "Conversation")
                         .WithMany("Messages")
-                        .HasForeignKey("ConversationId")
+                        .HasForeignKey("SenderId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 

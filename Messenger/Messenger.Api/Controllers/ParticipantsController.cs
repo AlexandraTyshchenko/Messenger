@@ -2,28 +2,26 @@
 using Messenger.Business.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace Messenger.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     [Authorize(AuthenticationSchemes = "Bearer")]
-    public class ConversationsController : ControllerBase
+    [Authorize(Policy = "ParticipantInConversationPolicy")]
+    public class ParticipantsController : ControllerBase
     {
         private readonly IMediator _mediatoR;
-        public ConversationsController(IMediator mediator)
+        public ParticipantsController(IMediator mediator)
         {
             _mediatoR = mediator;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetConversations()
+        public async Task<IActionResult> GetParticipantsByConversationId([FromQuery] Guid conversationId)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            var result = await _mediatoR.Send(new GetConversationByUserId { UserId = new Guid(userIdClaim.Value) });
+            var result = await _mediatoR.Send(new GetParticipantsByConversationId { ConversationId = conversationId });
             return Ok(result);
         }
     }
 }
-
