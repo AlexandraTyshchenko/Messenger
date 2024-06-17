@@ -11,7 +11,7 @@ namespace Messenger.Business.Commands
     {
         public Guid SenderId { get; set; }
         public Guid ConversationId { get; set; }
-        public MessageDto MessageDto;
+        public MessageDto MessageDto { get; set; }
     }
 
     public class AddMessageToConversationCommandHandler : IRequestHandler<AddMessageToConversationCommand, MessageWithSenderDto>

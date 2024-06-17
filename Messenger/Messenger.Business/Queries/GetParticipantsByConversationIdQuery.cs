@@ -6,11 +6,11 @@ using Messenger.Infrastructure.Interfaces;
 
 namespace Messenger.Business.Queries
 {
-    public class GetParticipantsByConversationId :IRequest<IEnumerable<UserBasicInfoDto>>
+    public class GetParticipantsByConversationIdQuery :IRequest<IEnumerable<UserBasicInfoDto>>
     {
         public Guid ConversationId { get; set; }
     }
-    public class GetParticipantsByConversationIdHandler : IRequestHandler<GetParticipantsByConversationId, IEnumerable<UserBasicInfoDto>>
+    public class GetParticipantsByConversationIdHandler : IRequestHandler<GetParticipantsByConversationIdQuery, IEnumerable<UserBasicInfoDto>>
     {
         private readonly IMapper _mapper;
         private readonly IParticipantRepository _participantRepository;
@@ -20,7 +20,7 @@ namespace Messenger.Business.Queries
             _participantRepository = participantRepository;
         }
 
-        public async Task<IEnumerable<UserBasicInfoDto>> Handle(GetParticipantsByConversationId request, CancellationToken cancellationToken)
+        public async Task<IEnumerable<UserBasicInfoDto>> Handle(GetParticipantsByConversationIdQuery request, CancellationToken cancellationToken)
         {
             IEnumerable<User> participants = await _participantRepository.GetParticipantsByConversationIdAsync(request.ConversationId);
 

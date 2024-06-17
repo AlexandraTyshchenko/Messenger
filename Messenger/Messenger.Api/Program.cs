@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using static Messenger.Api.Policies.AdminInConversationRequirement;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
@@ -79,8 +80,11 @@ builder.Services.AddAuthorization(options =>
  {
      options.AddPolicy("ParticipantInConversationPolicy", policy =>
          policy.Requirements.Add(new ParticipantInConversationRequirement()));
+     options.AddPolicy("AdminInConversationPolicy", policy =>
+         policy.Requirements.Add(new AdminInConversationRequirement()));
  });
 builder.Services.AddScoped<IAuthorizationHandler, ParticipantInConversationAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, AdminInConversationRequirementHandler>();
 
 var app = builder.Build();
 

@@ -25,7 +25,7 @@ namespace Messenger.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetMessagesByConversationId([FromQuery] Guid ConversationId)
         {
-            var result = await _mediatoR.Send(new GetMessagesByConversationId { ConversationId = ConversationId });
+            var result = await _mediatoR.Send(new GetMessagesByConversationIdQuery { ConversationId = ConversationId });
             return Ok(result);
         }
 

@@ -6,5 +6,7 @@ namespace Messenger.Infrastructure.Interfaces
     {
         Task<IEnumerable<User>> GetParticipantsByConversationIdAsync(Guid conversationId);
         Task<bool> IsUserInConversationAsync(Guid userId, Guid conversationId);
+        Task<ParticipantInConversation> GetUserFromConversationAsync(Guid userId, Guid conversationId);
+        Task AddParticipantsToConversationAsync(Guid[] userIds, Guid conversationId);
     }
 }

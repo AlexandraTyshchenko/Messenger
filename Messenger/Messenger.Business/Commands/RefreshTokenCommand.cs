@@ -4,7 +4,7 @@ using Messenger.Infrastructure.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Messenger.Business.Queries
+namespace Messenger.Business.Commands
 {
     public class RefreshTokenCommand : IRequest<IActionResult>
     {

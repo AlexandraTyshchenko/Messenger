@@ -25,6 +25,9 @@ namespace Messenger.Business.Profiles
                     src.Messages.OrderByDescending(m => m.SentAt).FirstOrDefault()
                 ));
 
+            CreateMap<UserContact, UserContactDto>()
+                .ForMember(dest => dest.Contact, opt => opt.MapFrom(x => x.Contact));
+
             CreateMap<UserRegistrationDto, User>();
             CreateMap<UserLoginDto, User>();
 

@@ -37,7 +37,7 @@ namespace Messenger.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("[GroupId] IS NOT NULL");
 
-                    b.ToTable("Conversations");
+                    b.ToTable("Conversations", (string)null);
                 });
 
             modelBuilder.Entity("Messenger.Infrastructure.Entities.Group", b =>
@@ -56,7 +56,7 @@ namespace Messenger.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Groups");
+                    b.ToTable("Groups", (string)null);
                 });
 
             modelBuilder.Entity("Messenger.Infrastructure.Entities.Message", b =>
@@ -94,7 +94,7 @@ namespace Messenger.Infrastructure.Migrations
 
                     b.HasIndex("SenderId");
 
-                    b.ToTable("Messages");
+                    b.ToTable("Messages", (string)null);
                 });
 
             modelBuilder.Entity("Messenger.Infrastructure.Entities.ParticipantInConversation", b =>
@@ -121,7 +121,7 @@ namespace Messenger.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ParticipantsInConversation");
+                    b.ToTable("ParticipantsInConversation", (string)null);
                 });
 
             modelBuilder.Entity("Messenger.Infrastructure.Entities.User", b =>
@@ -294,7 +294,7 @@ namespace Messenger.Infrastructure.Migrations
 
                     b.HasIndex("ContactOwnerId");
 
-                    b.ToTable("UserContacts");
+                    b.ToTable("UserContacts", (string)null);
                 });
 
             modelBuilder.Entity("Messenger.Infrastructure.Entities.UserRole", b =>
