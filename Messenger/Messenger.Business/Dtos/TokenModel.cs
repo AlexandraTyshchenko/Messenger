@@ -1,4 +1,4 @@
-﻿namespace Messenger.Infrastructure.Dtos
+﻿namespace Messenger.Business.Dtos
 {
     public class TokenModel
     {

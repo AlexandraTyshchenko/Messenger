@@ -14,7 +14,6 @@ using Microsoft.EntityFrameworkCore;
             }
 
             public DbSet<User> Users { get; set; }
-            public DbSet<UserContact> UserContacts { get; set; }
             public DbSet<Group> Groups { get; set; }
             public DbSet<Conversation> Conversations { get; set; }
             public DbSet<Message> Messages { get; set; }
@@ -25,7 +24,6 @@ using Microsoft.EntityFrameworkCore;
                 base.OnModelCreating(modelBuilder);
 
                 modelBuilder.ApplyConfiguration(new UserConfiguration());
-                modelBuilder.ApplyConfiguration(new UserContactConfiguration());
                 modelBuilder.ApplyConfiguration(new UserRoleConfiguration());
                 modelBuilder.ApplyConfiguration(new ParticipantInConversationConfiguration());
                 modelBuilder.ApplyConfiguration(new ConversationConfiguration());

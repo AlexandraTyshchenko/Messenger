@@ -3,15 +3,17 @@ using MediatR;
 using Messenger.Business.Dtos;
 using Messenger.Infrastructure.Entities;
 using Messenger.Infrastructure.Interfaces;
+using Microsoft.AspNetCore.Http;
+using System.Net;
 
 namespace Messenger.Business.Queries
 {
-    public class GetMessagesByConversationIdQuery : IRequest<IEnumerable<MessageWithSenderDto>>
+    public class GetMessagesByConversationIdQuery : IRequest<ResultDto<IEnumerable<MessageWithSenderDto>>>
     {
         public Guid ConversationId { get; set; }
     }
 
-    public class GetMessagesByConversationIdQueryHandler : IRequestHandler<GetMessagesByConversationIdQuery, IEnumerable<MessageWithSenderDto>>
+    public class GetMessagesByConversationIdQueryHandler : IRequestHandler<GetMessagesByConversationIdQuery, ResultDto<IEnumerable<MessageWithSenderDto>>>
     {
         private readonly IMapper _mapper;
         private readonly IMessageRepository _messageRepository;
@@ -21,11 +23,13 @@ namespace Messenger.Business.Queries
             _messageRepository = messageRepository;
         }
 
-        public async Task<IEnumerable<MessageWithSenderDto>> Handle(GetMessagesByConversationIdQuery request, CancellationToken cancellationToken)
+        public async Task<ResultDto<IEnumerable<MessageWithSenderDto>>> Handle(GetMessagesByConversationIdQuery request, CancellationToken cancellationToken)
         {
             IEnumerable<Message> messages = await _messageRepository.GetMessagesByConversationIdAsync(request.ConversationId);
 
-            return _mapper.Map<IEnumerable<MessageWithSenderDto>>(messages);
+            var mappedMasseges = _mapper.Map<IEnumerable<MessageWithSenderDto>>(messages);
+
+            return ResultDto<IEnumerable<MessageWithSenderDto>>.SuccessResult(mappedMasseges, HttpStatusCode.OK);
         }
     }
 }

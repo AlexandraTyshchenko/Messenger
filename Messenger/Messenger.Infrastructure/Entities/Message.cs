@@ -9,6 +9,5 @@
         public DateTime UpdatedAt { get; set; }//todo remove update field
         public bool IsSeen { get; set; }//todo isseen подумати
         public string AttachmentUrl {  get; set; }//todo remove
-
     }
 }

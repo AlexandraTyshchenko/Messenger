@@ -21,7 +21,6 @@ namespace Messenger.Infrastructure.Extensions
             services.AddScoped<IConversationRepository, ConversationRepository>();
             services.AddScoped<IMessageRepository, MessageRepository>();
             services.AddScoped<IParticipantRepository, ParticipantRepository>();
-            services.AddScoped<IContactsRepository, ContactsRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
             return services;
         }

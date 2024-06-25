@@ -1,6 +1,6 @@
 ﻿using Messenger.Infrastructure.Context;
-using Messenger.Infrastructure.Dtos;
 using Messenger.Infrastructure.Entities;
+using Messenger.Infrastructure.Exceptions;
 using Messenger.Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,24 +14,61 @@ namespace Messenger.Infrastructure.Repositories.Repositories
             _applicationContext = applicationContext;
         }
 
-        public async Task<Message> AddMessageToConversationAsync(MessageDto messageDto, Guid conversationId, Guid senderId)
+        public async Task<Message> AddMessageToConversationAsync(string messageText,
+            string attachmentUrl, Guid conversationId, Guid senderId)
         {
-            var sender = await _applicationContext.Users.FirstOrDefaultAsync(x => x.Id == senderId);
-            //todo add exception middleware
-            var conversation = await _applicationContext.Conversations.FirstOrDefaultAsync(x => x.Id == conversationId);
+            User sender = await _applicationContext.Users.FirstOrDefaultAsync(x => x.Id == senderId);
+
+            Conversation conversation = await _applicationContext.Conversations.FirstOrDefaultAsync(x => x.Id == conversationId);
+
+            if (conversation == null)
+            {
+                throw new NotFoundException("No conversation was found");
+            }
 
             var message = new Message
             {
-                MessageText = messageDto.MessageText,
-                AttachmentUrl = messageDto.AttachmentUrl,
+                MessageText = messageText,
+                AttachmentUrl = attachmentUrl,
                 SentAt = DateTime.UtcNow,
-                Sender = sender,
+                Sender = sender!,
                 Conversation = conversation
             };
 
             await _applicationContext.Messages.AddAsync(message);
 
             await _applicationContext.SaveChangesAsync();
+            return message;
+        }
+
+        public async Task DeleteMessageByIdAsync(Guid messageId)
+        {
+            Message message = await _applicationContext.Messages
+                         .Include(x => x.Conversation)
+                         .Include(x => x.Sender)
+                         .FirstOrDefaultAsync(x => x.Id == messageId);
+
+            if (message == null)
+            {
+                throw new NotFoundException($"Message with id {messageId} wasn`t found");
+            }
+
+            _applicationContext.Messages.Remove(message);
+            await _applicationContext.SaveChangesAsync();
+        }
+
+        public async Task<Message> GetMessageByIdAsync(Guid messageId)
+        {
+            Message message = await _applicationContext.Messages
+                .Include(x => x.Conversation)
+                .Include(x => x.Sender)
+                .FirstOrDefaultAsync(x => x.Id == messageId);
+
+            if (message == null)
+            {
+                throw new NotFoundException($"Message with id {messageId} wasn`t found");
+            }
+
             return message;
         }
 

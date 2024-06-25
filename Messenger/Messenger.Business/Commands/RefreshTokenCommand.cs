@@ -1,8 +1,7 @@
 ﻿using MediatR;
-using Messenger.Infrastructure.Dtos;
+using Messenger.Business.Dtos;
 using Messenger.Infrastructure.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Messenger.Business.Commands
 {

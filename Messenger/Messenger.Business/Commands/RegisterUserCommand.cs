@@ -1,22 +1,23 @@
 ﻿using AutoMapper;
 using MediatR;
-using Messenger.Infrastructure.Dtos;
+using Messenger.Business.Dtos;
 using Messenger.Infrastructure.Entities;
 using Messenger.Infrastructure.Interfaces;
 using Microsoft.AspNetCore.Identity;
+using System.Net;
 
 namespace Messenger.Business.Commands
 {
-    public class RegisterUserCommand : IRequest<IdentityResult>
+    public class RegisterUserCommand : IRequest<ResultDto>
     {
         public UserRegistrationDto UserRegistration { get; set; }
-        public string Role {  get; set; }
     }
 
-    public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, IdentityResult>
+    public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, ResultDto>
     {
         private readonly IUserAuthenticationRepository _userAuthenticationRepository;
         private readonly IMapper _mapper;
+
         public RegisterUserCommandHandler(IUserAuthenticationRepository userAuthenticationRepository,
             IMapper mapper)
         {
@@ -24,11 +25,20 @@ namespace Messenger.Business.Commands
             _mapper = mapper;
         }
 
-        public async Task<IdentityResult> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
+        public async Task<ResultDto> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
         {
             User user = _mapper.Map<User>(request.UserRegistration);
 
-            return await _userAuthenticationRepository.RegisterUserAsync(user,request.UserRegistration.Password,request.Role);
+            IdentityResult result = await _userAuthenticationRepository
+                .RegisterUserAsync(user, request.UserRegistration.Password);
+
+            if (result.Succeeded)
+            {
+                return ResultDto.SuccessResult(HttpStatusCode.OK);
+            }
+
+            return ResultDto.FailureResult(HttpStatusCode.BadRequest, 
+                string.Join("\n", result.Errors.Select(x => x.Description)));
         }
     }
 }

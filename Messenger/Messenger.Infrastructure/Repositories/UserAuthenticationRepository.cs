@@ -1,5 +1,4 @@
 ﻿using Messenger.Infrastructure.Context;
-using Messenger.Infrastructure.Dtos;
 using Messenger.Infrastructure.Entities;
 using Messenger.Infrastructure.Interfaces;
 using Microsoft.AspNetCore.Identity;
@@ -7,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
 
 namespace Messenger.Infrastructure.Repositories
@@ -28,30 +26,17 @@ namespace Messenger.Infrastructure.Repositories
             _applicationContext = applicationContext;
         }
 
-        public async Task<IdentityResult> RegisterUserAsync(User user, string password, string roleName)
+        public async Task<IdentityResult> RegisterUserAsync(User user, string password)
         {
-            var roleEntity = await _applicationContext.UserRoles.FirstOrDefaultAsync(x => x.Name == roleName);
-            if (roleEntity != null)
-            {
-                var result = await _userManager.CreateAsync(user, password);
-                if (result.Succeeded)
-                {
-                    var roleResult = await _userManager.AddToRoleAsync(user, roleName);
-                    if (!roleResult.Succeeded)
-                    {
-                        return IdentityResult.Failed(roleResult.Errors.ToArray());
-                    }
-                }
-                return result;
-            }
+            var result = await _userManager.CreateAsync(user, password);
 
-            throw new Exception("role doesn`t exist");
+            return result;
         }
 
-        public async Task<bool> ValidateUserAsync(UserLoginDto loginDto)
+        public async Task<bool> ValidateUserAsync(string userName, string password)
         {
-            _user = await _userManager.FindByNameAsync(loginDto.UserName);
-            var result = _user != null && await _userManager.CheckPasswordAsync(_user, loginDto.Password);
+            _user = await _userManager.FindByNameAsync(userName);
+            var result = _user != null && await _userManager.CheckPasswordAsync(_user, password);
             return result;
         }
 
@@ -99,7 +84,7 @@ namespace Messenger.Infrastructure.Repositories
             signingCredentials: signingCredentials
             );
             return tokenOptions;
-            
+
         }
 
         private JwtSecurityToken GenerateКуакуірTokenOptions(SigningCredentials signingCredentials)
@@ -127,11 +112,11 @@ namespace Messenger.Infrastructure.Repositories
         {
             var tokenValidationParameters = new TokenValidationParameters
             {
-                ValidateAudience = false, 
+                ValidateAudience = false,
                 ValidateIssuer = false,
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("superSecretKey@345")),
-                ValidateLifetime = false 
+                ValidateLifetime = false
             };
             var tokenHandler = new JwtSecurityTokenHandler();
             SecurityToken securityToken;

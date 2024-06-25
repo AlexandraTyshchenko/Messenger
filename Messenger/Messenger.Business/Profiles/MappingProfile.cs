@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using Messenger.Business.Dtos;
-using Messenger.Infrastructure.Dtos;
 using Messenger.Infrastructure.Entities;
 
 namespace Messenger.Business.Profiles
@@ -10,6 +9,9 @@ namespace Messenger.Business.Profiles
         public MappingProfile()
         {
             CreateMap<User, UserBasicInfoDto>();
+
+            CreateMap<ParticipantInConversation, ParticipantDto>()
+               .ForMember(dest=>dest.UserBasicInfo,opt=>opt.MapFrom(src=>src.User));
 
             CreateMap<Group, GroupDto>();
 
@@ -24,9 +26,6 @@ namespace Messenger.Business.Profiles
                 .ForMember(dest => dest.LastMessage, opt => opt.MapFrom(src =>
                     src.Messages.OrderByDescending(m => m.SentAt).FirstOrDefault()
                 ));
-
-            CreateMap<UserContact, UserContactDto>()
-                .ForMember(dest => dest.Contact, opt => opt.MapFrom(x => x.Contact));
 
             CreateMap<UserRegistrationDto, User>();
             CreateMap<UserLoginDto, User>();

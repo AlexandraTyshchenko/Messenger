@@ -1,15 +1,12 @@
-﻿using Messenger.Api.Policies;
-using Messenger.Business.Extensions;
+﻿using Messenger.Business.Extensions;
 using Messenger.Infrastructure.Context;
 using Messenger.Infrastructure.Entities;
 using Messenger.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
-using static Messenger.Api.Policies.AdminInConversationRequirement;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
@@ -72,19 +69,8 @@ builder.Services.AddIdentity<User, UserRole>(options =>
 {
     options.User.RequireUniqueEmail = true;
 
-})
-    .AddEntityFrameworkStores<ApplicationContext>()
+}).AddEntityFrameworkStores<ApplicationContext>()
     .AddDefaultTokenProviders();
-
-builder.Services.AddAuthorization(options =>
- {
-     options.AddPolicy("ParticipantInConversationPolicy", policy =>
-         policy.Requirements.Add(new ParticipantInConversationRequirement()));
-     options.AddPolicy("AdminInConversationPolicy", policy =>
-         policy.Requirements.Add(new AdminInConversationRequirement()));
- });
-builder.Services.AddScoped<IAuthorizationHandler, ParticipantInConversationAuthorizationHandler>();
-builder.Services.AddScoped<IAuthorizationHandler, AdminInConversationRequirementHandler>();
 
 var app = builder.Build();
 

@@ -1,8 +1,8 @@
-﻿using AutoMapper;
+﻿using Azure;
 using MediatR;
 using Messenger.Business.Commands;
+using Messenger.Business.Dtos;
 using Messenger.Business.Queries;
-using Messenger.Infrastructure.Dtos;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Messenger.Api.Controllers
@@ -19,21 +19,19 @@ namespace Messenger.Api.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> RegisterUser([FromBody] UserRegistrationDto userRegistration,string role)
+        public async Task<IActionResult> RegisterUser([FromBody] UserRegistrationDto userRegistration)
         {
-            var command = new RegisterUserCommand { UserRegistration = userRegistration,Role = role };
-            var result = await _mediator.Send(command);
+            var command = new RegisterUserCommand { UserRegistration = userRegistration };
+            var response = await _mediator.Send(command);
 
-            return !result.Succeeded ? new BadRequestObjectResult(result) : StatusCode(201);
+            return response.Success ? Created() : StatusCode((int)response.HttpStatusCode, response.ErrorMessage);
         }
-
         [HttpPost("login")]
         public async Task<IActionResult> Authenticate([FromBody] UserLoginDto user)
         {
-            var query = new AuthenticateUserQuery { UserLogin = user };
-            var result = await _mediator.Send(query);
+            var response = await _mediator.Send(new AuthenticateUserQuery { UserLogin = user });
 
-            return await _mediator.Send(query);
+            return response.Success ? Ok(response.Payload) : StatusCode((int)response.HttpStatusCode, response.ErrorMessage); 
         }
     }
 }

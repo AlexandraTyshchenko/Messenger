@@ -9,10 +9,11 @@ namespace Messenger.Api.Controllers
     [ApiController]
 
     [Authorize(AuthenticationSchemes = "Bearer")]
-    public class UserController : ControllerBase
+    public class UsersController : ControllerBase
     {
         private readonly IMediator _mediatoR;
-        public UserController(IMediator mediator)
+
+        public UsersController(IMediator mediator)
         {
             _mediatoR = mediator;
         }
@@ -20,12 +21,12 @@ namespace Messenger.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> SearchUsersByUserName([FromQuery] string userName)
         {
-            var result = await _mediatoR.Send(new GetUsersByUserNameQuery
+            var response = await _mediatoR.Send(new GetUsersByUserNameQuery
             {
                 UserName = userName,
             });
 
-            return Ok(result);
+            return Ok(response.Payload);
         }
     }
 }

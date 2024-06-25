@@ -20,7 +20,7 @@ namespace Messenger.Infrastructure.Configurations
             builder.HasOne(m => m.Conversation)
                 .WithMany(c => c.Messages)
                 .HasForeignKey("ConversationId")
-                .OnDelete(DeleteBehavior.NoAction);
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

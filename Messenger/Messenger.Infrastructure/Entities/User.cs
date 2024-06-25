@@ -10,7 +10,6 @@ namespace Messenger.Infrastructure.Entities
         public string ImgUrl { get; set; } = string.Empty;
         public string Bio { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;
-        public ICollection<UserContact> Contacts { get; set; } = new List<UserContact>();
         public ICollection<ParticipantInConversation> ParticipantsInConversation { get; set; } = new List<ParticipantInConversation>();
         public ICollection<Message> Messages { get; set; } = new List<Message>();
     }

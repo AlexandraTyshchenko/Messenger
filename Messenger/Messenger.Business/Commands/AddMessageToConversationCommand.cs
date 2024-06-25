@@ -1,20 +1,21 @@
 ﻿using AutoMapper;
 using MediatR;
 using Messenger.Business.Dtos;
-using Messenger.Infrastructure.Dtos;
 using Messenger.Infrastructure.Entities;
+using Messenger.Infrastructure.Exceptions;
 using Messenger.Infrastructure.Interfaces;
+using System.Net;
 
 namespace Messenger.Business.Commands
 {
-    public class AddMessageToConversationCommand : IRequest<MessageWithSenderDto>
+    public class AddMessageToConversationCommand : IRequest<ResultDto<MessageWithSenderDto>>
     {
         public Guid SenderId { get; set; }
         public Guid ConversationId { get; set; }
         public MessageDto MessageDto { get; set; }
     }
 
-    public class AddMessageToConversationCommandHandler : IRequestHandler<AddMessageToConversationCommand, MessageWithSenderDto>
+    public class AddMessageToConversationCommandHandler : IRequestHandler<AddMessageToConversationCommand, ResultDto<MessageWithSenderDto>>
     {
         private readonly IMapper _mapper;
         private readonly IMessageRepository _messageRepository;
@@ -24,11 +25,23 @@ namespace Messenger.Business.Commands
             _messageRepository = messageRepository;
         }
 
-        public async Task<MessageWithSenderDto> Handle(AddMessageToConversationCommand request, CancellationToken cancellationToken)
+        public async Task<ResultDto<MessageWithSenderDto>> Handle(AddMessageToConversationCommand request, CancellationToken cancellationToken)
         {
-            Message message = await _messageRepository.AddMessageToConversationAsync(request.MessageDto, request.ConversationId, request.SenderId);
+            try
+            {
+                Message message = await _messageRepository.AddMessageToConversationAsync(request.MessageDto.MessageText,
+                    request.MessageDto.AttachmentUrl, 
+                    request.ConversationId, request.SenderId);
 
-            return _mapper.Map<MessageWithSenderDto>(message);
+                var mappedMessage = _mapper.Map<MessageWithSenderDto>(message);
+
+                return ResultDto<MessageWithSenderDto>.SuccessResult(mappedMessage, HttpStatusCode.Created);
+            }
+            catch (CustomException ex)
+            {
+                return ResultDto<MessageWithSenderDto>.FailureResult<MessageWithSenderDto>(ex.StatusCode, ex.Message);
+            }
         }
+
     }
 }

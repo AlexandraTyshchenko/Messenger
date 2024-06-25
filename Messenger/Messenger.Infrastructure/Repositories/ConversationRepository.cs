@@ -1,8 +1,10 @@
 ﻿using Messenger.Infrastructure.Context;
 using Messenger.Infrastructure.Entities;
+using Messenger.Infrastructure.Enums;
+using Messenger.Infrastructure.Exceptions;
 using Messenger.Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
+using System.Net;
 
 namespace Messenger.Infrastructure.Repositories.Repositories
 {
@@ -29,7 +31,13 @@ namespace Messenger.Infrastructure.Repositories.Repositories
 
             var userCreator = await _applicationContext.Users.FindAsync(creatorId);
 
-            var participant = new ParticipantInConversation { Conversation = conversation, JoinedAt = DateTime.UtcNow, User = userCreator, Role = Enums.Role.Admin };
+            var participant = new ParticipantInConversation
+            { 
+                Conversation = conversation, 
+                JoinedAt = DateTime.UtcNow,
+                User = userCreator,
+                Role = Role.Admin 
+            };
 
             await _applicationContext.Conversations.AddAsync(conversation);
 
@@ -42,26 +50,20 @@ namespace Messenger.Infrastructure.Repositories.Repositories
         {
             var existingConversation = await _applicationContext.Conversations
                 .FirstOrDefaultAsync(x => x.ParticipantsInConversation.Any(x => x.User.Id == creatorUserId) &&
-                x.ParticipantsInConversation.Any(x => x.User.Id == userId));
+                x.ParticipantsInConversation.Any(x => x.User.Id == userId) && x.Group == null);
 
             if (existingConversation != null)
             {
-
-                throw new ArgumentException("conversation with this user already exists");
+                throw new ConflictException("conversation with this user already exists");
             }
 
             var creatorUser = await _applicationContext.Users.FindAsync(creatorUserId);
-
-            if (creatorUser == null)
-            {
-                throw new ArgumentException("creatorUser not found");
-            }
 
             var user = await _applicationContext.Users.FindAsync(userId);
 
             if (user == null)
             {
-                throw new ArgumentException("user not found");
+                throw new NotFoundException("user not found");
             }
 
             var conversation = new Conversation();
@@ -72,14 +74,16 @@ namespace Messenger.Infrastructure.Repositories.Repositories
             {
                 JoinedAt = DateTime.UtcNow,
                 User = creatorUser,
-                Conversation = conversation
+                Conversation = conversation,
+                Role = Role.Admin
             };
 
             var participantUser = new ParticipantInConversation
             {
                 JoinedAt = DateTime.UtcNow,
                 User = user,
-                Conversation = conversation
+                Conversation = conversation,
+                Role = Role.Admin
             };
 
             await _applicationContext.ParticipantsInConversation.AddAsync(participantCreatorUser);
@@ -87,6 +91,33 @@ namespace Messenger.Infrastructure.Repositories.Repositories
             await _applicationContext.ParticipantsInConversation.AddAsync(participantUser);
 
             await _applicationContext.SaveChangesAsync();
+        }
+
+        public async Task<Conversation> DeleteConversationAsync(Guid conversationId)
+        {
+            var conversation = await _applicationContext.FindAsync<Conversation>(conversationId);
+
+            if (conversation == null)
+            {
+                throw new NotFoundException($"Conversation with id {conversationId} wasn`t found");
+            }
+
+            _applicationContext.Remove(conversation);
+
+            await _applicationContext.SaveChangesAsync();
+
+            return conversation;
+        }
+
+        public async Task<Conversation> GetConversationByIdAsync(Guid conversationId)
+        {
+            var conversation = await _applicationContext.Conversations.Include(x=>x.Group).FirstOrDefaultAsync(x=>x.Id == conversationId);
+
+            if (conversation == null)
+            {
+                throw new NotFoundException($"Conversation with id {conversationId} wasn`t found");
+            }
+            return conversation;
         }
 
         public async Task<IEnumerable<Conversation>> GetConversationsByUserIdAsync(Guid userId)

@@ -4,15 +4,17 @@ using Messenger.Business.Dtos;
 using Messenger.Infrastructure.Context;
 using Messenger.Infrastructure.Entities;
 using Messenger.Infrastructure.Interfaces;
+using System.Collections.Generic;
+using System.Net;
 
 namespace Messenger.Business.Queries
 {
-    public class GetConversationByUserIdQuery : IRequest<IEnumerable<ConversationDto>>
+    public class GetConversationByUserIdQuery : IRequest<ResultDto<IEnumerable<ConversationDto>>>
     {
         public Guid UserId { get; set; }
 
     }
-    public class GetConversationByUserIdQueryHandler : IRequestHandler<GetConversationByUserIdQuery, IEnumerable<ConversationDto>>
+    public class GetConversationByUserIdQueryHandler : IRequestHandler<GetConversationByUserIdQuery, ResultDto<IEnumerable<ConversationDto>>>
     {
         private readonly IMapper _mapper;
         private readonly IConversationRepository _conversationRepository;
@@ -22,11 +24,13 @@ namespace Messenger.Business.Queries
             _conversationRepository = conversationRepository;
         }
 
-        public async Task<IEnumerable<ConversationDto>> Handle(GetConversationByUserIdQuery request, CancellationToken cancellationToken)
+        public async Task<ResultDto<IEnumerable<ConversationDto>>> Handle(GetConversationByUserIdQuery request, CancellationToken cancellationToken)
         {
             IEnumerable<Conversation> conversations = await _conversationRepository.GetConversationsByUserIdAsync(request.UserId);//todo почитати як працює під капотом await 
 
-            return _mapper.Map<IEnumerable<ConversationDto>>(conversations);
+            var mappedConversations = _mapper.Map<IEnumerable<ConversationDto>>(conversations);
+
+            return ResultDto<IEnumerable<ConversationDto>>.SuccessResult(mappedConversations,HttpStatusCode.OK);
         }
     }
 }
