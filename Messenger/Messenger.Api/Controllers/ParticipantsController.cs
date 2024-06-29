@@ -1,6 +1,8 @@
 ﻿using MediatR;
 using Messenger.Api.AuthorizationAttributes;
+using Messenger.Api.Extensions;
 using Messenger.Business.Commands;
+using Messenger.Business.Dtos;
 using Messenger.Business.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,41 +20,43 @@ namespace Messenger.Api.Controllers
         }
 
         [Route("api/Conversations/{conversationId}/Participants")]
-        [ParticipantInConversation( isGroup: true)]
         [HttpGet]
+        [ParticipantInConversation(isGroup: true)]
         public async Task<IActionResult> GetParticipantsByConversationId([FromRoute] Guid conversationId)
         {
-            var response = await _mediatoR.Send(new GetParticipantsByConversationIdQuery { ConversationId = conversationId });
+            ResultDto<IEnumerable<ParticipantDto>> response = await _mediatoR.Send(new GetParticipantsByConversationIdQuery
+            {
+                ConversationId = conversationId
+            });
 
-            return Ok(response.Payload);
+            return response.ToHttpResponse<IEnumerable<ParticipantDto>>();
         }
 
         [Route("api/Conversations/{conversationId}/Participants/AddParticipantToGroupConversation")]
-        [ParticipantInConversation( isGroup: true)]
         [HttpPost]
+      //  [ParticipantInConversation(isGroup: true)]
         public async Task<IActionResult> AddParticipantsToConversation([FromBody] Guid[] userIds, [FromRoute] Guid conversationId)
         {
-            var response = await _mediatoR.Send(new AddParticipantToConversationCommand
+            ResultDto response = await _mediatoR.Send(new AddParticipantToConversationCommand
             {
                 ConversationId = conversationId,
                 UserIds = userIds
             });
 
-            return response.Success ? Created() : StatusCode((int)response.HttpStatusCode, response.ErrorMessage);
+            return response.ToHttpResponse();
         }
 
         [Route("api/Participants/{participantInConversationId}")]
-        [ParticipantRemovalPermissions]
         [HttpDelete]
+        [ParticipantRemovalPermissions]
         public async Task<IActionResult> DeleteParticipantsFromConversation([FromRoute] Guid participantInConversationId)
         {
-            
-            var response = await _mediatoR.Send(new DeleteParticipantFromConversationCommand
+            ResultDto response = await _mediatoR.Send(new DeleteParticipantFromConversationCommand
             {
                 ParticipantInConversationId = participantInConversationId
             });
 
-            return response.Success ? Ok() : StatusCode((int)response.HttpStatusCode, response.ErrorMessage);
+            return response.ToHttpResponse();
         }
     }
 }

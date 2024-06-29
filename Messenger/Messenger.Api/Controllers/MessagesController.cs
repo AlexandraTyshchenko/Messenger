@@ -1,6 +1,6 @@
-﻿using Azure;
-using MediatR;
+﻿using MediatR;
 using Messenger.Api.AuthorizationAttributes;
+using Messenger.Api.Extensions;
 using Messenger.Business.Commands;
 using Messenger.Business.Dtos;
 using Messenger.Business.Queries;
@@ -27,37 +27,38 @@ namespace Messenger.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetMessagesByConversationId([FromRoute] Guid conversationId)
         {
-            var response = await _mediatoR.Send(new GetMessagesByConversationIdQuery { ConversationId = conversationId });
+            ResultDto<IEnumerable<MessageWithSenderDto>> response = await _mediatoR
+                .Send(new GetMessagesByConversationIdQuery { ConversationId = conversationId });
 
-            return response.Success ? Ok(response.Payload) : StatusCode((int)response.HttpStatusCode, response.ErrorMessage); 
+            return response.ToHttpResponse<IEnumerable<MessageWithSenderDto>>();
         }
 
         [Route("api/Conversations/{conversationId}/[controller]")]
-        [ParticipantInConversation]
         [HttpPost]
+        [ParticipantInConversation]
         public async Task<IActionResult> AddMessageToConversation([FromBody] MessageDto messageDto,
         [FromRoute] Guid conversationId)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
 
-            var response = await _mediatoR.Send(new AddMessageToConversationCommand
+            ResultDto<MessageWithSenderDto> response = await _mediatoR.Send(new AddMessageToConversationCommand
             {
                 MessageDto = messageDto,
                 ConversationId = conversationId,
                 SenderId = new Guid(userIdClaim.Value)
             });
 
-            return response.Success ? Ok(response.Payload) : StatusCode((int)response.HttpStatusCode, response.ErrorMessage);
+            return response.ToHttpResponse<MessageWithSenderDto>();
         }
 
         [Route("api/[controller]/{messageId}/")]
-        [MessageRemovalPermissions]
         [HttpDelete]
-        public async Task<IActionResult> DeleteMessageToConversation( [FromRoute] Guid messageId)
+        [MessageRemovalPermissions]
+        public async Task<IActionResult> DeleteMessageFromConversation([FromRoute] Guid messageId)
         {
-            var response = await _mediatoR.Send(new DeleteMessageCommand { MessageId = messageId });
+            ResultDto response = await _mediatoR.Send(new DeleteMessageCommand { MessageId = messageId });
 
-            return response.Success ? Ok() : StatusCode((int)response.HttpStatusCode, response.ErrorMessage); ;
+            return response.ToHttpResponse();
         }
     }
 }

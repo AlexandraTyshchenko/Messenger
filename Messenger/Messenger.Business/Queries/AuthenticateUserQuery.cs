@@ -1,6 +1,6 @@
 ﻿using MediatR;
 using Messenger.Business.Dtos;
-using Messenger.Infrastructure.Interfaces;
+using Messenger.Business.Interfaces;
 using System.Net;
 
 namespace Messenger.Business.Queries
@@ -12,16 +12,16 @@ namespace Messenger.Business.Queries
 
     public class AuthenticateUserQueryHandler : IRequestHandler<AuthenticateUserQuery, ResultDto<RefreshTokenDto>>
     {
-        private readonly IUserAuthenticationRepository _userAuthenticationRepository;
+        private readonly IUserAuthenticationService _userAuthenticationService;
 
-        public AuthenticateUserQueryHandler(IUserAuthenticationRepository userAuthenticationRepository)
+        public AuthenticateUserQueryHandler(IUserAuthenticationService userAuthenticationService)
         {
-            _userAuthenticationRepository = userAuthenticationRepository;
+            _userAuthenticationService = userAuthenticationService;
         }
 
         public async Task<ResultDto<RefreshTokenDto>> Handle(AuthenticateUserQuery request, CancellationToken cancellationToken)
         {
-            bool isAuthenticated = await _userAuthenticationRepository.ValidateUserAsync(request.UserLogin.UserName,
+            bool isAuthenticated = await _userAuthenticationService.ValidateUserAsync(request.UserLogin.UserName,
                 request.UserLogin.Password);
 
             if (!isAuthenticated)
@@ -31,8 +31,8 @@ namespace Messenger.Business.Queries
                     "Invalid credentials.");
             }
 
-            var token = await _userAuthenticationRepository.CreateTokenAsync();
-            var refreshToken = _userAuthenticationRepository.CreateRefreshToken();
+            string token = await _userAuthenticationService.CreateTokenAsync();
+            string refreshToken = _userAuthenticationService.CreateRefreshToken();
 
             return ResultDto<RefreshTokenDto>.SuccessResult(new RefreshTokenDto
             {

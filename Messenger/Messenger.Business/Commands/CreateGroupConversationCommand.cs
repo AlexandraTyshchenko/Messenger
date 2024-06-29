@@ -21,7 +21,7 @@ namespace Messenger.Business.Commands
         }
         public async Task<ResultDto> Handle(CreateGroupConversationCommand request, CancellationToken cancellationToken)
         {
-            await _conversationRepository.CreateGroupConversationAsync
+            await _conversationRepository.CreateGroupConversationAsync//todo return groupConversationDto
                 (request.GroupModelDto.Title,
                 request.GroupModelDto.ImgUrl,
                 request.CreatorUserId);

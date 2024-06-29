@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Messenger.Business.Dtos;
+using Messenger.Infrastructure.Entities;
 using Messenger.Infrastructure.Exceptions;
 using Messenger.Infrastructure.Interfaces;
 using System.Net;
@@ -15,23 +16,50 @@ namespace Messenger.Business.Commands
     public class AddParticipantToConversationCommandHandler : IRequestHandler<AddParticipantToConversationCommand, ResultDto>
     {
         private readonly IParticipantRepository _participantRepository;
+        private readonly IUserRepository _userRepository;
+        private readonly IConversationRepository _conversationRepository;
 
-        public AddParticipantToConversationCommandHandler(IParticipantRepository participantRepository)
+        public AddParticipantToConversationCommandHandler(IParticipantRepository participantRepository,
+            IUserRepository userRepository, IConversationRepository conversationRepository)
         {
             _participantRepository = participantRepository;
+            _userRepository = userRepository;
+            _conversationRepository = conversationRepository;
         }
 
         public async Task<ResultDto> Handle(AddParticipantToConversationCommand request, CancellationToken cancellationToken)
         {
-            try
+
+            IEnumerable<User> users = await _userRepository.GetUsersByIdsAsync(request.UserIds);
+
+            List<Guid> missingUserIds = request.UserIds.Where(id => !users.Select(x => x.Id).Contains(id)).ToList();
+
+            if (!missingUserIds.Any())
             {
-                await _participantRepository.AddParticipantsToConversationAsync(request.UserIds, request.ConversationId);
-                return ResultDto.SuccessResult(HttpStatusCode.Created);
+                return ResultDto.FailureResult(HttpStatusCode.NotFound,
+                    $"users with ids {string.Join(", ", missingUserIds)} were not found ");
             }
-            catch (CustomException ex)
+
+            Conversation conversation = await _conversationRepository.GetConversationByIdAsync(request.ConversationId);
+
+            if (conversation == null)
             {
-                return ResultDto.FailureResult(ex.StatusCode, ex.Message);
+                return ResultDto.FailureResult(HttpStatusCode.NotFound, "conversation not found.");
             }
+
+            List<ParticipantInConversation> existingParticipants = (await _participantRepository
+                .GetParticipantsByConversationIdAsync(request.ConversationId))
+                .Where(x => users.Contains(x.User)).ToList();
+
+            string participantsUserNames = string.Join(", ", existingParticipants.Select(x => x.User.UserName));
+
+            if (existingParticipants.Any())
+            {
+                return ResultDto.FailureResult(HttpStatusCode.Conflict,$"{participantsUserNames} already exist in conversation");
+            }
+
+            await _participantRepository.AddParticipantsToConversationAsync(users, conversation);
+            return ResultDto.SuccessResult(HttpStatusCode.OK);
         }
     }
 }

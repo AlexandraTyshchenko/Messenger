@@ -17,7 +17,6 @@ namespace Messenger.Infrastructure.Extensions
             services.AddDbContext<ApplicationContext>(options =>
                 options.UseSqlServer(connectionString));
 
-            services.AddScoped<IUserAuthenticationRepository, UserAuthenticationRepository>();
             services.AddScoped<IConversationRepository, ConversationRepository>();
             services.AddScoped<IMessageRepository, MessageRepository>();
             services.AddScoped<IParticipantRepository, ParticipantRepository>();

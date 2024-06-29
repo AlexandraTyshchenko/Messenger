@@ -3,7 +3,6 @@ using MediatR;
 using Messenger.Business.Dtos;
 using Messenger.Infrastructure.Entities;
 using Messenger.Infrastructure.Interfaces;
-using Microsoft.AspNetCore.Http;
 using System.Net;
 
 namespace Messenger.Business.Queries

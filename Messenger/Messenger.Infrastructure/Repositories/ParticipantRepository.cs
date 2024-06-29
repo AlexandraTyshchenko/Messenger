@@ -16,84 +16,24 @@ namespace Messenger.Infrastructure.Repositories.Repositories
             _applicationContext = applicationContext;
         }
 
-        public async Task AddParticipantsToConversationAsync(Guid[] userIds, Guid conversationId)
+        public async Task AddParticipantsToConversationAsync(IEnumerable<User> users, Conversation conversation)
         {
-            var users = await _applicationContext.Users
-                                        .Where(user => userIds.Contains(user.Id))
-                                        .ToListAsync();
-
-            var missingUserIds = userIds.Where(id => !users.Select(x => x.Id).Contains(id)).ToList();
-
-            if (missingUserIds.Count != 0)
-            {
-                throw new NotFoundException($"users with ids {string.Join(", ", missingUserIds)} were not found ");
-            }
-
-            var conversation = await _applicationContext.Conversations.FindAsync(conversationId);
-
-            if (conversation == null)
-            {
-                throw new NotFoundException("conversation not found.");
-            }
-
-            var existingParticipants = await _applicationContext.ParticipantsInConversation.
-                Where(x => users.Contains(x.User) && x.Conversation.Id == conversation.Id).ToListAsync();
-
-            var participantsUserNames = string.Join(", ", existingParticipants.Select(x => x.User.UserName));
-
-            if (existingParticipants.Count != 0)
-            {
-                throw new ConflictException($"{participantsUserNames} already exist in conversation");
-            }
-
-            var participants = users.Select(x => new ParticipantInConversation
+            IEnumerable<ParticipantInConversation> participants = users.Select(x => new ParticipantInConversation
             {
                 User = x,
                 JoinedAt = DateTime.UtcNow,
                 Conversation = conversation,
-                Role = Enums.Role.BasicUser,
+                Role = Role.BasicUser,
             });
 
             await _applicationContext.AddRangeAsync(participants);
             await _applicationContext.SaveChangesAsync();
         }
 
-        public async Task DeleteParticipantFromConversationAsync(Guid participantInConversationId)
+        public async Task DeleteParticipantFromConversationAsync(ParticipantInConversation participantInConversation)
         {
-            var participantInConversation = await _applicationContext.ParticipantsInConversation
-                 .Include(x => x.Conversation)
-                 .FirstOrDefaultAsync(x => x.Id == participantInConversationId);
-
-            if (participantInConversation == null)
-            {
-                throw new NotFoundException($"Participant with id {participantInConversationId} wasn`t found");
-            }
-
-            var participantsCount = await _applicationContext.ParticipantsInConversation
-                .Where(x => x.Conversation.Id == participantInConversation.Conversation.Id)
-                .CountAsync();
-
-            if (participantsCount <= 1)
-            {
-                throw new BadRequestException("Cannot delete the last participant from conversation.");
-            }
-
             _applicationContext.ParticipantsInConversation.Remove(participantInConversation);
-            await _applicationContext.SaveChangesAsync();
-
-            if (participantInConversation.Role == Role.Admin)
-            {
-                var newAdminParticipant = await _applicationContext.ParticipantsInConversation
-                    .Where(x => x.Conversation.Id == participantInConversation.Conversation.Id)
-                    .OrderByDescending(x => x.JoinedAt)
-                    .FirstOrDefaultAsync();
-
-                if (newAdminParticipant != null)
-                {
-                    newAdminParticipant.Role = Role.Admin;
-                    await _applicationContext.SaveChangesAsync();
-                }
-            }
+            await _applicationContext.SaveChangesAsync();   
         }
 
 
@@ -114,17 +54,20 @@ namespace Messenger.Infrastructure.Repositories.Repositories
 
         public async Task<ParticipantInConversation> GetParticipantByIdAsync(Guid participantInConversationId)
         {
-            var participantInConversation = await _applicationContext.ParticipantsInConversation
+            ParticipantInConversation participantInConversation = await _applicationContext.ParticipantsInConversation
                             .Include(x => x.Conversation)
                             .Include(x=>x.User)
                             .FirstOrDefaultAsync(x => x.Id == participantInConversationId);
 
-            if (participantInConversation == null)
-            {
-                throw new NotFoundException($"Participant with id {participantInConversationId} wasn`t found");
-            }
-
             return participantInConversation;
+        }
+
+        public async Task UpdateParticipantRoleAsync(Guid participantId, Role role)
+        {
+            ParticipantInConversation participant= await _applicationContext.ParticipantsInConversation.FindAsync(participantId);
+  
+            participant.Role = role;
+            await _applicationContext.SaveChangesAsync();    
         }
     }
 }

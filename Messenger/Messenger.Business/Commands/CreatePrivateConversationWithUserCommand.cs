@@ -1,6 +1,6 @@
 ﻿using MediatR;
 using Messenger.Business.Dtos;
-using Messenger.Infrastructure.Exceptions;
+using Messenger.Infrastructure.Entities;
 using Messenger.Infrastructure.Interfaces;
 using System.Net;
 
@@ -15,23 +15,37 @@ namespace Messenger.Business.Commands
     public class CreatePrivateConversationWithUserCommandHandler : IRequestHandler<CreatePrivateConversationWithUserCommand, ResultDto>
     {
         private readonly IConversationRepository _conversationRepository;
+        private readonly IUserRepository _userRepository;
 
-        public CreatePrivateConversationWithUserCommandHandler(IConversationRepository conversationRepository)
+        public CreatePrivateConversationWithUserCommandHandler(IConversationRepository conversationRepository, IUserRepository userRepository)
         {
             _conversationRepository = conversationRepository;
+            _userRepository = userRepository;
         }
 
         public async Task<ResultDto> Handle(CreatePrivateConversationWithUserCommand request, CancellationToken cancellationToken)
         {
-            try
+            Conversation existingConversation = await _conversationRepository
+                .GetPrivateConversationWithUserAsync(request.CreatorUserId, request.UserId);
+
+            if (existingConversation != null)
             {
-                await _conversationRepository.CreatePrivateConversationWithUserAsync(request.CreatorUserId, request.UserId);
-                return ResultDto.SuccessResult(HttpStatusCode.Created);
+                return ResultDto.FailureResult(HttpStatusCode.Conflict, "conversation with this user already exists");
             }
-            catch (CustomException ex)
+
+            User creatorUser = await _userRepository.GetUserByIdAsync(request.CreatorUserId);
+
+            User user = await _userRepository.GetUserByIdAsync(request.UserId);
+
+            if (user == null)
             {
-                return ResultDto.FailureResult(ex.StatusCode, ex.Message);
-            }          
+                return ResultDto.FailureResult(HttpStatusCode.NotFound, "user not found");
+            }
+
+            await _conversationRepository.CreateConversationWithUserAsync(creatorUser, user);
+
+            return ResultDto.SuccessResult(HttpStatusCode.Created);
         }
     }
 }
+

@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Messenger.Business.Dtos;
-using Messenger.Infrastructure.Exceptions;
+using Messenger.Infrastructure.Entities;
+using Messenger.Infrastructure.Enums;
 using Messenger.Infrastructure.Interfaces;
 using System.Net;
 
@@ -22,16 +23,37 @@ namespace Messenger.Business.Commands
         }
         public async Task<ResultDto> Handle(DeleteParticipantFromConversationCommand request, CancellationToken cancellationToken)
         {
-            try
-            {
-                await _participantRepository.DeleteParticipantFromConversationAsync(request.ParticipantInConversationId);
+            ParticipantInConversation participantInConversation = await _participantRepository
+                .GetParticipantByIdAsync(request.ParticipantInConversationId);
 
-                return ResultDto.SuccessResult(HttpStatusCode.OK);
-            }
-            catch (CustomException ex)
+            if (participantInConversation == null)
             {
-                return ResultDto.FailureResult(ex.StatusCode, ex.Message);
+                return ResultDto.FailureResult(HttpStatusCode.NotFound, $"Participant with id {participantInConversation.Id} wasn`t found");
             }
+
+            List<ParticipantInConversation> participants = (await _participantRepository
+                .GetParticipantsByConversationIdAsync(participantInConversation.Conversation.Id))
+                .ToList();
+
+            int participantsCount = participants.Count();
+            if (participantsCount <= 1)
+            {
+                return ResultDto.FailureResult(HttpStatusCode.BadRequest, "Cannot delete the last participant from conversation.");
+            }
+
+            await _participantRepository.DeleteParticipantFromConversationAsync(participantInConversation);
+
+            if (participantInConversation.Role == Role.Admin)
+            {
+                ParticipantInConversation newAdminParticipant = (await _participantRepository
+                    .GetParticipantsByConversationIdAsync(participantInConversation.Conversation.Id))
+                    .OrderByDescending(x => x.JoinedAt)
+                    .FirstOrDefault()!;
+                await _participantRepository.UpdateParticipantRoleAsync(newAdminParticipant.Id, Role.Admin);
+            }
+
+            return ResultDto.SuccessResult(HttpStatusCode.OK);
         }
     }
 }
+

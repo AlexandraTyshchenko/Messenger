@@ -1,23 +1,23 @@
-﻿using Messenger.Infrastructure.Context;
+﻿using Messenger.Business.Interfaces;
+using Messenger.Infrastructure.Context;
 using Messenger.Infrastructure.Entities;
-using Messenger.Infrastructure.Interfaces;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace Messenger.Infrastructure.Repositories
+namespace Messenger.Business.Services
 {
-    public class UserAuthenticationRepository : IUserAuthenticationRepository
+    public class UserAuthenticationService : IUserAuthenticationService
     {
         private readonly UserManager<User> _userManager;
         private readonly IConfiguration _configuration;
         private User? _user;
         private readonly ApplicationContext _applicationContext;
 
-        public UserAuthenticationRepository(UserManager<User> userManager,
+        public UserAuthenticationService(UserManager<User> userManager,
             IConfiguration configuration,
             ApplicationContext applicationContext)
         {

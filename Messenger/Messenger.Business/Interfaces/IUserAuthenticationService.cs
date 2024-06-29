@@ -2,9 +2,9 @@
 using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 
-namespace Messenger.Infrastructure.Interfaces
+namespace Messenger.Business.Interfaces
 {
-    public interface IUserAuthenticationRepository
+    public interface IUserAuthenticationService
     {
         Task<IdentityResult> RegisterUserAsync(User user, string password);
         Task<bool> ValidateUserAsync(string userName, string password);

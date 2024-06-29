@@ -1,5 +1,5 @@
-﻿using Azure;
-using MediatR;
+﻿using MediatR;
+using Messenger.Api.Extensions;
 using Messenger.Business.Commands;
 using Messenger.Business.Dtos;
 using Messenger.Business.Queries;
@@ -21,17 +21,20 @@ namespace Messenger.Api.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> RegisterUser([FromBody] UserRegistrationDto userRegistration)
         {
-            var command = new RegisterUserCommand { UserRegistration = userRegistration };
-            var response = await _mediator.Send(command);
+            ResultDto response = await _mediator.Send(new RegisterUserCommand
+            {
+                UserRegistration = userRegistration
+            });
 
-            return response.Success ? Created() : StatusCode((int)response.HttpStatusCode, response.ErrorMessage);
+            return response.ToHttpResponse();
         }
+
         [HttpPost("login")]
         public async Task<IActionResult> Authenticate([FromBody] UserLoginDto user)
         {
-            var response = await _mediator.Send(new AuthenticateUserQuery { UserLogin = user });
+            ResultDto<RefreshTokenDto> response = await _mediator.Send(new AuthenticateUserQuery { UserLogin = user });
 
-            return response.Success ? Ok(response.Payload) : StatusCode((int)response.HttpStatusCode, response.ErrorMessage); 
+            return response.ToHttpResponse<RefreshTokenDto>();
         }
     }
 }

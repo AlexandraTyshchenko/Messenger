@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Messenger.Api.AuthorizationAttributes;
+using Messenger.Api.Extensions;
 using Messenger.Business.Commands;
 using Messenger.Business.Dtos;
 using Messenger.Business.Queries;
@@ -11,7 +12,7 @@ namespace Messenger.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(AuthenticationSchemes = "Bearer")]
+    [Authorize]
     public class ConversationsController : ControllerBase
     {
         private readonly IMediator _mediatoR;
@@ -23,50 +24,53 @@ namespace Messenger.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetConversations()
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            var response = await _mediatoR.Send(new GetConversationByUserIdQuery { UserId = new Guid(userIdClaim.Value) });
+            Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
 
-            return Ok(response.Payload);
+            ResultDto<IEnumerable<ConversationDto>> response = await _mediatoR
+                .Send(new GetConversationsByUserIdQuery { UserId = new Guid(userIdClaim.Value) });
+
+            return response.ToHttpResponse<IEnumerable<ConversationDto>>();
         }
 
         [HttpPost("privateConvarsationWithUser")]
         public async Task<IActionResult> CreatePrivateConversation([FromQuery] Guid userId)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            var response = await _mediatoR.Send(new CreatePrivateConversationWithUserCommand
+            Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+
+            ResultDto response = await _mediatoR.Send(new CreatePrivateConversationWithUserCommand
             {
                 CreatorUserId = new Guid(userIdClaim.Value),
                 UserId = userId,
             });
 
-            return response.Success ? Ok() : StatusCode((int)response.HttpStatusCode, response.ErrorMessage);
+            return response.ToHttpResponse();
         }
 
         [HttpPost("groupConversation")]
         public async Task<IActionResult> CreateGroupConversation([FromBody] GroupModelDto groupModelDto)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
 
-            await _mediatoR.Send(new CreateGroupConversationCommand
+            ResultDto response = await _mediatoR.Send(new CreateGroupConversationCommand
             {
                 CreatorUserId = new Guid(userIdClaim.Value),
                 GroupModelDto = groupModelDto,
             });
 
-            return Ok();
+            return response.ToHttpResponse(); 
         }
 
-        [ParticipantInConversation]
 
         [HttpDelete("{conversationId}")]
-        public async Task<IActionResult> DeletePrivateConversation([FromRoute] Guid conversationId)
+        [ParticipantInConversation]
+        public async Task<IActionResult> DeleteConversation([FromRoute] Guid conversationId)
         {
-            var response = await _mediatoR.Send(new DeleteConversationCommand
+            ResultDto response = await _mediatoR.Send(new DeleteConversationCommand
             {
                 ConversationId = conversationId
             });
 
-            return response.Success ? Ok() : StatusCode((int)response.HttpStatusCode, response.ErrorMessage);
+            return response.ToHttpResponse(); ;
         }
     }
 }

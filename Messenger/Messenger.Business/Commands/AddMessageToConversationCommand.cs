@@ -2,7 +2,6 @@
 using MediatR;
 using Messenger.Business.Dtos;
 using Messenger.Infrastructure.Entities;
-using Messenger.Infrastructure.Exceptions;
 using Messenger.Infrastructure.Interfaces;
 using System.Net;
 
@@ -19,29 +18,37 @@ namespace Messenger.Business.Commands
     {
         private readonly IMapper _mapper;
         private readonly IMessageRepository _messageRepository;
-        public AddMessageToConversationCommandHandler(IMessageRepository messageRepository, IMapper mapper)
+        private readonly IUserRepository _userRepository;
+        private readonly IConversationRepository _conversationRepository;
+
+        public AddMessageToConversationCommandHandler(IMessageRepository messageRepository, IMapper mapper,
+            IUserRepository userRepository, IConversationRepository conversationRepository)
         {
             _mapper = mapper;
             _messageRepository = messageRepository;
+            _userRepository = userRepository;
+            _conversationRepository = conversationRepository;
         }
 
         public async Task<ResultDto<MessageWithSenderDto>> Handle(AddMessageToConversationCommand request, CancellationToken cancellationToken)
         {
-            try
-            {
-                Message message = await _messageRepository.AddMessageToConversationAsync(request.MessageDto.MessageText,
-                    request.MessageDto.AttachmentUrl, 
-                    request.ConversationId, request.SenderId);
+            User sender = await _userRepository.GetUserByIdAsync(request.SenderId);
 
-                var mappedMessage = _mapper.Map<MessageWithSenderDto>(message);
+            Conversation conversation = await _conversationRepository.GetConversationByIdAsync(request.ConversationId);
 
-                return ResultDto<MessageWithSenderDto>.SuccessResult(mappedMessage, HttpStatusCode.Created);
-            }
-            catch (CustomException ex)
+            if (conversation == null)
             {
-                return ResultDto<MessageWithSenderDto>.FailureResult<MessageWithSenderDto>(ex.StatusCode, ex.Message);
+                return ResultDto<MessageWithSenderDto>.FailureResult<MessageWithSenderDto>(HttpStatusCode.NotFound,"No conversation was found");
             }
+
+            Message message = await _messageRepository
+                 .AddMessageToConversationAsync(request.MessageDto.MessageText, request.MessageDto.AttachmentUrl,
+                 conversation, sender);
+
+            var mappedMessage = _mapper.Map<MessageWithSenderDto>(message);
+
+            return ResultDto<MessageWithSenderDto>.SuccessResult(mappedMessage, HttpStatusCode.Created);
         }
-
     }
 }
+

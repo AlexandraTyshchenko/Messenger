@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
 using MediatR;
 using Messenger.Business.Dtos;
+using Messenger.Business.Interfaces;
 using Messenger.Infrastructure.Entities;
-using Messenger.Infrastructure.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using System.Net;
 
@@ -15,13 +15,13 @@ namespace Messenger.Business.Commands
 
     public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, ResultDto>
     {
-        private readonly IUserAuthenticationRepository _userAuthenticationRepository;
+        private readonly IUserAuthenticationService _userAuthenticationService;
         private readonly IMapper _mapper;
 
-        public RegisterUserCommandHandler(IUserAuthenticationRepository userAuthenticationRepository,
+        public RegisterUserCommandHandler(IUserAuthenticationService userAuthenticationService,
             IMapper mapper)
         {
-            _userAuthenticationRepository = userAuthenticationRepository;
+            _userAuthenticationService = userAuthenticationService;
             _mapper = mapper;
         }
 
@@ -29,7 +29,7 @@ namespace Messenger.Business.Commands
         {
             User user = _mapper.Map<User>(request.UserRegistration);
 
-            IdentityResult result = await _userAuthenticationRepository
+            IdentityResult result = await _userAuthenticationService
                 .RegisterUserAsync(user, request.UserRegistration.Password);
 
             if (result.Succeeded)
@@ -38,7 +38,7 @@ namespace Messenger.Business.Commands
             }
 
             return ResultDto.FailureResult(HttpStatusCode.BadRequest, 
-                string.Join("\n", result.Errors.Select(x => x.Description)));
+                string.Join(Environment.NewLine, result.Errors.Select(x => x.Description)));
         }
     }
 }

@@ -1,10 +1,8 @@
 ﻿using Messenger.Infrastructure.Context;
 using Messenger.Infrastructure.Entities;
 using Messenger.Infrastructure.Enums;
-using Messenger.Infrastructure.Exceptions;
 using Messenger.Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System.Net;
 
 namespace Messenger.Infrastructure.Repositories.Repositories
 {
@@ -29,7 +27,7 @@ namespace Messenger.Infrastructure.Repositories.Repositories
 
             var conversation = new Conversation { Group = group };
 
-            var userCreator = await _applicationContext.Users.FindAsync(creatorId);
+            User userCreator = await _applicationContext.Users.FindAsync(creatorId);
 
             var participant = new ParticipantInConversation
             { 
@@ -46,26 +44,8 @@ namespace Messenger.Infrastructure.Repositories.Repositories
             await _applicationContext.SaveChangesAsync();
         }
 
-        public async Task CreatePrivateConversationWithUserAsync(Guid creatorUserId, Guid userId)
+        public async Task CreateConversationWithUserAsync(User creatorUser, User user)
         {
-            var existingConversation = await _applicationContext.Conversations
-                .FirstOrDefaultAsync(x => x.ParticipantsInConversation.Any(x => x.User.Id == creatorUserId) &&
-                x.ParticipantsInConversation.Any(x => x.User.Id == userId) && x.Group == null);
-
-            if (existingConversation != null)
-            {
-                throw new ConflictException("conversation with this user already exists");
-            }
-
-            var creatorUser = await _applicationContext.Users.FindAsync(creatorUserId);
-
-            var user = await _applicationContext.Users.FindAsync(userId);
-
-            if (user == null)
-            {
-                throw new NotFoundException("user not found");
-            }
-
             var conversation = new Conversation();
 
             await _applicationContext.Conversations.AddAsync(conversation);
@@ -93,15 +73,8 @@ namespace Messenger.Infrastructure.Repositories.Repositories
             await _applicationContext.SaveChangesAsync();
         }
 
-        public async Task<Conversation> DeleteConversationAsync(Guid conversationId)
+        public async Task<Conversation> DeleteConversationAsync(Conversation conversation)
         {
-            var conversation = await _applicationContext.FindAsync<Conversation>(conversationId);
-
-            if (conversation == null)
-            {
-                throw new NotFoundException($"Conversation with id {conversationId} wasn`t found");
-            }
-
             _applicationContext.Remove(conversation);
 
             await _applicationContext.SaveChangesAsync();
@@ -111,12 +84,9 @@ namespace Messenger.Infrastructure.Repositories.Repositories
 
         public async Task<Conversation> GetConversationByIdAsync(Guid conversationId)
         {
-            var conversation = await _applicationContext.Conversations.Include(x=>x.Group).FirstOrDefaultAsync(x=>x.Id == conversationId);
+            Conversation conversation = await _applicationContext.Conversations.Include(x=>x.Group)
+                .FirstOrDefaultAsync(x=>x.Id == conversationId);
 
-            if (conversation == null)
-            {
-                throw new NotFoundException($"Conversation with id {conversationId} wasn`t found");
-            }
             return conversation;
         }
 
@@ -128,6 +98,13 @@ namespace Messenger.Infrastructure.Repositories.Repositories
                  .Include(x => x.Messages)
                      .ThenInclude(x => x.Sender)
                  .ToListAsync();
+        }
+
+        public async Task<Conversation> GetPrivateConversationWithUserAsync(Guid creatorUserId, Guid userId)
+        {
+            return await _applicationContext.Conversations
+                           .FirstOrDefaultAsync(x => x.ParticipantsInConversation.Any(x => x.User.Id == creatorUserId) &&
+                           x.ParticipantsInConversation.Any(x => x.User.Id == userId) && x.Group == null);
         }
     }
 }

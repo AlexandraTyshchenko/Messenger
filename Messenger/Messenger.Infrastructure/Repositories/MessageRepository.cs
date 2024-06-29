@@ -1,6 +1,5 @@
 ﻿using Messenger.Infrastructure.Context;
 using Messenger.Infrastructure.Entities;
-using Messenger.Infrastructure.Exceptions;
 using Messenger.Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,17 +14,8 @@ namespace Messenger.Infrastructure.Repositories.Repositories
         }
 
         public async Task<Message> AddMessageToConversationAsync(string messageText,
-            string attachmentUrl, Guid conversationId, Guid senderId)
-        {
-            User sender = await _applicationContext.Users.FirstOrDefaultAsync(x => x.Id == senderId);
-
-            Conversation conversation = await _applicationContext.Conversations.FirstOrDefaultAsync(x => x.Id == conversationId);
-
-            if (conversation == null)
-            {
-                throw new NotFoundException("No conversation was found");
-            }
-
+            string attachmentUrl, Conversation conversation, User sender)
+        {    
             var message = new Message
             {
                 MessageText = messageText,
@@ -41,19 +31,9 @@ namespace Messenger.Infrastructure.Repositories.Repositories
             return message;
         }
 
-        public async Task DeleteMessageByIdAsync(Guid messageId)
-        {
-            Message message = await _applicationContext.Messages
-                         .Include(x => x.Conversation)
-                         .Include(x => x.Sender)
-                         .FirstOrDefaultAsync(x => x.Id == messageId);
-
-            if (message == null)
-            {
-                throw new NotFoundException($"Message with id {messageId} wasn`t found");
-            }
-
-            _applicationContext.Messages.Remove(message);
+        public async Task DeleteMessageAsync(Message message)
+        {          
+           Message message1 =  _applicationContext.Messages.Remove(message).Entity;
             await _applicationContext.SaveChangesAsync();
         }
 
@@ -64,17 +44,12 @@ namespace Messenger.Infrastructure.Repositories.Repositories
                 .Include(x => x.Sender)
                 .FirstOrDefaultAsync(x => x.Id == messageId);
 
-            if (message == null)
-            {
-                throw new NotFoundException($"Message with id {messageId} wasn`t found");
-            }
-
             return message;
         }
 
         public async Task<IEnumerable<Message>> GetMessagesByConversationIdAsync(Guid conversationId)
         {
-            var messages = await _applicationContext.Messages
+            IEnumerable<Message> messages = await _applicationContext.Messages
                                         .Where(m => m.Conversation.Id == conversationId)
                                         .Include(x => x.Sender)
                                         .OrderBy(x => x.SentAt)
@@ -82,6 +57,5 @@ namespace Messenger.Infrastructure.Repositories.Repositories
 
             return messages;
         }
-
     }
 }
