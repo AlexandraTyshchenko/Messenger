@@ -12,7 +12,7 @@ namespace Messenger.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize(AuthenticationSchemes = "Bearer")]
     public class ConversationsController : ControllerBase
     {
         private readonly IMediator _mediatoR;

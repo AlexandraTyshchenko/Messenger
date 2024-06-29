@@ -1,7 +1,5 @@
 ﻿using AutoMapper;
 using MediatR;
-using Messenger.Business.Interfaces;
-using Messenger.Business.Services;
 using Messenger.Business.Profiles;
 using Messenger.Business.Queries;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,7 +11,6 @@ namespace Messenger.Business.Extensions
         public static IServiceCollection AddBusinessServices(this IServiceCollection services)
         {
             services.AddMediatR(typeof(GetConversationsByUserIdQueryHandler).Assembly);
-            services.AddScoped<IUserAuthenticationService, UserAuthenticationService>();
 
             var mapperConfig = new MapperConfiguration(mc =>
             {
