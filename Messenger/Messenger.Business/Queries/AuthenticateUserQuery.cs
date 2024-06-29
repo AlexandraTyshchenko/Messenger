@@ -1,9 +1,11 @@
 ﻿using MediatR;
 using Messenger.Business.Dtos;
+using Messenger.Business.Options;
 using Messenger.Infrastructure.Context;
 using Messenger.Infrastructure.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
@@ -20,28 +22,26 @@ namespace Messenger.Business.Queries
     public class AuthenticateUserQueryHandler : IRequestHandler<AuthenticateUserQuery, ResultDto<RefreshTokenDto>>
     {
         private readonly UserManager<User> _userManager;
-        private readonly IConfiguration _configuration;
+        private readonly JwtSettings _jwtSettings;
         private readonly ApplicationContext _applicationContext;
 
         public AuthenticateUserQueryHandler(UserManager<User> userManager,
-            IConfiguration configuration,
+            IOptions<JwtSettings> jwtSettings,
             ApplicationContext applicationContext)
         {
             _userManager = userManager;
-            _configuration = configuration;
+            _jwtSettings = jwtSettings.Value;
             _applicationContext = applicationContext;
         }
 
         public async Task<ResultDto<RefreshTokenDto>> Handle(AuthenticateUserQuery request, CancellationToken cancellationToken)
         {
-            User user = await ValidateUserAsync(request.UserLogin.UserName,
-                request.UserLogin.Password);
+            User user = await ValidateUserAsync(request.UserLogin.UserName, request.UserLogin.Password);
 
             if (user == null)
             {
                 return ResultDto<RefreshTokenDto>.FailureResult<RefreshTokenDto>(
-                    HttpStatusCode.Unauthorized,
-                    "Invalid credentials.");
+                    HttpStatusCode.Unauthorized, "Invalid credentials.");
             }
 
             string token = await CreateTokenAsync(user);
@@ -78,36 +78,33 @@ namespace Messenger.Business.Queries
 
         private JwtSecurityToken GenerateRefreshTokenOptions(SigningCredentials signingCredentials)
         {
-            var jwtSettings = _configuration.GetSection("JwtConfig");
             var tokenOptions = new JwtSecurityToken
             (
-            issuer: jwtSettings["validIssuer"],
-            audience: jwtSettings["validAudience"],
-            claims: null,
-            expires: DateTime.Now.AddMinutes(Convert.ToDouble(jwtSettings["refreshTokenExpiresIn"])),
-            signingCredentials: signingCredentials
+                issuer: _jwtSettings.ValidIssuer,
+                audience: _jwtSettings.ValidAudience,
+                claims: null,
+                expires: DateTime.Now.AddMinutes(_jwtSettings.RefreshTokenExpiresIn),
+                signingCredentials: signingCredentials
             );
             return tokenOptions;
         }
 
         private JwtSecurityToken GenerateTokenOptions(SigningCredentials signingCredentials, List<Claim> claims)
         {
-            var jwtSettings = _configuration.GetSection("JwtConfig");
             var tokenOptions = new JwtSecurityToken
             (
-            issuer: jwtSettings["validIssuer"],
-            audience: jwtSettings["validAudience"],
-            claims: claims,
-            expires: DateTime.Now.AddMinutes(Convert.ToDouble(jwtSettings["accessTokenExpiresIn"])),
-            signingCredentials: signingCredentials
+                issuer: _jwtSettings.ValidIssuer,
+                audience: _jwtSettings.ValidAudience,
+                claims: claims,
+                expires: DateTime.Now.AddMinutes(_jwtSettings.AccessTokenExpiresIn),
+                signingCredentials: signingCredentials
             );
             return tokenOptions;
         }
 
         private SigningCredentials GetSigningCredentials()
         {
-            var jwtConfig = _configuration.GetSection("jwtConfig");
-            var key = Encoding.UTF8.GetBytes(jwtConfig["Secret"]);
+            var key = Encoding.UTF8.GetBytes(_jwtSettings.Secret);
             var secret = new SymmetricSecurityKey(key);
             return new SigningCredentials(secret, SecurityAlgorithms.HmacSha256);
         }

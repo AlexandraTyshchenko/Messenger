@@ -10,8 +10,10 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
-builder.Services.AddBusinessServices();
+
+builder.Services.AddBusinessServices(builder.Configuration);
 builder.Services.AddInfrastructureServices(builder.Configuration);
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(opt =>
 {
@@ -41,10 +43,8 @@ builder.Services.AddSwaggerGen(opt =>
     });
 });
 
-
-
-
 var jwtConfig = builder.Configuration.GetSection("jwtConfig");
+
 var secretKey = jwtConfig["secret"];
 
 builder.Services.AddAuthentication(opt =>
