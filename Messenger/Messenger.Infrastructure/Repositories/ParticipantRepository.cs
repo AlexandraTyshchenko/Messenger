@@ -1,7 +1,6 @@
 ﻿using Messenger.Infrastructure.Context;
 using Messenger.Infrastructure.Entities;
 using Messenger.Infrastructure.Enums;
-using Messenger.Infrastructure.Exceptions;
 using Messenger.Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 

@@ -1,7 +1,6 @@
 ﻿using MediatR;
 using Messenger.Business.Dtos;
 using Messenger.Infrastructure.Entities;
-using Messenger.Infrastructure.Exceptions;
 using Messenger.Infrastructure.Interfaces;
 using System.Net;
 
