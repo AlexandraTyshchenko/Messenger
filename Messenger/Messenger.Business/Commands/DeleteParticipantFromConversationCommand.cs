@@ -9,7 +9,8 @@ namespace Messenger.Business.Commands
 {
     public class DeleteParticipantFromConversationCommand : IRequest<ResultDto>
     {
-        public Guid ParticipantInConversationId { get; set; }
+        public Guid UserToDeleteId { get; set; }
+        public Guid ConversationId { get; set; }
     }
 
     public class DeleteParticipantFromConversationCommandHandler
@@ -23,25 +24,25 @@ namespace Messenger.Business.Commands
         }
         public async Task<ResultDto> Handle(DeleteParticipantFromConversationCommand request, CancellationToken cancellationToken)
         {
-            ParticipantInConversation participantInConversation = await _participantRepository
-                .GetParticipantByIdAsync(request.ParticipantInConversationId);
-
-            if (participantInConversation == null)
-            {
-                return ResultDto.FailureResult(HttpStatusCode.NotFound, $"Participant with id {participantInConversation.Id} wasn`t found");
-            }
-
             List<ParticipantInConversation> participants = (await _participantRepository
-                .GetParticipantsByConversationIdAsync(participantInConversation.Conversation.Id))
+                .GetParticipantsByConversationIdAsync(request.ConversationId))
                 .ToList();
 
             int participantsCount = participants.Count();
             if (participantsCount <= 1)
             {
-                return ResultDto.FailureResult(HttpStatusCode.BadRequest, "Cannot delete the last participant from conversation.");
+                return ResultDto.FailureResult(HttpStatusCode.BadRequest, "Cannot delete participant because" +
+                    " it would leave the conversation with zero participants.");
             }
 
-            await _participantRepository.DeleteParticipantFromConversationAsync(participantInConversation);
+            ParticipantInConversation participantInConversation = await _participantRepository
+                .DeleteParticipantFromConversationAsync(request.UserToDeleteId,request.ConversationId);
+
+            if (participantInConversation == null)
+            {
+                return ResultDto.FailureResult(HttpStatusCode.NotFound, $"User with id {request.UserToDeleteId} wasn`t found " +
+                    $"in conversation with id {request.ConversationId}");
+            }
 
             if (participantInConversation.Role == Role.Admin)
             {

@@ -9,7 +9,6 @@ namespace Messenger.Infrastructure.Interfaces
         Task UpdateParticipantRoleAsync(Guid participantId, Role role);
         Task<ParticipantInConversation> GetParticipantFromConversationAsync(Guid userId, Guid conversationId);
         Task AddParticipantsToConversationAsync(IEnumerable<User> users, Conversation conversation);
-        Task DeleteParticipantFromConversationAsync(ParticipantInConversation participantInConversation);
-        Task<ParticipantInConversation> GetParticipantByIdAsync(Guid participantInConversationId);
+        Task<ParticipantInConversation> DeleteParticipantFromConversationAsync(Guid userId, Guid conversationId);
     }
 }

@@ -22,15 +22,12 @@ namespace Messenger.Business.Commands
 
         public async Task<ResultDto> Handle(DeleteConversationCommand request, CancellationToken cancellationToken)
         {
-            Conversation conversation = await _conversationRepository.GetConversationByIdAsync(request.ConversationId);
+            Conversation conversation =  await _conversationRepository.DeleteConversationAsync(request.ConversationId);
 
             if (conversation == null)
             {
                 return ResultDto.FailureResult(HttpStatusCode.NotFound, $"Conversation with id {request.ConversationId} wasn`t found");
             }
-
-            await _conversationRepository.DeleteConversationAsync(conversation);
-
 
             return ResultDto.SuccessResult(HttpStatusCode.OK);
         }

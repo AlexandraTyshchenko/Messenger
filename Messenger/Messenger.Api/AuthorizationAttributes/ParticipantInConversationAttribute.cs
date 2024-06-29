@@ -1,5 +1,5 @@
 ﻿using Messenger.Infrastructure.Entities;
-using Messenger.Infrastructure.Exceptions;
+using Messenger.Infrastructure.Enums;
 using Messenger.Infrastructure.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -10,23 +10,26 @@ namespace Messenger.Api.AuthorizationAttributes
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
     public class ParticipantInConversationAttribute : TypeFilterAttribute
     {
-        public ParticipantInConversationAttribute(bool isGroup = false)
+        public ParticipantInConversationAttribute(bool isGroup = false, bool isAdmin = false)
             : base(typeof(ParticipantInConversationFilter))
         {
-            Arguments = new object[] { isGroup };
+            Arguments = new object[] { isGroup, isAdmin };
         }
     }
 
     public class ParticipantInConversationFilter : IAsyncAuthorizationFilter
     {
         private readonly bool _isGroup;
+        private readonly bool _isAdmin;
 
         private IParticipantRepository _participantRepository;
         private IConversationRepository _conversationRepository;
 
-        public ParticipantInConversationFilter(bool isGroup)
+        public ParticipantInConversationFilter(bool isGroup, bool isAdmin, IParticipantRepository participantRepository)
         {
             _isGroup = isGroup;
+            _isAdmin = isAdmin;
+            _participantRepository = participantRepository;
         }
 
         public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
@@ -48,79 +51,52 @@ namespace Messenger.Api.AuthorizationAttributes
             if (!httpContext.Request.RouteValues.TryGetValue("conversationId", out var conversationIdObj) ||
                 !Guid.TryParse(conversationIdObj?.ToString(), out var conversationId))
             {
-                context.Result = new JsonResult(new { message = "Conversation ID is null or invalid." })
+                context.Result = new JsonResult(new { message = "Conversation Id is null or invalid." })
                 {
                     StatusCode = StatusCodes.Status401Unauthorized
                 };
                 return;
             }
 
-            if (!await IsValidConversation(httpContext, conversationId, context))
+            Guid userId = new Guid(httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+
+            ParticipantInConversation participantInConversation = await _participantRepository
+                .GetParticipantFromConversationAsync(userId, conversationId);
+
+            if (participantInConversation == null)
             {
-                return;
-            }
-
-            string userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            try
-            {
-                ParticipantInConversation participant =
-                    await _participantRepository.GetParticipantFromConversationAsync(new Guid(userId), conversationId);
-
-                if (!IsValidParticipant(httpContext, participant, conversationId, context))
+                context.Result = new JsonResult(new
                 {
-                    return;
-                }
-            }
-            catch (CustomException ex)
-            {
-                context.Result = new JsonResult(new { message = ex.Message })
+                    message = $"Participant with user id {userId}" +
+                    $" wasn`t found in conversation with id {conversationId}."
+                })
                 {
-                    StatusCode = StatusCodes.Status403Forbidden
+                    StatusCode = StatusCodes.Status404NotFound
                 };
                 return;
             }
-        }
 
-        private async Task<bool> IsValidConversation(HttpContext httpContext, Guid conversationId, AuthorizationFilterContext context)
-        {
-            try
+            if (_isGroup && participantInConversation.Conversation.Group == null)
             {
-                Conversation conversation = await _conversationRepository.GetConversationByIdAsync(conversationId);
-
-                if (_isGroup && conversation.Group == null)
-                {
-                    context.Result = new JsonResult(new { message = $"Conversation with id {conversation.Id} is not a group conversation." })
-                    {
-                        StatusCode = StatusCodes.Status403Forbidden
-                    };
-                    return false;
-                }
-                return true;
-            }
-            catch (CustomException ex)
-            {
-                context.Result = new JsonResult(new { message = ex.Message })
+                context.Result = new JsonResult(new { message = $"Conversation with id {conversationId} is not a group conversation." })
                 {
                     StatusCode = StatusCodes.Status403Forbidden
                 };
-                return false;
+                return;
             }
-        }
 
-        private bool IsValidParticipant(HttpContext httpContext, ParticipantInConversation participant,
-            Guid conversationId, AuthorizationFilterContext context)
-        {
-            if (participant == null)
+            if (_isAdmin && participantInConversation.Role != Role.Admin)
             {
-                var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                context.Result = new JsonResult(new { message = $"No participant found for user ID {userId} in conversation ID {conversationId}." })
+                context.Result = new JsonResult(new
+                {
+                    message = "Current user does not have " +
+                    "administrative privileges in this conversation."
+                })
                 {
                     StatusCode = StatusCodes.Status403Forbidden
                 };
-                return false;
+                return;
             }
-            return true;
         }
     }
 }

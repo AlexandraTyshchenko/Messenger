@@ -10,9 +10,6 @@ namespace Messenger.Business.Profiles
         {
             CreateMap<User, UserBasicInfoDto>();
 
-            CreateMap<ParticipantInConversation, ParticipantDto>()
-               .ForMember(dest=>dest.UserBasicInfo,opt=>opt.MapFrom(src=>src.User));
-
             CreateMap<Group, GroupDto>();
 
             CreateMap<Message, MessageWithSenderDto>()
@@ -29,7 +26,6 @@ namespace Messenger.Business.Profiles
 
             CreateMap<UserRegistrationDto, User>();
             CreateMap<UserLoginDto, User>();
-
         }
     }
 }

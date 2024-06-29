@@ -1,7 +1,6 @@
 ﻿using MediatR;
 using Messenger.Business.Dtos;
 using Messenger.Infrastructure.Entities;
-using Messenger.Infrastructure.Exceptions;
 using Messenger.Infrastructure.Interfaces;
 using System.Net;
 
@@ -23,14 +22,13 @@ namespace Messenger.Business.Commands
 
         public async Task<ResultDto> Handle(DeleteMessageCommand request, CancellationToken cancellationToken)
         {
-            Message message = await _messageRepository.GetMessageByIdAsync(request.MessageId);
+            Message message = await _messageRepository.DeleteMessageAsync(request.MessageId);
 
             if (message == null)
             {
-                ResultDto.FailureResult(HttpStatusCode.NotFound,$"Message with id {request.MessageId} wasn`t found");
+                return ResultDto.FailureResult(HttpStatusCode.NotFound, $"Message with id {request.MessageId} wasn`t found");
             }
 
-            await _messageRepository.DeleteMessageAsync(message);
             return ResultDto.SuccessResult(HttpStatusCode.OK);
         }
     }

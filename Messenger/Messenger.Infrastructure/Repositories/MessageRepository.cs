@@ -15,7 +15,7 @@ namespace Messenger.Infrastructure.Repositories.Repositories
 
         public async Task<Message> AddMessageToConversationAsync(string messageText,
             string attachmentUrl, Conversation conversation, User sender)
-        {    
+        {
             var message = new Message
             {
                 MessageText = messageText,
@@ -31,10 +31,19 @@ namespace Messenger.Infrastructure.Repositories.Repositories
             return message;
         }
 
-        public async Task DeleteMessageAsync(Message message)
-        {          
-           Message message1 =  _applicationContext.Messages.Remove(message).Entity;
+        public async Task<Message> DeleteMessageAsync(Guid messageId)
+        {
+            Message message = await GetMessageByIdAsync(messageId);
+
+            if (message == null)
+            {
+                return null; 
+            }
+
+            Message deletedMessage = _applicationContext.Messages.Remove(message).Entity;
             await _applicationContext.SaveChangesAsync();
+
+            return deletedMessage;
         }
 
         public async Task<Message> GetMessageByIdAsync(Guid messageId)

@@ -9,6 +9,6 @@ namespace Messenger.Infrastructure.Interfaces
         Task CreateConversationWithUserAsync(User creatorUser, User user);
         Task<Conversation> GetPrivateConversationWithUserAsync(Guid creatorUserId, Guid userId);
         Task CreateGroupConversationAsync(string title, string imgUrl, Guid creatorId);
-        Task<Conversation> DeleteConversationAsync(Conversation conversation);
+        Task<Conversation> DeleteConversationAsync(Guid conversationId);
     }
 }

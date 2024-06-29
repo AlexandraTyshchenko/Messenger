@@ -62,7 +62,7 @@ namespace Messenger.Api.Controllers
 
 
         [HttpDelete("{conversationId}")]
-        [ParticipantInConversation]
+       // [ParticipantInConversation]
         public async Task<IActionResult> DeleteConversation([FromRoute] Guid conversationId)
         {
             ResultDto response = await _mediatoR.Send(new DeleteConversationCommand

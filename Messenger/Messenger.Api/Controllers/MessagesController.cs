@@ -13,35 +13,32 @@ namespace Messenger.Api.Controllers
 {
     [ApiController]
     [Authorize(AuthenticationSchemes = "Bearer")]
+    [Route("api/Conversations/{conversationId}/[controller]")]
+    [ParticipantInConversation]
     public class MessagesController : ControllerBase
     {
-        private readonly IMediator _mediatoR;
+        private readonly IMediator _mediator;
 
         public MessagesController(IMediator mediator)
         {
-            _mediatoR = mediator;
+            _mediator = mediator;
         }
 
-        [Route("api/Conversations/{conversationId}/[controller]")]
-        [ParticipantInConversation]
         [HttpGet]
         public async Task<IActionResult> GetMessagesByConversationId([FromRoute] Guid conversationId)
         {
-            ResultDto<IEnumerable<MessageWithSenderDto>> response = await _mediatoR
+            ResultDto<IEnumerable<MessageWithSenderDto>> response = await _mediator
                 .Send(new GetMessagesByConversationIdQuery { ConversationId = conversationId });
 
             return response.ToHttpResponse<IEnumerable<MessageWithSenderDto>>();
         }
 
-        [Route("api/Conversations/{conversationId}/[controller]")]
         [HttpPost]
-        [ParticipantInConversation]
-        public async Task<IActionResult> AddMessageToConversation([FromBody] MessageDto messageDto,
-        [FromRoute] Guid conversationId)
+        public async Task<IActionResult> AddMessageToConversation([FromBody] MessageDto messageDto, [FromRoute] Guid conversationId)
         {
             Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
 
-            ResultDto<MessageWithSenderDto> response = await _mediatoR.Send(new AddMessageToConversationCommand
+            ResultDto<MessageWithSenderDto> response = await _mediator.Send(new AddMessageToConversationCommand
             {
                 MessageDto = messageDto,
                 ConversationId = conversationId,
@@ -51,12 +48,11 @@ namespace Messenger.Api.Controllers
             return response.ToHttpResponse<MessageWithSenderDto>();
         }
 
-        [Route("api/[controller]/{messageId}/")]
-        [HttpDelete]
-        [MessageRemovalPermissions]
+        [HttpDelete("{messageId}")]
+        [PermissionsToManageMessages]
         public async Task<IActionResult> DeleteMessageFromConversation([FromRoute] Guid messageId)
         {
-            ResultDto response = await _mediatoR.Send(new DeleteMessageCommand { MessageId = messageId });
+            ResultDto response = await _mediator.Send(new DeleteMessageCommand { MessageId = messageId });
 
             return response.ToHttpResponse();
         }

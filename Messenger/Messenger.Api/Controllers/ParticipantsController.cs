@@ -11,33 +11,33 @@ namespace Messenger.Api.Controllers
 {
     [ApiController]
     [Authorize(AuthenticationSchemes = "Bearer")]
+    [Route("api/Conversations/{conversationId}/[controller]")]
     public class ParticipantsController : ControllerBase
     {
-        private readonly IMediator _mediatoR;
+        private readonly IMediator _mediator;
+
         public ParticipantsController(IMediator mediator)
         {
-            _mediatoR = mediator;
+            _mediator = mediator;
         }
 
-        [Route("api/Conversations/{conversationId}/Participants")]
         [HttpGet]
-        [ParticipantInConversation(isGroup: true)]
+        [ParticipantInConversation]
         public async Task<IActionResult> GetParticipantsByConversationId([FromRoute] Guid conversationId)
         {
-            ResultDto<IEnumerable<ParticipantDto>> response = await _mediatoR.Send(new GetParticipantsByConversationIdQuery
+            ResultDto<IEnumerable<UserBasicInfoDto>> response = await _mediator.Send(new GetParticipantsByConversationIdQuery
             {
                 ConversationId = conversationId
             });
 
-            return response.ToHttpResponse<IEnumerable<ParticipantDto>>();
+            return response.ToHttpResponse<IEnumerable<UserBasicInfoDto>>();
         }
 
-        [Route("api/Conversations/{conversationId}/Participants/AddParticipantToGroupConversation")]
-        [HttpPost]
-      //  [ParticipantInConversation(isGroup: true)]
+        [HttpPost("AddParticipantToGroupConversation")]
+        [ParticipantInConversation(isGroup: true)]
         public async Task<IActionResult> AddParticipantsToConversation([FromBody] Guid[] userIds, [FromRoute] Guid conversationId)
         {
-            ResultDto response = await _mediatoR.Send(new AddParticipantToConversationCommand
+            ResultDto response = await _mediator.Send(new AddParticipantToConversationCommand
             {
                 ConversationId = conversationId,
                 UserIds = userIds
@@ -46,14 +46,16 @@ namespace Messenger.Api.Controllers
             return response.ToHttpResponse();
         }
 
-        [Route("api/Participants/{participantInConversationId}")]
-        [HttpDelete]
-        [ParticipantRemovalPermissions]
-        public async Task<IActionResult> DeleteParticipantsFromConversation([FromRoute] Guid participantInConversationId)
+        [HttpDelete("DeleteUserFromConversation/{userToDeleteId}")]
+        [ParticipantInConversation(isGroup: true)]
+        [PermissionsToManageParticipants]
+        public async Task<IActionResult> DeleteParticipantsFromConversation([FromRoute] Guid userToDeleteId,
+            [FromRoute] Guid conversationId)
         {
-            ResultDto response = await _mediatoR.Send(new DeleteParticipantFromConversationCommand
+            ResultDto response = await _mediator.Send(new DeleteParticipantFromConversationCommand
             {
-                ParticipantInConversationId = participantInConversationId
+                UserToDeleteId = userToDeleteId,
+                ConversationId = conversationId
             });
 
             return response.ToHttpResponse();

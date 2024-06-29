@@ -32,9 +32,9 @@ namespace Messenger.Business.Commands
 
             IEnumerable<User> users = await _userRepository.GetUsersByIdsAsync(request.UserIds);
 
-            List<Guid> missingUserIds = request.UserIds.Where(id => !users.Select(x => x.Id).Contains(id)).ToList();
+            IEnumerable<Guid> missingUserIds = request.UserIds.Where(id => !users.Select(x => x.Id).Contains(id)).ToList();
 
-            if (!missingUserIds.Any())
+            if (missingUserIds.Any())
             {
                 return ResultDto.FailureResult(HttpStatusCode.NotFound,
                     $"users with ids {string.Join(", ", missingUserIds)} were not found ");
@@ -47,7 +47,7 @@ namespace Messenger.Business.Commands
                 return ResultDto.FailureResult(HttpStatusCode.NotFound, "conversation not found.");
             }
 
-            List<ParticipantInConversation> existingParticipants = (await _participantRepository
+            IEnumerable<ParticipantInConversation> existingParticipants = (await _participantRepository
                 .GetParticipantsByConversationIdAsync(request.ConversationId))
                 .Where(x => users.Contains(x.User)).ToList();
 

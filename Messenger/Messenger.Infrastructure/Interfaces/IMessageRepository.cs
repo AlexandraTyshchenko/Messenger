@@ -8,6 +8,6 @@ namespace Messenger.Infrastructure.Interfaces
         public Task<Message> AddMessageToConversationAsync(string messageText,
             string attachmentUrl, Conversation conversation, User sender);
         public Task<Message> GetMessageByIdAsync(Guid messageId);
-        public Task DeleteMessageAsync(Message message);
+        public Task<Message> DeleteMessageAsync(Guid messageId);
     }
 }

@@ -73,13 +73,18 @@ namespace Messenger.Infrastructure.Repositories.Repositories
             await _applicationContext.SaveChangesAsync();
         }
 
-        public async Task<Conversation> DeleteConversationAsync(Conversation conversation)
+        public async Task<Conversation> DeleteConversationAsync(Guid conversationId)
         {
-            _applicationContext.Remove(conversation);
+            Conversation conversation = await GetConversationByIdAsync(conversationId);
+
+            if(conversation == null)
+                return null;
+
+            Conversation deletedConversation = _applicationContext.Remove(conversation).Entity;
 
             await _applicationContext.SaveChangesAsync();
 
-            return conversation;
+            return deletedConversation;
         }
 
         public async Task<Conversation> GetConversationByIdAsync(Guid conversationId)
