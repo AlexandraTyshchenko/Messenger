@@ -11,7 +11,7 @@ namespace Messenger.Business.Commands
     {
         public Guid SenderId { get; set; }
         public Guid ConversationId { get; set; }
-        public MessageDto MessageDto { get; set; }
+        public MessageDto Message { get; set; }
     }
 
     public class AddMessageToConversationCommandHandler : IRequestHandler<AddMessageToConversationCommand, ResultDto<MessageWithSenderDto>>
@@ -38,12 +38,12 @@ namespace Messenger.Business.Commands
 
             if (conversation == null)
             {
-                return ResultDto<MessageWithSenderDto>.FailureResult<MessageWithSenderDto>(HttpStatusCode.NotFound,"No conversation was found");
+                return ResultDto<MessageWithSenderDto>.FailureResult<MessageWithSenderDto>(HttpStatusCode.NotFound,
+                    "No conversation was found.");
             }
 
             Message message = await _messageRepository
-                 .AddMessageToConversationAsync(request.MessageDto.MessageText, request.MessageDto.AttachmentUrl,
-                 conversation, sender);
+                 .AddMessageToConversationAsync(request.Message.Text, conversation, sender);
 
             var mappedMessage = _mapper.Map<MessageWithSenderDto>(message);
 

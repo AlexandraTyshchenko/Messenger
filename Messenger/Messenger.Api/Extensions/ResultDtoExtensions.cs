@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc.Infrastructure;
 
 namespace Messenger.Api.Extensions
 {
-    public static class HttpResponseHandler
+    public static class ResultDtoExtensions
     {
         public static IActionResult ToHttpResponse(this ResultDto response)
         {

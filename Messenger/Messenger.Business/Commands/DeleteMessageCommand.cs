@@ -4,32 +4,31 @@ using Messenger.Infrastructure.Entities;
 using Messenger.Infrastructure.Interfaces;
 using System.Net;
 
-namespace Messenger.Business.Commands
+namespace Messenger.Business.Commands;
+
+public class DeleteMessageCommand : IRequest<ResultDto>
 {
-    public class DeleteMessageCommand : IRequest<ResultDto>
+    public Guid MessageId { get; set; }
+}
+
+public class DeleteMessageCommandHandler : IRequestHandler<DeleteMessageCommand, ResultDto>
+{
+    private readonly IMessageRepository _messageRepository;
+
+    public DeleteMessageCommandHandler(IMessageRepository messageRepository)
     {
-        public Guid MessageId { get; set; }
+        _messageRepository = messageRepository;
     }
 
-    public class DeleteMessageCommandHandler : IRequestHandler<DeleteMessageCommand, ResultDto>
+    public async Task<ResultDto> Handle(DeleteMessageCommand request, CancellationToken cancellationToken)
     {
-        private readonly IMessageRepository _messageRepository;
+        Message message = await _messageRepository.DeleteMessageAsync(request.MessageId);
 
-        public DeleteMessageCommandHandler(IMessageRepository messageRepository)
+        if (message == null)
         {
-            _messageRepository = messageRepository;
+            return ResultDto.FailureResult(HttpStatusCode.NotFound, $"Message with id {request.MessageId} wasn`t found.");
         }
 
-        public async Task<ResultDto> Handle(DeleteMessageCommand request, CancellationToken cancellationToken)
-        {
-            Message message = await _messageRepository.DeleteMessageAsync(request.MessageId);
-
-            if (message == null)
-            {
-                return ResultDto.FailureResult(HttpStatusCode.NotFound, $"Message with id {request.MessageId} wasn`t found");
-            }
-
-            return ResultDto.SuccessResult(HttpStatusCode.OK);
-        }
+        return ResultDto.SuccessResult(HttpStatusCode.OK);
     }
 }

@@ -36,25 +36,31 @@ namespace Messenger.Business.Commands
             if (missingUserIds.Any())
             {
                 return ResultDto.FailureResult(HttpStatusCode.NotFound,
-                    $"users with ids {string.Join(", ", missingUserIds)} were not found ");
+                    $"Users with ids {string.Join(", ", missingUserIds)} were not found.");
             }
 
-            Conversation conversation = await _conversationRepository.GetConversationByIdAsync(request.ConversationId);
+            Conversation conversation = await _conversationRepository.GetGroupConversationByIdAsync(request.ConversationId);
 
             if (conversation == null)
             {
-                return ResultDto.FailureResult(HttpStatusCode.NotFound, "conversation not found.");
+                return ResultDto.FailureResult(HttpStatusCode.NotFound, "Group conversation was not found.");
             }
 
             IEnumerable<ParticipantInConversation> existingParticipants = (await _participantRepository
                 .GetParticipantsByConversationIdAsync(request.ConversationId))
-                .Where(x => users.Contains(x.User)).ToList();
+                .Where(x => users.Contains(x.User))
+                .ToList();
 
-            string participantsUserNames = string.Join(", ", existingParticipants.Select(x => x.User.UserName));
+            var participantsUserNames = string.Join(", ", existingParticipants.Select(x => x.User.UserName));
 
             if (existingParticipants.Any())
             {
-                return ResultDto.FailureResult(HttpStatusCode.Conflict,$"{participantsUserNames} already exist in conversation");
+                return ResultDto.FailureResult(HttpStatusCode.Conflict, $"Users {participantsUserNames} already exist in conversation.");
+            }
+
+            if (conversation.Group == null)
+            {
+                return ResultDto.FailureResult(HttpStatusCode.NotFound, $"Conversation with id {request.ConversationId} is not a group conversation.");
             }
 
             await _participantRepository.AddParticipantsToConversationAsync(users, conversation);

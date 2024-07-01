@@ -8,7 +8,8 @@ namespace Messenger.Infrastructure.Interfaces
         Task<IEnumerable<ParticipantInConversation>> GetParticipantsByConversationIdAsync(Guid conversationId);
         Task UpdateParticipantRoleAsync(Guid participantId, Role role);
         Task<ParticipantInConversation> GetParticipantFromConversationAsync(Guid userId, Guid conversationId);
+        Task<ParticipantInConversation> GetParticipantFromGroupConversationAsync(Guid userId, Guid conversationId);
         Task AddParticipantsToConversationAsync(IEnumerable<User> users, Conversation conversation);
-        Task<ParticipantInConversation> DeleteParticipantFromConversationAsync(Guid userId, Guid conversationId);
+        Task<ParticipantInConversation> DeleteParticipantFromGroupConversationAsync(Guid userId, Guid conversationId);
     }
 }

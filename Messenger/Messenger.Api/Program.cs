@@ -1,9 +1,11 @@
 ﻿using Messenger.Business.Extensions;
+using Messenger.Business.Options;
 using Messenger.Infrastructure.Context;
 using Messenger.Infrastructure.Entities;
 using Messenger.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -13,7 +15,6 @@ builder.Services.AddControllers();
 
 builder.Services.AddBusinessServices(builder.Configuration);
 builder.Services.AddInfrastructureServices(builder.Configuration);
-
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(opt =>
 {
@@ -47,6 +48,15 @@ var jwtConfig = builder.Configuration.GetSection("jwtConfig");
 
 var secretKey = jwtConfig["secret"];
 
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtConfig"));
+
+builder.Services.AddIdentity<User, UserRole>(options =>
+{
+    options.User.RequireUniqueEmail = true;
+
+}).AddEntityFrameworkStores<ApplicationContext>()
+    .AddDefaultTokenProviders();
+
 builder.Services.AddAuthentication(opt =>
 {
     opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -65,13 +75,6 @@ builder.Services.AddAuthentication(opt =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
     };
 });
-builder.Services.AddIdentity<User, UserRole>(options =>
-{
-    options.User.RequireUniqueEmail = true;
-
-}).AddEntityFrameworkStores<ApplicationContext>()
-    .AddDefaultTokenProviders();
-
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

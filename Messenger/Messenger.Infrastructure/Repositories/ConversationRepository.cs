@@ -15,7 +15,7 @@ namespace Messenger.Infrastructure.Repositories.Repositories
             _applicationContext = applicationContext;
         }
 
-        public async Task CreateGroupConversationAsync(string title, string imgUrl, Guid creatorId)
+        public async Task<Conversation> CreateGroupConversationAsync(string title, string imgUrl, Guid creatorId)
         {
             var group = new Group
             {
@@ -30,18 +30,21 @@ namespace Messenger.Infrastructure.Repositories.Repositories
             User userCreator = await _applicationContext.Users.FindAsync(creatorId);
 
             var participant = new ParticipantInConversation
-            { 
-                Conversation = conversation, 
+            {
+                Conversation = conversation,
                 JoinedAt = DateTime.UtcNow,
                 User = userCreator,
-                Role = Role.Admin 
+                Role = Role.Admin
             };
+            conversation.ParticipantsInConversation.Add(participant);
 
             await _applicationContext.Conversations.AddAsync(conversation);
 
             await _applicationContext.ParticipantsInConversation.AddAsync(participant);
 
             await _applicationContext.SaveChangesAsync();
+
+            return conversation;
         }
 
         public async Task CreateConversationWithUserAsync(User creatorUser, User user)
@@ -77,7 +80,7 @@ namespace Messenger.Infrastructure.Repositories.Repositories
         {
             Conversation conversation = await GetConversationByIdAsync(conversationId);
 
-            if(conversation == null)
+            if (conversation == null)
                 return null;
 
             Conversation deletedConversation = _applicationContext.Remove(conversation).Entity;
@@ -89,8 +92,11 @@ namespace Messenger.Infrastructure.Repositories.Repositories
 
         public async Task<Conversation> GetConversationByIdAsync(Guid conversationId)
         {
-            Conversation conversation = await _applicationContext.Conversations.Include(x=>x.Group)
-                .FirstOrDefaultAsync(x=>x.Id == conversationId);
+            Conversation conversation = await _applicationContext.Conversations
+                .Include(x => x.Group)
+                .Include(x => x.ParticipantsInConversation)
+                    .ThenInclude(x => x.User)
+                .FirstOrDefaultAsync(x => x.Id == conversationId);
 
             return conversation;
         }
@@ -110,6 +116,17 @@ namespace Messenger.Infrastructure.Repositories.Repositories
             return await _applicationContext.Conversations
                            .FirstOrDefaultAsync(x => x.ParticipantsInConversation.Any(x => x.User.Id == creatorUserId) &&
                            x.ParticipantsInConversation.Any(x => x.User.Id == userId) && x.Group == null);
+        }
+
+        public async Task<Conversation> GetGroupConversationByIdAsync(Guid conversationId)
+        {
+            Conversation conversation = await _applicationContext.Conversations
+                .Include(x => x.Group)
+                .Include(x => x.ParticipantsInConversation)
+                    .ThenInclude(x => x.User)
+                .FirstOrDefaultAsync(x => x.Id == conversationId && x.Group != null);
+
+            return conversation;
         }
     }
 }

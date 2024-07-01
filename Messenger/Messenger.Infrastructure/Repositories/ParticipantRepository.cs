@@ -22,24 +22,25 @@ namespace Messenger.Infrastructure.Repositories.Repositories
                 User = x,
                 JoinedAt = DateTime.UtcNow,
                 Conversation = conversation,
-                Role = Role.BasicUser,
+                Role = Role.Participant,
             });
 
             await _applicationContext.AddRangeAsync(participants);
             await _applicationContext.SaveChangesAsync();
         }
 
-        public async Task<ParticipantInConversation> DeleteParticipantFromConversationAsync(Guid userId,Guid conversationId)
+        public async Task<ParticipantInConversation> DeleteParticipantFromGroupConversationAsync(Guid userId, Guid conversationId)
         {
-            ParticipantInConversation participantInConversation = await GetParticipantFromConversationAsync(userId, conversationId);
+            ParticipantInConversation participantInConversation = await GetParticipantFromGroupConversationAsync(userId, conversationId);
 
-            if (participantInConversation == null) {
+            if (participantInConversation == null)
+            {
                 return null;
             }
 
             ParticipantInConversation deletedParticipantInConversation = _applicationContext.ParticipantsInConversation
                 .Remove(participantInConversation).Entity;
-            await _applicationContext.SaveChangesAsync();   
+            await _applicationContext.SaveChangesAsync();
 
             return deletedParticipantInConversation;
         }
@@ -56,19 +57,32 @@ namespace Messenger.Infrastructure.Repositories.Repositories
         public async Task<ParticipantInConversation> GetParticipantFromConversationAsync(Guid userId, Guid conversationId)
         {
             ParticipantInConversation participant = await _applicationContext.ParticipantsInConversation
-                .Include(x=>x.Conversation)
-                    .ThenInclude(x=>x.Group)
-                .FirstOrDefaultAsync(x => x.User.Id == userId && x.Conversation.Id == conversationId);     
+                .Include(x => x.Conversation)
+                    .ThenInclude(x => x.Group)
+                .Include(x => x.User)
+                .FirstOrDefaultAsync(x => x.User.Id == userId && x.Conversation.Id == conversationId);
 
             return participant;
         }
 
         public async Task UpdateParticipantRoleAsync(Guid participantId, Role role)
         {
-            ParticipantInConversation participant= await _applicationContext.ParticipantsInConversation.FindAsync(participantId);
-  
+            ParticipantInConversation participant = await _applicationContext.ParticipantsInConversation.FindAsync(participantId);
+
             participant.Role = role;
-            await _applicationContext.SaveChangesAsync();    
+            await _applicationContext.SaveChangesAsync();
+        }
+
+        public async Task<ParticipantInConversation> GetParticipantFromGroupConversationAsync(Guid userId, Guid conversationId)
+        {
+
+            ParticipantInConversation participant = await _applicationContext.ParticipantsInConversation
+                .Include(x => x.Conversation)
+                    .ThenInclude(x => x.Group)
+                .Include(x => x.User)
+                .FirstOrDefaultAsync(x => x.User.Id == userId && x.Conversation.Id == conversationId && x.Conversation.Group != null);
+
+            return participant;
         }
     }
 }

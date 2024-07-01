@@ -14,8 +14,6 @@ namespace Messenger.Business.Extensions
         {
             services.AddMediatR(typeof(GetConversationsByUserIdQueryHandler).Assembly);
 
-            services.Configure<JwtSettings>(configuration.GetSection("JwtConfig"));
-
             var mapperConfig = new MapperConfiguration(mc =>
             {
                 mc.AddProfile(new MappingProfile());

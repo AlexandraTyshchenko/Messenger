@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Messenger.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    [Migration("20240616161335_SeedingMigration")]
-    partial class SeedingMigration
+    [Migration("20240701075236_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -68,19 +68,11 @@ namespace Messenger.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("AttachmentUrl")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<Guid>("ConversationId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("IsSeen")
                         .HasColumnType("bit");
-
-                    b.Property<string>("MessageText")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("SenderId")
                         .HasColumnType("uniqueidentifier");
@@ -88,10 +80,16 @@ namespace Messenger.Infrastructure.Migrations
                     b.Property<DateTime>("SentAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ConversationId");
 
                     b.HasIndex("SenderId");
 
@@ -217,10 +215,10 @@ namespace Messenger.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("158da52e-b441-49b6-9c2b-f49016b48f58"),
+                            Id = new Guid("41da35f0-ffe5-470b-be8a-1a9382445179"),
                             AccessFailedCount = 0,
                             Bio = "Hello, I'm John.",
-                            ConcurrencyStamp = "627f84d1-2814-45f4-8b58-afb33b1558e6",
+                            ConcurrencyStamp = "4e63fefa-4041-4187-a49e-438a7c32b3aa",
                             Email = "john.doe@example.com",
                             EmailConfirmed = true,
                             FirstName = "John",
@@ -237,10 +235,10 @@ namespace Messenger.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("16d9c791-0848-421f-8bf0-96c16563fdcc"),
+                            Id = new Guid("43fb3ecf-0599-4598-9325-f6448d092589"),
                             AccessFailedCount = 0,
                             Bio = "Hi, I'm Jane.",
-                            ConcurrencyStamp = "71213803-5d22-47b3-a97e-4a48c90db428",
+                            ConcurrencyStamp = "362d4aea-0965-491b-b52b-5bf71ace929d",
                             Email = "jane.smith@example.com",
                             EmailConfirmed = true,
                             FirstName = "Jane",
@@ -257,10 +255,10 @@ namespace Messenger.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("0578f87f-80a0-42ac-838b-3e4ae82a31dc"),
+                            Id = new Guid("f36ef44e-c853-48e6-b66c-e2130081e94f"),
                             AccessFailedCount = 0,
                             Bio = "Hey, I'm Michael.",
-                            ConcurrencyStamp = "e23a2e1b-4ebb-428e-b7f3-f9263359bb66",
+                            ConcurrencyStamp = "c0dfbb1b-259d-4360-b533-12f53bb1b051",
                             Email = "michael.johnson@example.com",
                             EmailConfirmed = true,
                             FirstName = "Michael",
@@ -275,27 +273,6 @@ namespace Messenger.Infrastructure.Migrations
                             TwoFactorEnabled = false,
                             UserName = "michael.johnson"
                         });
-                });
-
-            modelBuilder.Entity("Messenger.Infrastructure.Entities.UserContact", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ContactId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ContactOwnerId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ContactId");
-
-                    b.HasIndex("ContactOwnerId");
-
-                    b.ToTable("UserContacts");
                 });
 
             modelBuilder.Entity("Messenger.Infrastructure.Entities.UserRole", b =>
@@ -324,20 +301,6 @@ namespace Messenger.Infrastructure.Migrations
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("AspNetRoles", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("7805a370-4064-4206-ae91-4fa0e690133d"),
-                            Name = "User",
-                            NormalizedName = "USER"
-                        },
-                        new
-                        {
-                            Id = new Guid("445a07b5-a530-422d-9e6c-c7316f0cc1ba"),
-                            Name = "Admin",
-                            NormalizedName = "ADMIN"
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
@@ -422,23 +385,6 @@ namespace Messenger.Infrastructure.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("AspNetUserRoles", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            UserId = new Guid("158da52e-b441-49b6-9c2b-f49016b48f58"),
-                            RoleId = new Guid("445a07b5-a530-422d-9e6c-c7316f0cc1ba")
-                        },
-                        new
-                        {
-                            UserId = new Guid("16d9c791-0848-421f-8bf0-96c16563fdcc"),
-                            RoleId = new Guid("7805a370-4064-4206-ae91-4fa0e690133d")
-                        },
-                        new
-                        {
-                            UserId = new Guid("0578f87f-80a0-42ac-838b-3e4ae82a31dc"),
-                            RoleId = new Guid("7805a370-4064-4206-ae91-4fa0e690133d")
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
@@ -474,8 +420,8 @@ namespace Messenger.Infrastructure.Migrations
                 {
                     b.HasOne("Messenger.Infrastructure.Entities.Conversation", "Conversation")
                         .WithMany("Messages")
-                        .HasForeignKey("SenderId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Messenger.Infrastructure.Entities.User", "Sender")
@@ -494,7 +440,7 @@ namespace Messenger.Infrastructure.Migrations
                     b.HasOne("Messenger.Infrastructure.Entities.Conversation", "Conversation")
                         .WithMany("ParticipantsInConversation")
                         .HasForeignKey("ConversationId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Messenger.Infrastructure.Entities.User", "User")
@@ -506,25 +452,6 @@ namespace Messenger.Infrastructure.Migrations
                     b.Navigation("Conversation");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Messenger.Infrastructure.Entities.UserContact", b =>
-                {
-                    b.HasOne("Messenger.Infrastructure.Entities.User", "Contact")
-                        .WithMany("Contacts")
-                        .HasForeignKey("ContactId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("Messenger.Infrastructure.Entities.User", "ContactOwner")
-                        .WithMany()
-                        .HasForeignKey("ContactOwnerId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("Contact");
-
-                    b.Navigation("ContactOwner");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
@@ -593,8 +520,6 @@ namespace Messenger.Infrastructure.Migrations
 
             modelBuilder.Entity("Messenger.Infrastructure.Entities.User", b =>
                 {
-                    b.Navigation("Contacts");
-
                     b.Navigation("Messages");
 
                     b.Navigation("ParticipantsInConversation");

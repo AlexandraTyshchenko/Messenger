@@ -30,7 +30,7 @@ namespace Messenger.Business.Commands
 
             if (existingConversation != null)
             {
-                return ResultDto.FailureResult(HttpStatusCode.Conflict, "conversation with this user already exists");
+                return ResultDto.FailureResult(HttpStatusCode.Conflict, "Conversation with this user already exists.");
             }
 
             User creatorUser = await _userRepository.GetUserByIdAsync(request.CreatorUserId);
@@ -39,7 +39,7 @@ namespace Messenger.Business.Commands
 
             if (user == null)
             {
-                return ResultDto.FailureResult(HttpStatusCode.NotFound, "user not found");
+                return ResultDto.FailureResult(HttpStatusCode.NotFound, "User was not found.");
             }
 
             await _conversationRepository.CreateConversationWithUserAsync(creatorUser, user);

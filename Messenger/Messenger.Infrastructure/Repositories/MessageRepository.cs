@@ -13,13 +13,11 @@ namespace Messenger.Infrastructure.Repositories.Repositories
             _applicationContext = applicationContext;
         }
 
-        public async Task<Message> AddMessageToConversationAsync(string messageText,
-            string attachmentUrl, Conversation conversation, User sender)
+        public async Task<Message> AddMessageToConversationAsync(string text, Conversation conversation, User sender)
         {
             var message = new Message
             {
-                MessageText = messageText,
-                AttachmentUrl = attachmentUrl,
+                Text = text,
                 SentAt = DateTime.UtcNow,
                 Sender = sender!,
                 Conversation = conversation
@@ -35,7 +33,7 @@ namespace Messenger.Infrastructure.Repositories.Repositories
         {
             Message message = await GetMessageByIdAsync(messageId);
 
-            if (message == null)
+            if (message is null)
             {
                 return null; 
             }

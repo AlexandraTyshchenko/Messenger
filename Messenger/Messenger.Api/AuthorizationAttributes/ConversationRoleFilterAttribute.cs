@@ -8,27 +8,25 @@ using System.Security.Claims;
 namespace Messenger.Api.AuthorizationAttributes
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
-    public class ParticipantInConversationAttribute : TypeFilterAttribute
+    public class ConversationRoleFilterAttribute : TypeFilterAttribute
     {
-        public ParticipantInConversationAttribute(bool isGroup = false, bool isAdmin = false)
-            : base(typeof(ParticipantInConversationFilter))
+        public ConversationRoleFilterAttribute(Role role)
+            : base(typeof(ConversationRoleFilterHandler))
         {
-            Arguments = new object[] { isGroup, isAdmin };
+            Arguments = new object[] { role };
         }
     }
 
-    public class ParticipantInConversationFilter : IAsyncAuthorizationFilter
+    public class ConversationRoleFilterHandler : IAsyncAuthorizationFilter
     {
-        private readonly bool _isGroup;
-        private readonly bool _isAdmin;
+        private readonly Role _role;
 
         private IParticipantRepository _participantRepository;
         private IConversationRepository _conversationRepository;
 
-        public ParticipantInConversationFilter(bool isGroup, bool isAdmin, IParticipantRepository participantRepository)
+        public ConversationRoleFilterHandler(Role role, IParticipantRepository participantRepository)
         {
-            _isGroup = isGroup;
-            _isAdmin = isAdmin;
+            _role = role;
             _participantRepository = participantRepository;
         }
 
@@ -41,7 +39,7 @@ namespace Messenger.Api.AuthorizationAttributes
 
             if (httpContext == null)
             {
-                context.Result = new JsonResult(new { message = "Internal Server Error" })
+                context.Result = new ObjectResult(new { message = "Internal Server Error" })
                 {
                     StatusCode = StatusCodes.Status500InternalServerError
                 };
@@ -51,7 +49,7 @@ namespace Messenger.Api.AuthorizationAttributes
             if (!httpContext.Request.RouteValues.TryGetValue("conversationId", out var conversationIdObj) ||
                 !Guid.TryParse(conversationIdObj?.ToString(), out var conversationId))
             {
-                context.Result = new JsonResult(new { message = "Conversation Id is null or invalid." })
+                context.Result = new ObjectResult(new { message = "Conversation Id is null or invalid." })
                 {
                     StatusCode = StatusCodes.Status401Unauthorized
                 };
@@ -65,7 +63,7 @@ namespace Messenger.Api.AuthorizationAttributes
 
             if (participantInConversation == null)
             {
-                context.Result = new JsonResult(new
+                context.Result = new ObjectResult(new
                 {
                     message = $"Participant with user id {userId}" +
                     $" wasn`t found in conversation with id {conversationId}."
@@ -76,21 +74,25 @@ namespace Messenger.Api.AuthorizationAttributes
                 return;
             }
 
-            if (_isGroup && participantInConversation.Conversation.Group == null)
+            if (_role == Role.Admin && participantInConversation.Role != Role.Admin)
             {
-                context.Result = new JsonResult(new { message = $"Conversation with id {conversationId} is not a group conversation." })
+                context.Result = new ObjectResult(new
+                {
+                    message = "Current user does not have " +
+                    "administrative privileges in this conversation."
+                })
                 {
                     StatusCode = StatusCodes.Status403Forbidden
                 };
                 return;
             }
 
-            if (_isAdmin && participantInConversation.Role != Role.Admin)
+            if (_role == Role.Participant && participantInConversation.User.Id != userId)
             {
-                context.Result = new JsonResult(new
+                context.Result = new ObjectResult(new
                 {
                     message = "Current user does not have " +
-                    "administrative privileges in this conversation."
+                    "privileges in this conversation."
                 })
                 {
                     StatusCode = StatusCodes.Status403Forbidden

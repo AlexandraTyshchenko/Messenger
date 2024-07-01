@@ -26,7 +26,7 @@ namespace Messenger.Business.Commands
 
             if (conversation == null)
             {
-                return ResultDto.FailureResult(HttpStatusCode.NotFound, $"Conversation with id {request.ConversationId} wasn`t found");
+                return ResultDto.FailureResult(HttpStatusCode.NotFound, $"Conversation with id {request.ConversationId} wasn`t found.");
             }
 
             return ResultDto.SuccessResult(HttpStatusCode.OK);

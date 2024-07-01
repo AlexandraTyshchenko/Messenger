@@ -4,15 +4,16 @@ using Messenger.Api.Extensions;
 using Messenger.Business.Commands;
 using Messenger.Business.Dtos;
 using Messenger.Business.Queries;
+using Messenger.Infrastructure.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Messenger.Api.Controllers
 {
+    [Authorize]
     [ApiController]
-    [Authorize(AuthenticationSchemes = "Bearer")]
-    [Route("api/Conversations/{conversationId}/[controller]")]
-    public class ParticipantsController : ControllerBase
+    [Route("api/conversations/{conversationId}/[controller]")]
+    public class ParticipantsController : BaseController
     {
         private readonly IMediator _mediator;
 
@@ -22,7 +23,7 @@ namespace Messenger.Api.Controllers
         }
 
         [HttpGet]
-        [ParticipantInConversation]
+        [ConversationRoleFilter(Role.Participant)]
         public async Task<IActionResult> GetParticipantsByConversationId([FromRoute] Guid conversationId)
         {
             ResultDto<IEnumerable<UserBasicInfoDto>> response = await _mediator.Send(new GetParticipantsByConversationIdQuery
@@ -33,8 +34,8 @@ namespace Messenger.Api.Controllers
             return response.ToHttpResponse<IEnumerable<UserBasicInfoDto>>();
         }
 
-        [HttpPost("AddParticipantToGroupConversation")]
-        [ParticipantInConversation(isGroup: true)]
+        [HttpPost]
+        [ConversationRoleFilter(Role.Participant)]
         public async Task<IActionResult> AddParticipantsToConversation([FromBody] Guid[] userIds, [FromRoute] Guid conversationId)
         {
             ResultDto response = await _mediator.Send(new AddParticipantToConversationCommand
@@ -46,15 +47,27 @@ namespace Messenger.Api.Controllers
             return response.ToHttpResponse();
         }
 
-        [HttpDelete("DeleteUserFromConversation/{userToDeleteId}")]
-        [ParticipantInConversation(isGroup: true)]
-        [PermissionsToManageParticipants]
-        public async Task<IActionResult> DeleteParticipantsFromConversation([FromRoute] Guid userToDeleteId,
+        [HttpDelete("{userId}")]
+        [ConversationRoleFilter(Role.Admin)]
+        public async Task<IActionResult> DeleteParticipantsFromConversation([FromRoute] Guid userId,
             [FromRoute] Guid conversationId)
         {
             ResultDto response = await _mediator.Send(new DeleteParticipantFromConversationCommand
             {
-                UserToDeleteId = userToDeleteId,
+                UserId = userId,
+                ConversationId = conversationId
+            });
+
+            return response.ToHttpResponse();
+        }
+
+        [HttpDelete]
+        [ConversationRoleFilter(Role.Participant)]
+        public async Task<IActionResult> LeaveConversation([FromRoute] Guid conversationId)
+        {
+            ResultDto response = await _mediator.Send(new DeleteParticipantFromConversationCommand
+            {
+                UserId = UserId,
                 ConversationId = conversationId
             });
 

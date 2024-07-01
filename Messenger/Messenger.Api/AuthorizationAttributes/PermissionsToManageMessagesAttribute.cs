@@ -21,7 +21,8 @@ namespace Messenger.Api.AuthorizationAttributes
         private readonly IMessageRepository _messageRepository;
         private readonly IParticipantRepository _participantRepository;
 
-        public PermissionsToManageMessagesHandler(IMessageRepository messageRepository, IParticipantRepository participantRepository)
+        public PermissionsToManageMessagesHandler(IMessageRepository messageRepository,
+            IParticipantRepository participantRepository)
         {
             _messageRepository = messageRepository;
             _participantRepository = participantRepository;
@@ -33,7 +34,7 @@ namespace Messenger.Api.AuthorizationAttributes
 
             if (httpContext == null)
             {
-                context.Result = new JsonResult(new { message = "Internal Server Error." })
+                context.Result = new ObjectResult(new { message = "Internal Server Error." })
                 {
                     StatusCode = StatusCodes.Status500InternalServerError
                 };
@@ -43,7 +44,7 @@ namespace Messenger.Api.AuthorizationAttributes
             if (!httpContext.Request.RouteValues.TryGetValue("messageId", out var messageIdObj) ||
                 !Guid.TryParse(messageIdObj?.ToString(), out var messageId))
             {
-                context.Result = new JsonResult(new { message = "Message ID is null or invalid." })
+                context.Result = new ObjectResult(new { message = "Message ID is null or invalid." })
                 {
                     StatusCode = StatusCodes.Status401Unauthorized
                 };
@@ -53,7 +54,7 @@ namespace Messenger.Api.AuthorizationAttributes
             if (!httpContext.Request.RouteValues.TryGetValue("conversationId", out var conversationIdObj) ||
               !Guid.TryParse(conversationIdObj?.ToString(), out var conversationId))
             {
-                context.Result = new JsonResult(new { message = "Conversation ID is null or invalid." })
+                context.Result = new ObjectResult(new { message = "Conversation ID is null or invalid." })
                 {
                     StatusCode = StatusCodes.Status401Unauthorized
                 };
@@ -66,7 +67,7 @@ namespace Messenger.Api.AuthorizationAttributes
 
             if (message == null)
             {
-                context.Result = new JsonResult(new { message = $"Conversation with id {messageId} wasn`t found." })
+                context.Result = new ObjectResult(new { message = $"Conversation with id {messageId} wasn`t found." })
                 {
                     StatusCode = StatusCodes.Status404NotFound
                 };
@@ -78,7 +79,7 @@ namespace Messenger.Api.AuthorizationAttributes
 
             if (participantInConversation == null)
             {
-                context.Result = new JsonResult(new
+                context.Result = new ObjectResult(new
                 {
                     participantInConversation = $"User wasn`t found in conversation."
                 })
@@ -90,7 +91,7 @@ namespace Messenger.Api.AuthorizationAttributes
 
             if (!(message.Sender.Id == userId || participantInConversation.Role == Role.Admin))
             {
-                context.Result = new JsonResult(new
+                context.Result = new ObjectResult(new
                 {
                     participantInConversation = $"User doesn`t have permissions to delete the message."
                 })

@@ -9,7 +9,7 @@ namespace Messenger.Business.Commands
 {
     public class DeleteParticipantFromConversationCommand : IRequest<ResultDto>
     {
-        public Guid UserToDeleteId { get; set; }
+        public Guid UserId { get; set; }
         public Guid ConversationId { get; set; }
     }
 
@@ -17,31 +17,35 @@ namespace Messenger.Business.Commands
         : IRequestHandler<DeleteParticipantFromConversationCommand, ResultDto>
     {
         private readonly IParticipantRepository _participantRepository;
+        private readonly IConversationRepository _conversationRepository;
 
-        public DeleteParticipantFromConversationCommandHandler(IParticipantRepository participantRepository)
+        public DeleteParticipantFromConversationCommandHandler(IParticipantRepository participantRepository, 
+            IConversationRepository conversationRepository)
         {
             _participantRepository = participantRepository;
+            _conversationRepository = conversationRepository;
         }
         public async Task<ResultDto> Handle(DeleteParticipantFromConversationCommand request, CancellationToken cancellationToken)
         {
+            Conversation conversation = await _conversationRepository.GetConversationByIdAsync(request.ConversationId);
+
             List<ParticipantInConversation> participants = (await _participantRepository
                 .GetParticipantsByConversationIdAsync(request.ConversationId))
                 .ToList();
 
-            int participantsCount = participants.Count();
-            if (participantsCount <= 1)
+            if (participants.Count() <= 1)
             {
                 return ResultDto.FailureResult(HttpStatusCode.BadRequest, "Cannot delete participant because" +
                     " it would leave the conversation with zero participants.");
             }
 
             ParticipantInConversation participantInConversation = await _participantRepository
-                .DeleteParticipantFromConversationAsync(request.UserToDeleteId,request.ConversationId);
+                .DeleteParticipantFromGroupConversationAsync(request.UserId, request.ConversationId);
 
             if (participantInConversation == null)
             {
-                return ResultDto.FailureResult(HttpStatusCode.NotFound, $"User with id {request.UserToDeleteId} wasn`t found " +
-                    $"in conversation with id {request.ConversationId}");
+                return ResultDto.FailureResult(HttpStatusCode.NotFound, $"User with id {request.UserId}" +
+                    $" wasn`t found in group conversation with id {request.ConversationId}.");
             }
 
             if (participantInConversation.Role == Role.Admin)

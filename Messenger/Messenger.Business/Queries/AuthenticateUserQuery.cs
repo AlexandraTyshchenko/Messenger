@@ -54,14 +54,14 @@ namespace Messenger.Business.Queries
             });
         }
 
-        public async Task<User> ValidateUserAsync(string userName, string password)
+        private async Task<User> ValidateUserAsync(string userName, string password)
         {
             var user = await _userManager.FindByNameAsync(userName);
             var result = user != null && await _userManager.CheckPasswordAsync(user, password);
             return user;
         }
 
-        public async Task<string> CreateTokenAsync(User user)
+        private async Task<string> CreateTokenAsync(User user)
         {
             var signingCredentials = GetSigningCredentials();
             var claims = await GetClaims(user);
@@ -69,7 +69,7 @@ namespace Messenger.Business.Queries
             return new JwtSecurityTokenHandler().WriteToken(tokenOptions);
         }
 
-        public string CreateRefreshToken()
+        private string CreateRefreshToken()
         {
             var signingCredentials = GetSigningCredentials();
             var tokenOptions = GenerateRefreshTokenOptions(signingCredentials);

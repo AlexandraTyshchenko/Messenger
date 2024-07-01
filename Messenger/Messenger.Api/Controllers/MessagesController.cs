@@ -4,18 +4,17 @@ using Messenger.Api.Extensions;
 using Messenger.Business.Commands;
 using Messenger.Business.Dtos;
 using Messenger.Business.Queries;
-using Messenger.Infrastructure.Entities;
+using Messenger.Infrastructure.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace Messenger.Api.Controllers
 {
+    [Authorize]
     [ApiController]
-    [Authorize(AuthenticationSchemes = "Bearer")]
     [Route("api/Conversations/{conversationId}/[controller]")]
-    [ParticipantInConversation]
-    public class MessagesController : ControllerBase
+    [ConversationRoleFilter(Role.Participant)]
+    public class MessagesController : BaseController
     {
         private readonly IMediator _mediator;
 
@@ -36,13 +35,11 @@ namespace Messenger.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> AddMessageToConversation([FromBody] MessageDto messageDto, [FromRoute] Guid conversationId)
         {
-            Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-
             ResultDto<MessageWithSenderDto> response = await _mediator.Send(new AddMessageToConversationCommand
             {
-                MessageDto = messageDto,
+                Message = messageDto,
                 ConversationId = conversationId,
-                SenderId = new Guid(userIdClaim.Value)
+                SenderId = UserId
             });
 
             return response.ToHttpResponse<MessageWithSenderDto>();

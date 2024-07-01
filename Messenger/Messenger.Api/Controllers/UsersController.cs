@@ -7,11 +7,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Messenger.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Authorize]
     [ApiController]
-
-    [Authorize(AuthenticationSchemes = "Bearer")]
-    public class UsersController : ControllerBase
+    [Route("api/[controller]")]
+    public class UsersController : BaseController
     {
         private readonly IMediator _mediatoR;
 

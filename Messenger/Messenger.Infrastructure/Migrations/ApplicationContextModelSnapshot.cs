@@ -65,25 +65,21 @@ namespace Messenger.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("AttachmentUrl")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<Guid>("ConversationId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("IsSeen")
                         .HasColumnType("bit");
 
-                    b.Property<string>("MessageText")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<Guid>("SenderId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("SentAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -216,10 +212,10 @@ namespace Messenger.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("ba2b49bd-daaa-4639-beb2-9e9af8001ad8"),
+                            Id = new Guid("41da35f0-ffe5-470b-be8a-1a9382445179"),
                             AccessFailedCount = 0,
                             Bio = "Hello, I'm John.",
-                            ConcurrencyStamp = "1b5439a5-81da-47e5-8026-8c97a9956562",
+                            ConcurrencyStamp = "4e63fefa-4041-4187-a49e-438a7c32b3aa",
                             Email = "john.doe@example.com",
                             EmailConfirmed = true,
                             FirstName = "John",
@@ -236,10 +232,10 @@ namespace Messenger.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("9757f8d4-8009-45fe-b153-3b51b75c964d"),
+                            Id = new Guid("43fb3ecf-0599-4598-9325-f6448d092589"),
                             AccessFailedCount = 0,
                             Bio = "Hi, I'm Jane.",
-                            ConcurrencyStamp = "cdee69ab-3258-4b16-8d23-547433125859",
+                            ConcurrencyStamp = "362d4aea-0965-491b-b52b-5bf71ace929d",
                             Email = "jane.smith@example.com",
                             EmailConfirmed = true,
                             FirstName = "Jane",
@@ -256,10 +252,10 @@ namespace Messenger.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("c03e9e37-d596-40d5-97f3-49eff170f9bc"),
+                            Id = new Guid("f36ef44e-c853-48e6-b66c-e2130081e94f"),
                             AccessFailedCount = 0,
                             Bio = "Hey, I'm Michael.",
-                            ConcurrencyStamp = "2ba9ff06-25ce-4256-8b13-96381605ba9a",
+                            ConcurrencyStamp = "c0dfbb1b-259d-4360-b533-12f53bb1b051",
                             Email = "michael.johnson@example.com",
                             EmailConfirmed = true,
                             FirstName = "Michael",
@@ -302,20 +298,6 @@ namespace Messenger.Infrastructure.Migrations
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("AspNetRoles", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("2ea6ccb8-a5d7-4890-a7a2-624e06709aa2"),
-                            Name = "User",
-                            NormalizedName = "USER"
-                        },
-                        new
-                        {
-                            Id = new Guid("91b9b5aa-0ae8-405e-ae6e-4c2df0206df8"),
-                            Name = "Admin",
-                            NormalizedName = "ADMIN"
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
@@ -400,23 +382,6 @@ namespace Messenger.Infrastructure.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("AspNetUserRoles", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            UserId = new Guid("ba2b49bd-daaa-4639-beb2-9e9af8001ad8"),
-                            RoleId = new Guid("91b9b5aa-0ae8-405e-ae6e-4c2df0206df8")
-                        },
-                        new
-                        {
-                            UserId = new Guid("9757f8d4-8009-45fe-b153-3b51b75c964d"),
-                            RoleId = new Guid("2ea6ccb8-a5d7-4890-a7a2-624e06709aa2")
-                        },
-                        new
-                        {
-                            UserId = new Guid("c03e9e37-d596-40d5-97f3-49eff170f9bc"),
-                            RoleId = new Guid("2ea6ccb8-a5d7-4890-a7a2-624e06709aa2")
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
