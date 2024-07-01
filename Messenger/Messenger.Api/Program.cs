@@ -1,4 +1,7 @@
-﻿using Messenger.Business.Extensions;
+﻿using FluentValidation;
+using Messenger.Api.Validators;
+using Messenger.Business.Dtos;
+using Messenger.Business.Extensions;
 using Messenger.Business.Options;
 using Messenger.Infrastructure.Context;
 using Messenger.Infrastructure.Entities;
@@ -12,7 +15,6 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
-
 builder.Services.AddBusinessServices(builder.Configuration);
 builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddEndpointsApiExplorer();
@@ -75,6 +77,9 @@ builder.Services.AddAuthentication(opt =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
     };
 });
+
+builder.Services.AddTransient<IValidator<UserRegistrationDto>, UserRegistrationDtoValidator>();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

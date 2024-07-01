@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using MediatR;
-using Messenger.Business.Options;
 using Messenger.Business.Profiles;
 using Messenger.Business.Queries;
 using Microsoft.Extensions.Configuration;
@@ -18,7 +17,6 @@ namespace Messenger.Business.Extensions
             {
                 mc.AddProfile(new MappingProfile());
             });
-
             IMapper mapper = mapperConfig.CreateMapper();
             services.AddSingleton(mapper);
             return services;
