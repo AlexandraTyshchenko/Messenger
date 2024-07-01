@@ -12,117 +12,116 @@ using System.Net;
 using System.Security.Claims;
 using System.Text;
 
-namespace Messenger.Business.Queries
+namespace Messenger.Business.Queries;
+
+public class AuthenticateUserQuery : IRequest<ResultDto<RefreshTokenDto>>
 {
-    public class AuthenticateUserQuery : IRequest<ResultDto<RefreshTokenDto>>
+    public UserLoginDto UserLogin { get; set; }
+}
+
+public class AuthenticateUserQueryHandler : IRequestHandler<AuthenticateUserQuery, ResultDto<RefreshTokenDto>>
+{
+    private readonly UserManager<User> _userManager;
+    private readonly JwtSettings _jwtSettings;
+    private readonly ApplicationContext _applicationContext;
+
+    public AuthenticateUserQueryHandler(UserManager<User> userManager,
+        IOptions<JwtSettings> jwtSettings,
+        ApplicationContext applicationContext)
     {
-        public UserLoginDto UserLogin { get; set; }
+        _userManager = userManager;
+        _jwtSettings = jwtSettings.Value;
+        _applicationContext = applicationContext;
     }
 
-    public class AuthenticateUserQueryHandler : IRequestHandler<AuthenticateUserQuery, ResultDto<RefreshTokenDto>>
+    public async Task<ResultDto<RefreshTokenDto>> Handle(AuthenticateUserQuery request, CancellationToken cancellationToken)
     {
-        private readonly UserManager<User> _userManager;
-        private readonly JwtSettings _jwtSettings;
-        private readonly ApplicationContext _applicationContext;
+        User user = await ValidateUserAsync(request.UserLogin.UserName, request.UserLogin.Password);
 
-        public AuthenticateUserQueryHandler(UserManager<User> userManager,
-            IOptions<JwtSettings> jwtSettings,
-            ApplicationContext applicationContext)
+        if (user == null)
         {
-            _userManager = userManager;
-            _jwtSettings = jwtSettings.Value;
-            _applicationContext = applicationContext;
+            return ResultDto<RefreshTokenDto>.FailureResult<RefreshTokenDto>(
+                HttpStatusCode.Unauthorized, "Invalid credentials.");
         }
 
-        public async Task<ResultDto<RefreshTokenDto>> Handle(AuthenticateUserQuery request, CancellationToken cancellationToken)
+        string token = await CreateTokenAsync(user);
+        string refreshToken = CreateRefreshToken();
+
+        return ResultDto<RefreshTokenDto>.SuccessResult(new RefreshTokenDto
         {
-            User user = await ValidateUserAsync(request.UserLogin.UserName, request.UserLogin.Password);
+            Token = token,
+            RefreshToken = refreshToken
+        });
+    }
 
-            if (user == null)
-            {
-                return ResultDto<RefreshTokenDto>.FailureResult<RefreshTokenDto>(
-                    HttpStatusCode.Unauthorized, "Invalid credentials.");
-            }
+    private async Task<User> ValidateUserAsync(string userName, string password)
+    {
+        var user = await _userManager.FindByNameAsync(userName);
+        var result = user != null && await _userManager.CheckPasswordAsync(user, password);
+        return user;
+    }
 
-            string token = await CreateTokenAsync(user);
-            string refreshToken = CreateRefreshToken();
+    private async Task<string> CreateTokenAsync(User user)
+    {
+        var signingCredentials = GetSigningCredentials();
+        var claims = await GetClaims(user);
+        var tokenOptions = GenerateTokenOptions(signingCredentials, claims);
+        return new JwtSecurityTokenHandler().WriteToken(tokenOptions);
+    }
 
-            return ResultDto<RefreshTokenDto>.SuccessResult(new RefreshTokenDto
-            {
-                Token = token,
-                RefreshToken = refreshToken
-            });
-        }
+    private string CreateRefreshToken()
+    {
+        var signingCredentials = GetSigningCredentials();
+        var tokenOptions = GenerateRefreshTokenOptions(signingCredentials);
+        return new JwtSecurityTokenHandler().WriteToken(tokenOptions);
+    }
 
-        private async Task<User> ValidateUserAsync(string userName, string password)
+    private JwtSecurityToken GenerateRefreshTokenOptions(SigningCredentials signingCredentials)
+    {
+        var tokenOptions = new JwtSecurityToken
+        (
+            issuer: _jwtSettings.ValidIssuer,
+            audience: _jwtSettings.ValidAudience,
+            claims: null,
+            expires: DateTime.Now.AddMinutes(_jwtSettings.RefreshTokenExpiresIn),
+            signingCredentials: signingCredentials
+        );
+        return tokenOptions;
+    }
+
+    private JwtSecurityToken GenerateTokenOptions(SigningCredentials signingCredentials, List<Claim> claims)
+    {
+        var tokenOptions = new JwtSecurityToken
+        (
+            issuer: _jwtSettings.ValidIssuer,
+            audience: _jwtSettings.ValidAudience,
+            claims: claims,
+            expires: DateTime.Now.AddMinutes(_jwtSettings.AccessTokenExpiresIn),
+            signingCredentials: signingCredentials
+        );
+        return tokenOptions;
+    }
+
+    private SigningCredentials GetSigningCredentials()
+    {
+        var key = Encoding.UTF8.GetBytes(_jwtSettings.Secret);
+        var secret = new SymmetricSecurityKey(key);
+        return new SigningCredentials(secret, SecurityAlgorithms.HmacSha256);
+    }
+
+    private async Task<List<Claim>> GetClaims(User user)
+    {
+        var claims = new List<Claim>
         {
-            var user = await _userManager.FindByNameAsync(userName);
-            var result = user != null && await _userManager.CheckPasswordAsync(user, password);
-            return user;
-        }
-
-        private async Task<string> CreateTokenAsync(User user)
+            new Claim(ClaimTypes.Name, user.UserName),
+            new Claim(ClaimTypes.Email, user.Email),
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
+        };
+        var roles = await _userManager.GetRolesAsync(user);
+        foreach (var role in roles)
         {
-            var signingCredentials = GetSigningCredentials();
-            var claims = await GetClaims(user);
-            var tokenOptions = GenerateTokenOptions(signingCredentials, claims);
-            return new JwtSecurityTokenHandler().WriteToken(tokenOptions);
+            claims.Add(new Claim(ClaimTypes.Role, role));
         }
-
-        private string CreateRefreshToken()
-        {
-            var signingCredentials = GetSigningCredentials();
-            var tokenOptions = GenerateRefreshTokenOptions(signingCredentials);
-            return new JwtSecurityTokenHandler().WriteToken(tokenOptions);
-        }
-
-        private JwtSecurityToken GenerateRefreshTokenOptions(SigningCredentials signingCredentials)
-        {
-            var tokenOptions = new JwtSecurityToken
-            (
-                issuer: _jwtSettings.ValidIssuer,
-                audience: _jwtSettings.ValidAudience,
-                claims: null,
-                expires: DateTime.Now.AddMinutes(_jwtSettings.RefreshTokenExpiresIn),
-                signingCredentials: signingCredentials
-            );
-            return tokenOptions;
-        }
-
-        private JwtSecurityToken GenerateTokenOptions(SigningCredentials signingCredentials, List<Claim> claims)
-        {
-            var tokenOptions = new JwtSecurityToken
-            (
-                issuer: _jwtSettings.ValidIssuer,
-                audience: _jwtSettings.ValidAudience,
-                claims: claims,
-                expires: DateTime.Now.AddMinutes(_jwtSettings.AccessTokenExpiresIn),
-                signingCredentials: signingCredentials
-            );
-            return tokenOptions;
-        }
-
-        private SigningCredentials GetSigningCredentials()
-        {
-            var key = Encoding.UTF8.GetBytes(_jwtSettings.Secret);
-            var secret = new SymmetricSecurityKey(key);
-            return new SigningCredentials(secret, SecurityAlgorithms.HmacSha256);
-        }
-
-        private async Task<List<Claim>> GetClaims(User user)
-        {
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, user.UserName),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
-            };
-            var roles = await _userManager.GetRolesAsync(user);
-            foreach (var role in roles)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, role));
-            }
-            return claims;
-        }
+        return claims;
     }
 }

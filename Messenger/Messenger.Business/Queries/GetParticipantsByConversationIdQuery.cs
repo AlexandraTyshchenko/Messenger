@@ -1,35 +1,38 @@
 ﻿using AutoMapper;
 using MediatR;
 using Messenger.Business.Dtos;
+using Messenger.Infrastructure;
 using Messenger.Infrastructure.Entities;
 using Messenger.Infrastructure.Interfaces;
 using System.Net;
 
-namespace Messenger.Business.Queries
+namespace Messenger.Business.Queries;
+
+public class GetParticipantsByConversationIdQuery :IRequest<ResultDto<IEnumerable<UserBasicInfoDto>>>
 {
-    public class GetParticipantsByConversationIdQuery :IRequest<ResultDto<IEnumerable<UserBasicInfoDto>>>
+    public Guid ConversationId { get; set; }
+}
+
+public class GetParticipantsByConversationIdHandler : IRequestHandler<GetParticipantsByConversationIdQuery,
+    ResultDto<IEnumerable<UserBasicInfoDto>>>
+{
+    private readonly IMapper _mapper;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public GetParticipantsByConversationIdHandler(IUnitOfWork unitOfWork, IMapper mapper)
     {
-        public Guid ConversationId { get; set; }
+        _unitOfWork = unitOfWork;
+        _mapper = mapper;
     }
-    public class GetParticipantsByConversationIdHandler : IRequestHandler<GetParticipantsByConversationIdQuery,
-        ResultDto<IEnumerable<UserBasicInfoDto>>>
+
+    public async Task<ResultDto<IEnumerable<UserBasicInfoDto>>> Handle(GetParticipantsByConversationIdQuery request,
+        CancellationToken cancellationToken)
     {
-        private readonly IMapper _mapper;
-        private readonly IParticipantRepository _participantRepository;
-        public GetParticipantsByConversationIdHandler(IParticipantRepository participantRepository, IMapper mapper)
-        {
-            _mapper = mapper;
-            _participantRepository = participantRepository;
-        }
+        IEnumerable<User> usersInConversation = (await _unitOfWork.Participants
+            .GetParticipantsByConversationIdAsync(request.ConversationId)).Select(x=>x.User).ToList();
 
-        public async Task<ResultDto<IEnumerable<UserBasicInfoDto>>> Handle(GetParticipantsByConversationIdQuery request,
-            CancellationToken cancellationToken)
-        {
-            IEnumerable<User> usersInConversation = (await _participantRepository
-                .GetParticipantsByConversationIdAsync(request.ConversationId)).Select(x=>x.User).ToList();
-            var mappedParticipants = _mapper.Map<IEnumerable<UserBasicInfoDto>>(usersInConversation);
+        var mappedParticipants = _mapper.Map<IEnumerable<UserBasicInfoDto>>(usersInConversation);
 
-            return ResultDto<IEnumerable<UserBasicInfoDto>>.SuccessResult(mappedParticipants, HttpStatusCode.OK);
-        }
+        return ResultDto<IEnumerable<UserBasicInfoDto>>.SuccessResult(mappedParticipants, HttpStatusCode.OK);
     }
 }

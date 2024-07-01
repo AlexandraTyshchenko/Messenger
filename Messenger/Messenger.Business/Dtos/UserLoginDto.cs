@@ -1,13 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Messenger.Business.Dtos
-{
-    public class UserLoginDto
-    {
-        [Required(ErrorMessage = "Username is required")]
-        public string? UserName { get; init; }
+namespace Messenger.Business.Dtos;
 
-        [Required(ErrorMessage = "Password is required")]
-        public string? Password { get; init; }
-    }
+public class UserLoginDto
+{
+    [Required(ErrorMessage = "Username is required")]
+    public string? UserName { get; init; }
+
+    [Required(ErrorMessage = "Password is required")]
+    public string? Password { get; init; }
 }

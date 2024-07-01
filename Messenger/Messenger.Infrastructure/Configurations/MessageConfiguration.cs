@@ -2,25 +2,24 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Messenger.Infrastructure.Configurations
+namespace Messenger.Infrastructure.Configurations;
+
+public class MessageConfiguration : IEntityTypeConfiguration<Message>
 {
-    public class MessageConfiguration : IEntityTypeConfiguration<Message>
+    public void Configure(EntityTypeBuilder<Message> builder)
     {
-        public void Configure(EntityTypeBuilder<Message> builder)
-        {
-            builder.Property<Guid>("SenderId");
+        builder.Property<Guid>("SenderId");
 
-            builder.HasOne(m => m.Sender)
-                .WithMany(c => c.Messages)
-                .HasForeignKey("SenderId")
-                .OnDelete(DeleteBehavior.NoAction);
+        builder.HasOne(m => m.Sender)
+            .WithMany(c => c.Messages)
+            .HasForeignKey("SenderId")
+            .OnDelete(DeleteBehavior.NoAction);
 
-            builder.Property<Guid>("ConversationId");
+        builder.Property<Guid>("ConversationId");
 
-            builder.HasOne(m => m.Conversation)
-                .WithMany(c => c.Messages)
-                .HasForeignKey("ConversationId")
-                .OnDelete(DeleteBehavior.Cascade);
-        }
+        builder.HasOne(m => m.Conversation)
+            .WithMany(c => c.Messages)
+            .HasForeignKey("ConversationId")
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

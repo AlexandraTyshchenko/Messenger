@@ -1,8 +1,7 @@
-﻿namespace Messenger.Infrastructure.Enums
+﻿namespace Messenger.Infrastructure.Enums;
+
+public enum Role
 {
-    public enum Role
-    {
-        Participant,
-        Admin
-    }
+    Participant,
+    Admin
 }

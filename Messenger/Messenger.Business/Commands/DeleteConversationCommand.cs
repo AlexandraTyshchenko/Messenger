@@ -1,35 +1,36 @@
 ﻿using MediatR;
 using Messenger.Business.Dtos;
+using Messenger.Infrastructure;
 using Messenger.Infrastructure.Entities;
-using Messenger.Infrastructure.Interfaces;
 using System.Net;
 
-namespace Messenger.Business.Commands
+namespace Messenger.Business.Commands;
+
+public class DeleteConversationCommand : IRequest<ResultDto>
 {
-    public class DeleteConversationCommand : IRequest<ResultDto>
+    public Guid ConversationId { get; set; }
+}
+
+public class DeleteConversationHandler : IRequestHandler<DeleteConversationCommand, ResultDto>
+{
+    private readonly IUnitOfWork _unitOfWork;
+
+    public DeleteConversationHandler(IUnitOfWork unitOfWork)
     {
-        public Guid ConversationId { get; set; }
+        _unitOfWork = unitOfWork;
     }
 
-    public class DeleteConversationHandler : IRequestHandler<DeleteConversationCommand, ResultDto>
+    public async Task<ResultDto> Handle(DeleteConversationCommand request, CancellationToken cancellationToken)
     {
-        private readonly IConversationRepository _conversationRepository;
+        Conversation conversation = await _unitOfWork.Conversations.DeleteConversationAsync(request.ConversationId);
 
-        public DeleteConversationHandler(IConversationRepository conversationRepository)
+        if (conversation == null)
         {
-            _conversationRepository = conversationRepository;
+            return ResultDto.FailureResult(HttpStatusCode.NotFound, $"Conversation with id {request.ConversationId} wasn't found.");
         }
 
-        public async Task<ResultDto> Handle(DeleteConversationCommand request, CancellationToken cancellationToken)
-        {
-            Conversation conversation =  await _conversationRepository.DeleteConversationAsync(request.ConversationId);
+        await _unitOfWork.SaveChangesAsync();
 
-            if (conversation == null)
-            {
-                return ResultDto.FailureResult(HttpStatusCode.NotFound, $"Conversation with id {request.ConversationId} wasn`t found.");
-            }
-
-            return ResultDto.SuccessResult(HttpStatusCode.OK);
-        }
+        return ResultDto.SuccessResult(HttpStatusCode.OK);
     }
 }

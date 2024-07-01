@@ -4,129 +4,128 @@ using Messenger.Infrastructure.Enums;
 using Messenger.Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace Messenger.Infrastructure.Repositories.Repositories
+namespace Messenger.Infrastructure.Repositories.Repositories;
+
+public class ConversationRepository : IConversationRepository
 {
-    public class ConversationRepository : IConversationRepository
+    private readonly ApplicationContext _applicationContext;
+
+    public ConversationRepository(ApplicationContext applicationContext)
     {
-        private readonly ApplicationContext _applicationContext;
+        _applicationContext = applicationContext;
+    }
 
-        public ConversationRepository(ApplicationContext applicationContext)
+    public async Task<Conversation> CreateGroupConversationAsync(string title, string imgUrl, Guid creatorId)
+    {
+        var group = new Group
         {
-            _applicationContext = applicationContext;
-        }
+            Title = title,
+            ImgUrl = imgUrl
+        };
 
-        public async Task<Conversation> CreateGroupConversationAsync(string title, string imgUrl, Guid creatorId)
+        await _applicationContext.Groups.AddAsync(group);
+
+        var conversation = new Conversation { Group = group };
+
+        User userCreator = await _applicationContext.Users.FindAsync(creatorId);
+
+        var participant = new ParticipantInConversation
         {
-            var group = new Group
-            {
-                Title = title,
-                ImgUrl = imgUrl
-            };
+            Conversation = conversation,
+            JoinedAt = DateTime.UtcNow,
+            User = userCreator,
+            Role = Role.Admin
+        };
+        conversation.ParticipantsInConversation.Add(participant);
 
-            await _applicationContext.Groups.AddAsync(group);
+        await _applicationContext.Conversations.AddAsync(conversation);
 
-            var conversation = new Conversation { Group = group };
+        await _applicationContext.ParticipantsInConversation.AddAsync(participant);
 
-            User userCreator = await _applicationContext.Users.FindAsync(creatorId);
+        await _applicationContext.SaveChangesAsync();
 
-            var participant = new ParticipantInConversation
-            {
-                Conversation = conversation,
-                JoinedAt = DateTime.UtcNow,
-                User = userCreator,
-                Role = Role.Admin
-            };
-            conversation.ParticipantsInConversation.Add(participant);
+        return conversation;
+    }
 
-            await _applicationContext.Conversations.AddAsync(conversation);
+    public async Task CreateConversationWithUserAsync(User creatorUser, User user)
+    {
+        var conversation = new Conversation();
 
-            await _applicationContext.ParticipantsInConversation.AddAsync(participant);
+        await _applicationContext.Conversations.AddAsync(conversation);
 
-            await _applicationContext.SaveChangesAsync();
-
-            return conversation;
-        }
-
-        public async Task CreateConversationWithUserAsync(User creatorUser, User user)
+        var participantCreatorUser = new ParticipantInConversation
         {
-            var conversation = new Conversation();
+            JoinedAt = DateTime.UtcNow,
+            User = creatorUser,
+            Conversation = conversation,
+            Role = Role.Admin
+        };
 
-            await _applicationContext.Conversations.AddAsync(conversation);
-
-            var participantCreatorUser = new ParticipantInConversation
-            {
-                JoinedAt = DateTime.UtcNow,
-                User = creatorUser,
-                Conversation = conversation,
-                Role = Role.Admin
-            };
-
-            var participantUser = new ParticipantInConversation
-            {
-                JoinedAt = DateTime.UtcNow,
-                User = user,
-                Conversation = conversation,
-                Role = Role.Admin
-            };
-
-            await _applicationContext.ParticipantsInConversation.AddAsync(participantCreatorUser);
-
-            await _applicationContext.ParticipantsInConversation.AddAsync(participantUser);
-
-            await _applicationContext.SaveChangesAsync();
-        }
-
-        public async Task<Conversation> DeleteConversationAsync(Guid conversationId)
+        var participantUser = new ParticipantInConversation
         {
-            Conversation conversation = await GetConversationByIdAsync(conversationId);
+            JoinedAt = DateTime.UtcNow,
+            User = user,
+            Conversation = conversation,
+            Role = Role.Admin
+        };
 
-            if (conversation == null)
-                return null;
+        await _applicationContext.ParticipantsInConversation.AddAsync(participantCreatorUser);
 
-            Conversation deletedConversation = _applicationContext.Remove(conversation).Entity;
+        await _applicationContext.ParticipantsInConversation.AddAsync(participantUser);
 
-            await _applicationContext.SaveChangesAsync();
+        await _applicationContext.SaveChangesAsync();
+    }
 
-            return deletedConversation;
-        }
+    public async Task<Conversation> DeleteConversationAsync(Guid conversationId)
+    {
+        Conversation conversation = await GetConversationByIdAsync(conversationId);
 
-        public async Task<Conversation> GetConversationByIdAsync(Guid conversationId)
-        {
-            Conversation conversation = await _applicationContext.Conversations
-                .Include(x => x.Group)
-                .Include(x => x.ParticipantsInConversation)
-                    .ThenInclude(x => x.User)
-                .FirstOrDefaultAsync(x => x.Id == conversationId);
+        if (conversation == null)
+            return null;
 
-            return conversation;
-        }
+        Conversation deletedConversation = _applicationContext.Remove(conversation).Entity;
 
-        public async Task<IEnumerable<Conversation>> GetConversationsByUserIdAsync(Guid userId)
-        {
-            return await _applicationContext.Conversations
-                 .Where(x => x.ParticipantsInConversation.Any(x => x.User.Id == userId))
-                 .Include(x => x.Group)
-                 .Include(x => x.Messages)
-                     .ThenInclude(x => x.Sender)
-                 .ToListAsync();
-        }
+        await _applicationContext.SaveChangesAsync();
 
-        public async Task<Conversation> GetPrivateConversationWithUserAsync(Guid creatorUserId, Guid userId)
-        {
-            return await _applicationContext.Conversations
-                           .FirstOrDefaultAsync(x => x.ParticipantsInConversation.Any(x => x.User.Id == creatorUserId) &&
-                           x.ParticipantsInConversation.Any(x => x.User.Id == userId) && x.Group == null);
-        }
+        return deletedConversation;
+    }
 
-        public async Task<Conversation> GetGroupConversationByIdAsync(Guid conversationId)
-        {
-            Conversation conversation = await _applicationContext.Conversations
-                .Include(x => x.Group)
-                .Include(x => x.ParticipantsInConversation)
-                    .ThenInclude(x => x.User)
-                .FirstOrDefaultAsync(x => x.Id == conversationId && x.Group != null);
+    public async Task<Conversation> GetConversationByIdAsync(Guid conversationId)
+    {
+        Conversation conversation = await _applicationContext.Conversations
+            .Include(x => x.Group)
+            .Include(x => x.ParticipantsInConversation)
+                .ThenInclude(x => x.User)
+            .FirstOrDefaultAsync(x => x.Id == conversationId);
 
-            return conversation;
-        }
+        return conversation;
+    }
+
+    public async Task<IEnumerable<Conversation>> GetConversationsByUserIdAsync(Guid userId)
+    {
+        return await _applicationContext.Conversations
+             .Where(x => x.ParticipantsInConversation.Any(x => x.User.Id == userId))
+             .Include(x => x.Group)
+             .Include(x => x.Messages)
+                 .ThenInclude(x => x.Sender)
+             .ToListAsync();
+    }
+
+    public async Task<Conversation> GetPrivateConversationWithUserAsync(Guid creatorUserId, Guid userId)
+    {
+        return await _applicationContext.Conversations
+                       .FirstOrDefaultAsync(x => x.ParticipantsInConversation.Any(x => x.User.Id == creatorUserId) &&
+                       x.ParticipantsInConversation.Any(x => x.User.Id == userId) && x.Group == null);
+    }
+
+    public async Task<Conversation> GetGroupConversationByIdAsync(Guid conversationId)
+    {
+        Conversation conversation = await _applicationContext.Conversations
+            .Include(x => x.Group)
+            .Include(x => x.ParticipantsInConversation)
+                .ThenInclude(x => x.User)
+            .FirstOrDefaultAsync(x => x.Id == conversationId && x.Group != null);
+
+        return conversation;
     }
 }

@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using Messenger.Business.Dtos;
+using Messenger.Infrastructure;
 using Messenger.Infrastructure.Entities;
-using Messenger.Infrastructure.Interfaces;
 using System.Net;
 
 namespace Messenger.Business.Commands;
@@ -13,21 +13,23 @@ public class DeleteMessageCommand : IRequest<ResultDto>
 
 public class DeleteMessageCommandHandler : IRequestHandler<DeleteMessageCommand, ResultDto>
 {
-    private readonly IMessageRepository _messageRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public DeleteMessageCommandHandler(IMessageRepository messageRepository)
+    public DeleteMessageCommandHandler(IUnitOfWork unitOfWork)
     {
-        _messageRepository = messageRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<ResultDto> Handle(DeleteMessageCommand request, CancellationToken cancellationToken)
     {
-        Message message = await _messageRepository.DeleteMessageAsync(request.MessageId);
+        Message message = await _unitOfWork.Messages.DeleteMessageAsync(request.MessageId);
 
         if (message == null)
         {
-            return ResultDto.FailureResult(HttpStatusCode.NotFound, $"Message with id {request.MessageId} wasn`t found.");
+            return ResultDto.FailureResult(HttpStatusCode.NotFound, $"Message with id {request.MessageId} wasn't found.");
         }
+
+        await _unitOfWork.SaveChangesAsync();
 
         return ResultDto.SuccessResult(HttpStatusCode.OK);
     }

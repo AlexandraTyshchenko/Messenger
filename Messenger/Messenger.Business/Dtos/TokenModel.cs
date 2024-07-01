@@ -1,8 +1,7 @@
-﻿namespace Messenger.Business.Dtos
+﻿namespace Messenger.Business.Dtos;
+
+public class TokenModel
 {
-    public class TokenModel
-    {
-        public string? AccessToken { get; set; }
-        public string? RefreshToken { get; set; }
-    }
+    public string? AccessToken { get; set; }
+    public string? RefreshToken { get; set; }
 }

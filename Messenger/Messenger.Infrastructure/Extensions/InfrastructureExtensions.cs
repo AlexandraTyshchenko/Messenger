@@ -6,22 +6,22 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Messenger.Infrastructure.Extensions
+namespace Messenger.Infrastructure.Extensions;
+
+public static class InfrastructureExtensions
 {
-    public static class InfrastructureExtensions
+    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
-        public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
-        {
-            string connectionString = configuration.GetConnectionString("DefaultConnection")!;
+        string connectionString = configuration.GetConnectionString("DefaultConnection")!;
 
-            services.AddDbContext<ApplicationContext>(options =>
-                options.UseSqlServer(connectionString));
+        services.AddDbContext<ApplicationContext>(options =>
+            options.UseSqlServer(connectionString));
 
-            services.AddScoped<IConversationRepository, ConversationRepository>();
-            services.AddScoped<IMessageRepository, MessageRepository>();
-            services.AddScoped<IParticipantRepository, ParticipantRepository>();
-            services.AddScoped<IUserRepository, UserRepository>();
-            return services;
-        }
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<IConversationRepository, ConversationRepository>();
+        services.AddScoped<IMessageRepository, MessageRepository>();
+        services.AddScoped<IParticipantRepository, ParticipantRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
+        return services;
     }
 }

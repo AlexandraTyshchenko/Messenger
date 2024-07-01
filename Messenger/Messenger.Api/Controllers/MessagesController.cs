@@ -8,50 +8,49 @@ using Messenger.Infrastructure.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Messenger.Api.Controllers
+namespace Messenger.Api.Controllers;
+
+[Authorize]
+[ApiController]
+[Route("api/Conversations/{conversationId}/[controller]")]
+[ConversationRoleFilter(Role.Participant)]
+public class MessagesController : BaseController
 {
-    [Authorize]
-    [ApiController]
-    [Route("api/Conversations/{conversationId}/[controller]")]
-    [ConversationRoleFilter(Role.Participant)]
-    public class MessagesController : BaseController
+    private readonly IMediator _mediator;
+
+    public MessagesController(IMediator mediator)
     {
-        private readonly IMediator _mediator;
+        _mediator = mediator;
+    }
 
-        public MessagesController(IMediator mediator)
+    [HttpGet]
+    public async Task<IActionResult> GetMessagesByConversationId([FromRoute] Guid conversationId)
+    {
+        ResultDto<IEnumerable<MessageWithSenderDto>> response = await _mediator
+            .Send(new GetMessagesByConversationIdQuery { ConversationId = conversationId });
+
+        return response.ToHttpResponse<IEnumerable<MessageWithSenderDto>>();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AddMessageToConversation([FromBody] MessageDto messageDto, [FromRoute] Guid conversationId)
+    {
+        ResultDto<MessageWithSenderDto> response = await _mediator.Send(new AddMessageToConversationCommand
         {
-            _mediator = mediator;
-        }
+            Message = messageDto,
+            ConversationId = conversationId,
+            SenderId = UserId
+        });
 
-        [HttpGet]
-        public async Task<IActionResult> GetMessagesByConversationId([FromRoute] Guid conversationId)
-        {
-            ResultDto<IEnumerable<MessageWithSenderDto>> response = await _mediator
-                .Send(new GetMessagesByConversationIdQuery { ConversationId = conversationId });
+        return response.ToHttpResponse<MessageWithSenderDto>();
+    }
 
-            return response.ToHttpResponse<IEnumerable<MessageWithSenderDto>>();
-        }
+    [HttpDelete("{messageId}")]
+    [PermissionsToManageMessages]
+    public async Task<IActionResult> DeleteMessageFromConversation([FromRoute] Guid messageId)
+    {
+        ResultDto response = await _mediator.Send(new DeleteMessageCommand { MessageId = messageId });
 
-        [HttpPost]
-        public async Task<IActionResult> AddMessageToConversation([FromBody] MessageDto messageDto, [FromRoute] Guid conversationId)
-        {
-            ResultDto<MessageWithSenderDto> response = await _mediator.Send(new AddMessageToConversationCommand
-            {
-                Message = messageDto,
-                ConversationId = conversationId,
-                SenderId = UserId
-            });
-
-            return response.ToHttpResponse<MessageWithSenderDto>();
-        }
-
-        [HttpDelete("{messageId}")]
-        [PermissionsToManageMessages]
-        public async Task<IActionResult> DeleteMessageFromConversation([FromRoute] Guid messageId)
-        {
-            ResultDto response = await _mediator.Send(new DeleteMessageCommand { MessageId = messageId });
-
-            return response.ToHttpResponse();
-        }
+        return response.ToHttpResponse();
     }
 }

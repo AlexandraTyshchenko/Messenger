@@ -4,85 +4,84 @@ using Messenger.Infrastructure.Enums;
 using Messenger.Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace Messenger.Infrastructure.Repositories.Repositories
+namespace Messenger.Infrastructure.Repositories.Repositories;
+
+public class ParticipantRepository : IParticipantRepository
 {
-    public class ParticipantRepository : IParticipantRepository
+    private readonly ApplicationContext _applicationContext;
+
+    public ParticipantRepository(ApplicationContext applicationContext)
     {
-        private readonly ApplicationContext _applicationContext;
+        _applicationContext = applicationContext;
+    }
 
-        public ParticipantRepository(ApplicationContext applicationContext)
+    public async Task AddParticipantsToConversationAsync(IEnumerable<User> users, Conversation conversation)
+    {
+        IEnumerable<ParticipantInConversation> participants = users.Select(x => new ParticipantInConversation
         {
-            _applicationContext = applicationContext;
+            User = x,
+            JoinedAt = DateTime.UtcNow,
+            Conversation = conversation,
+            Role = Role.Participant,
+        });
+
+        await _applicationContext.AddRangeAsync(participants);
+        await _applicationContext.SaveChangesAsync();
+    }
+
+    public async Task<ParticipantInConversation> DeleteParticipantFromGroupConversationAsync(Guid userId, Guid conversationId)
+    {
+        ParticipantInConversation participantInConversation = await GetParticipantFromGroupConversationAsync(userId, conversationId);
+
+        if (participantInConversation == null)
+        {
+            return null;
         }
 
-        public async Task AddParticipantsToConversationAsync(IEnumerable<User> users, Conversation conversation)
-        {
-            IEnumerable<ParticipantInConversation> participants = users.Select(x => new ParticipantInConversation
-            {
-                User = x,
-                JoinedAt = DateTime.UtcNow,
-                Conversation = conversation,
-                Role = Role.Participant,
-            });
+        ParticipantInConversation deletedParticipantInConversation = _applicationContext.ParticipantsInConversation
+            .Remove(participantInConversation).Entity;
+        await _applicationContext.SaveChangesAsync();
 
-            await _applicationContext.AddRangeAsync(participants);
-            await _applicationContext.SaveChangesAsync();
-        }
-
-        public async Task<ParticipantInConversation> DeleteParticipantFromGroupConversationAsync(Guid userId, Guid conversationId)
-        {
-            ParticipantInConversation participantInConversation = await GetParticipantFromGroupConversationAsync(userId, conversationId);
-
-            if (participantInConversation == null)
-            {
-                return null;
-            }
-
-            ParticipantInConversation deletedParticipantInConversation = _applicationContext.ParticipantsInConversation
-                .Remove(participantInConversation).Entity;
-            await _applicationContext.SaveChangesAsync();
-
-            return deletedParticipantInConversation;
-        }
+        return deletedParticipantInConversation;
+    }
 
 
-        public async Task<IEnumerable<ParticipantInConversation>> GetParticipantsByConversationIdAsync(Guid conversationId)
-        {
-            return await _applicationContext.ParticipantsInConversation
-                .Where(x => x.Conversation.Id == conversationId)
-                .Include(x => x.User)
-                .ToListAsync();
-        }
+    public async Task<IEnumerable<ParticipantInConversation>> GetParticipantsByConversationIdAsync(Guid conversationId)
+    {
+        return await _applicationContext.ParticipantsInConversation
+            .Where(x => x.Conversation.Id == conversationId)
+            .Include(x => x.User)
+            .ToListAsync();
+    }
 
-        public async Task<ParticipantInConversation> GetParticipantFromConversationAsync(Guid userId, Guid conversationId)
-        {
-            ParticipantInConversation participant = await _applicationContext.ParticipantsInConversation
-                .Include(x => x.Conversation)
-                    .ThenInclude(x => x.Group)
-                .Include(x => x.User)
-                .FirstOrDefaultAsync(x => x.User.Id == userId && x.Conversation.Id == conversationId);
+    public async Task<ParticipantInConversation> GetParticipantFromConversationAsync(Guid userId, Guid conversationId)
+    {
+        ParticipantInConversation participant = await _applicationContext.ParticipantsInConversation
+            .Include(x => x.Conversation)
+                .ThenInclude(x => x.Group)
+            .Include(x => x.User)
+            .FirstOrDefaultAsync(x => x.User.Id == userId && x.Conversation.Id == conversationId);
 
-            return participant;
-        }
+        return participant;
+    }
 
-        public async Task UpdateParticipantRoleAsync(Guid participantId, Role role)
-        {
-            ParticipantInConversation participant = await _applicationContext.ParticipantsInConversation.FindAsync(participantId);
+    public async Task UpdateParticipantRoleAsync(Guid participantId, Role role)
+    {
+        ParticipantInConversation participant = await _applicationContext.ParticipantsInConversation.FindAsync(participantId);
 
-            participant.Role = role;
-            await _applicationContext.SaveChangesAsync();
-        }
+        participant.Role = role;
+        await _applicationContext.SaveChangesAsync();
+    }
 
-        public async Task<ParticipantInConversation> GetParticipantFromGroupConversationAsync(Guid userId, Guid conversationId)
-        {
+    public async Task<ParticipantInConversation> GetParticipantFromGroupConversationAsync(Guid userId, Guid conversationId)
+    {
 
-            ParticipantInConversation participant = await _applicationContext.ParticipantsInConversation
-                .Include(x => x.Conversation)
-                    .ThenInclude(x => x.Group)
-                .Include(x => x.User)
-                .FirstOrDefaultAsync(x => x.User.Id == userId && x.Conversation.Id == conversationId && x.Conversation.Group != null);
+        ParticipantInConversation participant = await _applicationContext.ParticipantsInConversation
+            .Include(x => x.Conversation)
+                .ThenInclude(x => x.Group)
+            .Include(x => x.User)
+            .FirstOrDefaultAsync(x => x.User.Id == userId && x.Conversation.Id == conversationId && x.Conversation.Group != null);
 
-            return participant;
-        }
+        return participant;
     }
 }

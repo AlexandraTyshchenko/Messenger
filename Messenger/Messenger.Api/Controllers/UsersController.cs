@@ -5,29 +5,28 @@ using Messenger.Business.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Messenger.Api.Controllers
+namespace Messenger.Api.Controllers;
+
+[Authorize]
+[ApiController]
+[Route("api/[controller]")]
+public class UsersController : BaseController
 {
-    [Authorize]
-    [ApiController]
-    [Route("api/[controller]")]
-    public class UsersController : BaseController
+    private readonly IMediator _mediatoR;
+
+    public UsersController(IMediator mediator)
     {
-        private readonly IMediator _mediatoR;
+        _mediatoR = mediator;
+    }
 
-        public UsersController(IMediator mediator)
+    [HttpGet]
+    public async Task<IActionResult> SearchUsersByUserName([FromQuery] string userName)
+    {
+        ResultDto<IEnumerable<UserBasicInfoDto>> response = await _mediatoR.Send(new GetUsersByUserNameQuery
         {
-            _mediatoR = mediator;
-        }
+            UserName = userName,
+        });
 
-        [HttpGet]
-        public async Task<IActionResult> SearchUsersByUserName([FromQuery] string userName)
-        {
-            ResultDto<IEnumerable<UserBasicInfoDto>> response = await _mediatoR.Send(new GetUsersByUserNameQuery
-            {
-                UserName = userName,
-            });
-
-            return response.ToHttpResponse<IEnumerable<UserBasicInfoDto>>();
-        }
+        return response.ToHttpResponse<IEnumerable<UserBasicInfoDto>>();
     }
 }

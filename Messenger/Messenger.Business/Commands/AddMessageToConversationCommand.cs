@@ -1,54 +1,49 @@
 ﻿using AutoMapper;
 using MediatR;
 using Messenger.Business.Dtos;
+using Messenger.Infrastructure;
 using Messenger.Infrastructure.Entities;
-using Messenger.Infrastructure.Interfaces;
 using System.Net;
 
-namespace Messenger.Business.Commands
+namespace Messenger.Business.Commands;
+
+public class AddMessageToConversationCommand : IRequest<ResultDto<MessageWithSenderDto>>
 {
-    public class AddMessageToConversationCommand : IRequest<ResultDto<MessageWithSenderDto>>
+    public Guid SenderId { get; set; }
+    public Guid ConversationId { get; set; }
+    public MessageDto Message { get; set; }
+}
+
+public class AddMessageToConversationCommandHandler : IRequestHandler<AddMessageToConversationCommand, ResultDto<MessageWithSenderDto>>
+{
+    private readonly IMapper _mapper;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public AddMessageToConversationCommandHandler(IUnitOfWork unitOfWork, IMapper mapper)
     {
-        public Guid SenderId { get; set; }
-        public Guid ConversationId { get; set; }
-        public MessageDto Message { get; set; }
+        _mapper = mapper;
+        _unitOfWork = unitOfWork;
     }
-
-    public class AddMessageToConversationCommandHandler : IRequestHandler<AddMessageToConversationCommand, ResultDto<MessageWithSenderDto>>
+    public async Task<ResultDto<MessageWithSenderDto>> Handle(AddMessageToConversationCommand request, CancellationToken cancellationToken)
     {
-        private readonly IMapper _mapper;
-        private readonly IMessageRepository _messageRepository;
-        private readonly IUserRepository _userRepository;
-        private readonly IConversationRepository _conversationRepository;
+        User sender = await _unitOfWork.Users.GetUserByIdAsync(request.SenderId);
 
-        public AddMessageToConversationCommandHandler(IMessageRepository messageRepository, IMapper mapper,
-            IUserRepository userRepository, IConversationRepository conversationRepository)
+        Conversation conversation = await _unitOfWork.Conversations.GetConversationByIdAsync(request.ConversationId);
+
+        if (conversation == null)
         {
-            _mapper = mapper;
-            _messageRepository = messageRepository;
-            _userRepository = userRepository;
-            _conversationRepository = conversationRepository;
+            return ResultDto<MessageWithSenderDto>.FailureResult<MessageWithSenderDto>(HttpStatusCode.NotFound,
+                "No conversation was found.");
         }
 
-        public async Task<ResultDto<MessageWithSenderDto>> Handle(AddMessageToConversationCommand request, CancellationToken cancellationToken)
-        {
-            User sender = await _userRepository.GetUserByIdAsync(request.SenderId);
+        Message message = await _unitOfWork.Messages
+             .AddMessageToConversationAsync(request.Message.Text, conversation, sender);
 
-            Conversation conversation = await _conversationRepository.GetConversationByIdAsync(request.ConversationId);
+        await _unitOfWork.SaveChangesAsync();
 
-            if (conversation == null)
-            {
-                return ResultDto<MessageWithSenderDto>.FailureResult<MessageWithSenderDto>(HttpStatusCode.NotFound,
-                    "No conversation was found.");
-            }
+        var mappedMessage = _mapper.Map<MessageWithSenderDto>(message);
 
-            Message message = await _messageRepository
-                 .AddMessageToConversationAsync(request.Message.Text, conversation, sender);
-
-            var mappedMessage = _mapper.Map<MessageWithSenderDto>(message);
-
-            return ResultDto<MessageWithSenderDto>.SuccessResult(mappedMessage, HttpStatusCode.Created);
-        }
+        return ResultDto<MessageWithSenderDto>.SuccessResult(mappedMessage, HttpStatusCode.Created);
     }
 }
 

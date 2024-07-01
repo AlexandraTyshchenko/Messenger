@@ -7,6 +7,7 @@ using System.Net;
 
 namespace Messenger.Business.Commands
 {
+
     public class RegisterUserCommand : IRequest<ResultDto>
     {
         public UserRegistrationDto UserRegistration { get; set; }
