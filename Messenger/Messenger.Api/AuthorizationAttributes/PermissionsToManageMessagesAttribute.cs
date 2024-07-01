@@ -1,4 +1,5 @@
-﻿using Messenger.Infrastructure.Entities;
+﻿using Messenger.Infrastructure;
+using Messenger.Infrastructure.Entities;
 using Messenger.Infrastructure.Enums;
 using Messenger.Infrastructure.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -18,14 +19,11 @@ public class PermissionsToManageMessagesAttribute : TypeFilterAttribute
 
 public class PermissionsToManageMessagesHandler : IAsyncAuthorizationFilter
 {
-    private readonly IMessageRepository _messageRepository;
-    private readonly IParticipantRepository _participantRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public PermissionsToManageMessagesHandler(IMessageRepository messageRepository,
-        IParticipantRepository participantRepository)
+    public PermissionsToManageMessagesHandler(IUnitOfWork unitOfWork)
     {
-        _messageRepository = messageRepository;
-        _participantRepository = participantRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
@@ -63,7 +61,7 @@ public class PermissionsToManageMessagesHandler : IAsyncAuthorizationFilter
 
         Guid userId = new Guid(httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
 
-        Message message = await _messageRepository.GetMessageByIdAsync(messageId);
+        Message message = await _unitOfWork.Messages.GetMessageByIdAsync(messageId);
 
         if (message == null)
         {
@@ -74,7 +72,7 @@ public class PermissionsToManageMessagesHandler : IAsyncAuthorizationFilter
             return;
         }
 
-        ParticipantInConversation participantInConversation = await _participantRepository
+        ParticipantInConversation participantInConversation = await _unitOfWork.Participants
             .GetParticipantFromConversationAsync(userId, conversationId);
 
         if (participantInConversation == null)

@@ -1,4 +1,5 @@
-﻿using Messenger.Infrastructure.Entities;
+﻿using Messenger.Infrastructure;
+using Messenger.Infrastructure.Entities;
 using Messenger.Infrastructure.Enums;
 using Messenger.Infrastructure.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -21,21 +22,17 @@ public class ConversationRoleFilterHandler : IAsyncAuthorizationFilter
 {
     private readonly Role _role;
 
-    private IParticipantRepository _participantRepository;
-    private IConversationRepository _conversationRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public ConversationRoleFilterHandler(Role role, IParticipantRepository participantRepository)
+    public ConversationRoleFilterHandler(Role role, IUnitOfWork unitOfWork)
     {
         _role = role;
-        _participantRepository = participantRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
     {
         var httpContext = context.HttpContext;
-
-        _participantRepository = httpContext.RequestServices.GetRequiredService<IParticipantRepository>();
-        _conversationRepository = httpContext.RequestServices.GetRequiredService<IConversationRepository>();
 
         if (httpContext == null)
         {
@@ -58,7 +55,7 @@ public class ConversationRoleFilterHandler : IAsyncAuthorizationFilter
 
         Guid userId = new Guid(httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
 
-        ParticipantInConversation participantInConversation = await _participantRepository
+        ParticipantInConversation participantInConversation = await _unitOfWork.Participants
             .GetParticipantFromConversationAsync(userId, conversationId);
 
         if (participantInConversation == null)
