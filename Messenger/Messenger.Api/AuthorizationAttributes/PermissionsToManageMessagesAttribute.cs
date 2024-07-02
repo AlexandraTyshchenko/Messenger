@@ -1,7 +1,6 @@
 ﻿using Messenger.Infrastructure;
 using Messenger.Infrastructure.Entities;
 using Messenger.Infrastructure.Enums;
-using Messenger.Infrastructure.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.Security.Claims;

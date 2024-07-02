@@ -5,38 +5,37 @@ using Messenger.Infrastructure.Entities;
 using Microsoft.AspNetCore.Identity;
 using System.Net;
 
-namespace Messenger.Business.Commands
-{
+namespace Messenger.Business.Commands;
 
-    public class RegisterUserCommand : IRequest<ResultDto>
+
+public class RegisterUserCommand : IRequest<ResultDto>
+{
+    public UserRegistrationDto UserRegistration { get; set; }
+}
+
+public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, ResultDto>
+{
+    private readonly IMapper _mapper;
+    private readonly UserManager<User> _userManager;
+
+    public RegisterUserCommandHandler(IMapper mapper, UserManager<User> userManager)
     {
-        public UserRegistrationDto UserRegistration { get; set; }
+        _mapper = mapper;
+        _userManager = userManager;
     }
 
-    public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, ResultDto>
+    public async Task<ResultDto> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
     {
-        private readonly IMapper _mapper;
-        private readonly UserManager<User> _userManager;
+        User user = _mapper.Map<User>(request.UserRegistration);
 
-        public RegisterUserCommandHandler(IMapper mapper, UserManager<User> userManager)
+        IdentityResult result = await _userManager.CreateAsync(user, request.UserRegistration.Password);
+
+        if (result.Succeeded)
         {
-            _mapper = mapper;
-            _userManager = userManager;
+            return ResultDto.SuccessResult(HttpStatusCode.OK);
         }
 
-        public async Task<ResultDto> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
-        {
-            User user = _mapper.Map<User>(request.UserRegistration);
-
-            IdentityResult result = await _userManager.CreateAsync(user, request.UserRegistration.Password);
-
-            if (result.Succeeded)
-            {
-                return ResultDto.SuccessResult(HttpStatusCode.OK);
-            }
-
-            return ResultDto.FailureResult(HttpStatusCode.BadRequest,
-                string.Join(Environment.NewLine, result.Errors.Select(x => x.Description)));
-        }
+        return ResultDto.FailureResult(HttpStatusCode.BadRequest,
+            string.Join(Environment.NewLine, result.Errors.Select(x => x.Description)));
     }
 }
