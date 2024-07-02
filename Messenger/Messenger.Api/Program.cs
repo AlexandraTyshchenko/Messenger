@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using Messenger.Api.Middleware;
 using Messenger.Api.Validators;
 using Messenger.Business.Dtos;
 using Messenger.Business.Extensions;
@@ -80,6 +81,8 @@ builder.Services.AddAuthentication(opt =>
 builder.Services.AddTransient<IValidator<UserRegistrationDto>, UserRegistrationDtoValidator>();
 
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
