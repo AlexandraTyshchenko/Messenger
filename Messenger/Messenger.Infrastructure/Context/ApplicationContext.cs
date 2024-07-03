@@ -27,7 +27,6 @@ public class ApplicationContext : IdentityDbContext<User, UserRole, Guid>
         modelBuilder.ApplyConfiguration(new ParticipantInConversationConfiguration());
         modelBuilder.ApplyConfiguration(new ConversationConfiguration());
         modelBuilder.ApplyConfiguration(new MessageConfiguration());
-
         SeedData(modelBuilder);
     }
 

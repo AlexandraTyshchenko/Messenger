@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FluentValidation;
 using MediatR;
 using Messenger.Business.Dtos;
 using Messenger.Infrastructure;
@@ -12,6 +13,16 @@ public class AddMessageToConversationCommand : IRequest<ResultDto<MessageWithSen
     public Guid SenderId { get; set; }
     public Guid ConversationId { get; set; }
     public MessageDto Message { get; set; }
+}
+
+public class AddMessageToConversationCommandValidator : AbstractValidator<AddMessageToConversationCommand>
+{
+    public AddMessageToConversationCommandValidator()
+    {
+        RuleFor(x => x.Message.Text)
+           .NotNull().WithMessage("Text cannot be null")
+           .NotEmpty().WithMessage("Text cannot be empty");
+    }   
 }
 
 public class AddMessageToConversationCommandHandler : IRequestHandler<AddMessageToConversationCommand, ResultDto<MessageWithSenderDto>>

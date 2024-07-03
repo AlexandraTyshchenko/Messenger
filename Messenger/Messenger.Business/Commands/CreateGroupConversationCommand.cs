@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FluentValidation;
 using MediatR;
 using Messenger.Business.Dtos;
 using Messenger.Infrastructure;
@@ -11,6 +12,18 @@ public class CreateGroupConversationCommand : IRequest<ResultDto<ConversationWit
 {
     public GroupModelDto Group { get; set; }
     public Guid CreatorUserId { get; set; }
+}
+
+public class CreateGroupConversationCommandValidator : AbstractValidator<CreateGroupConversationCommand>
+{
+    public CreateGroupConversationCommandValidator()
+    {
+        RuleFor(x => x.Group.Title)
+           .NotEmpty();
+
+        RuleFor(x => x.Group.ImgUrl)
+           .NotEmpty();
+    }
 }
 
 public class CreateGroupConversationCommandHandler : IRequestHandler<CreateGroupConversationCommand, ResultDto<ConversationWithParticipantsDto>>

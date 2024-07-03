@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FluentValidation;
 using MediatR;
 using Messenger.Business.Dtos;
 using Messenger.Infrastructure;
@@ -10,6 +11,15 @@ namespace Messenger.Business.Queries;
 public class GetMessagesByConversationIdQuery : IRequest<ResultDto<IEnumerable<MessageWithSenderDto>>>
 {
     public Guid ConversationId { get; set; }
+}
+
+public class GetMessagesByConversationIdQueryValidator : AbstractValidator<GetMessagesByConversationIdQuery>
+{
+    public GetMessagesByConversationIdQueryValidator()
+    {
+        RuleFor(x => x.ConversationId)
+          .Must(guid => guid != Guid.Empty);
+    }
 }
 
 public class GetMessagesByConversationIdQueryHandler : IRequestHandler<GetMessagesByConversationIdQuery, ResultDto<IEnumerable<MessageWithSenderDto>>>

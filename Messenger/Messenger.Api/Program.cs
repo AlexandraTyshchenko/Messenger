@@ -1,9 +1,9 @@
 ﻿using FluentValidation;
 using Messenger.Api.Middleware;
-using Messenger.Api.Validators;
-using Messenger.Business.Dtos;
+using Messenger.Business.Commands;
 using Messenger.Business.Extensions;
 using Messenger.Business.Options;
+using Messenger.Business.Queries;
 using Messenger.Infrastructure.Context;
 using Messenger.Infrastructure.Entities;
 using Messenger.Infrastructure.Extensions;
@@ -78,10 +78,12 @@ builder.Services.AddAuthentication(opt =>
     };
 });
 
-builder.Services.AddTransient<IValidator<UserRegistrationDto>, UserRegistrationDtoValidator>();
+
+//builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+builder.Services.AddValidatorsFromAssemblyContaining(typeof(CreateGroupConversationCommandValidator), includeInternalTypes: true);
+
 
 var app = builder.Build();
-
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())

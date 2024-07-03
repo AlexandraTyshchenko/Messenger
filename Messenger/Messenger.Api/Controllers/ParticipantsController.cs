@@ -38,7 +38,7 @@ public class ParticipantsController : BaseController
     [ConversationRoleFilter(Role.Participant)]
     public async Task<IActionResult> AddParticipantsToConversation([FromBody] Guid[] userIds, [FromRoute] Guid conversationId)
     {
-        ResultDto response = await _mediator.Send(new AddParticipantToConversationCommand
+        ResultDto<AffectedRowsDto> response = await _mediator.Send(new AddParticipantToConversationCommand
         {
             ConversationId = conversationId,
             UserIds = userIds
@@ -52,7 +52,7 @@ public class ParticipantsController : BaseController
     public async Task<IActionResult> DeleteParticipantsFromConversation([FromRoute] Guid userId,
         [FromRoute] Guid conversationId)
     {
-        ResultDto response = await _mediator.Send(new DeleteParticipantFromConversationCommand
+        ResultDto<AffectedRowsDto> response = await _mediator.Send(new DeleteParticipantFromConversationCommand
         {
             UserId = userId,
             ConversationId = conversationId

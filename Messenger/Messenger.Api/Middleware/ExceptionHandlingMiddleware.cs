@@ -1,41 +1,38 @@
-﻿using System.Net;
+﻿using FluentValidation;
+using System.Net;
 
-namespace Messenger.Api.Middleware
+namespace Messenger.Api.Middleware;
+
+public class ExceptionHandlingMiddleware
 {
-    public class ExceptionHandlingMiddleware
+    private readonly RequestDelegate _next;
+
+    public ExceptionHandlingMiddleware(RequestDelegate next)
     {
-        private readonly RequestDelegate _next;
+        _next = next;
+    }
 
-        public ExceptionHandlingMiddleware(RequestDelegate next)
+    public async Task InvokeAsync(HttpContext context)
+    {
+        try
         {
-            _next = next;
+            await _next(context);
         }
-
-        public async Task InvokeAsync(HttpContext context)
+        catch (ValidationException ex)
         {
-            try
-            {
-                await _next(context);
-            }
-            catch (Exception ex)
-            {
-                await HandleExceptionAsync(context, ex);
-            }
+            await HandleExceptionAsync(context, ex, HttpStatusCode.BadRequest);
         }
-
-        private Task HandleExceptionAsync(HttpContext context, Exception exception)
+        catch (Exception ex)
         {
-            context.Response.ContentType = "application/json";
-            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-
-            var result = new
-            {
-                StatusCode = context.Response.StatusCode,
-                Message = "An unexpected error occurred. Please try again later.",
-                Detailed = exception.Message 
-            };
-
-            return context.Response.WriteAsJsonAsync(result);
+            await HandleExceptionAsync(context, ex, HttpStatusCode.InternalServerError);
         }
     }
+
+    private async Task HandleExceptionAsync(HttpContext context, Exception exception, HttpStatusCode statusCode)
+    {
+        context.Response.StatusCode = (int)statusCode;
+        context.Response.ContentType = "text/plain";
+        await context.Response.WriteAsync(exception.Message);
+    }
+
 }

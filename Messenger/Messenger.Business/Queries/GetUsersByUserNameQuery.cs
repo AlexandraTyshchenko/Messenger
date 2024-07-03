@@ -1,18 +1,38 @@
 ﻿using AutoMapper;
+using FluentValidation;
 using MediatR;
 using Messenger.Business.Dtos;
+using Messenger.Business.Profiles;
 using Messenger.Infrastructure;
 using Messenger.Infrastructure.Entities;
+using Messenger.Infrastructure.Pagination;
 using System.Net;
 
 namespace Messenger.Business.Queries;
 
-public class GetUsersByUserNameQuery : IRequest<ResultDto<IEnumerable<UserBasicInfoDto>>>
+public class GetUsersByUserNameQuery : IRequest<ResultDto<IPagedEntities<UserBasicInfoDto>>>
 {
     public string UserName { get; set; }
+    public int Page { get; set; }
+    public int PageSize {  get; set; }
 }
 
-public class GetUsersByUserNameQueryHandler : IRequestHandler<GetUsersByUserNameQuery, ResultDto<IEnumerable<UserBasicInfoDto>>>
+public class GetUsersByUserNameQueryValidator : AbstractValidator<GetUsersByUserNameQuery>
+{
+    public GetUsersByUserNameQueryValidator()
+    {
+        RuleFor(x => x.UserName)
+            .NotEmpty().WithMessage("UserName is required");
+
+        RuleFor(x => x.Page)
+                 .GreaterThan(0).WithMessage("Page must be a positive number");
+
+        RuleFor(x => x.PageSize)
+            .GreaterThan(0).WithMessage("PageSize must be a positive number");
+    }
+}
+
+public class GetUsersByUserNameQueryHandler : IRequestHandler<GetUsersByUserNameQuery, ResultDto<IPagedEntities<UserBasicInfoDto>>>
 {
     private readonly IMapper _mapper;
     private readonly IUnitOfWork _unitOfWork;
@@ -23,11 +43,12 @@ public class GetUsersByUserNameQueryHandler : IRequestHandler<GetUsersByUserName
         _mapper = mapper;
     }
 
-    public async Task<ResultDto<IEnumerable<UserBasicInfoDto>>> Handle(GetUsersByUserNameQuery request, CancellationToken cancellationToken)
+    public async Task<ResultDto<IPagedEntities<UserBasicInfoDto>>> Handle(GetUsersByUserNameQuery request,
+        CancellationToken cancellationToken)
     {
-        IEnumerable<User> users = await _unitOfWork.Users.GetUsersAsync(request.UserName);
-        var mappedUsers = _mapper.Map<IEnumerable<UserBasicInfoDto>>(users);
+        IPagedEntities<User> users = await _unitOfWork.Users.GetUsersAsync(request.UserName,request.Page,request.PageSize);    
+        var mappedUsers = _mapper.MapPagedEntities<User, UserBasicInfoDto>(users);
 
-        return ResultDto<IEnumerable<UserBasicInfoDto>>.SuccessResult(mappedUsers, HttpStatusCode.OK);
+        return ResultDto<IPagedEntities<UserBasicInfoDto>>.SuccessResult(mappedUsers, HttpStatusCode.OK);
     }
 }

@@ -25,7 +25,6 @@ public class MessageRepository : IMessageRepository
 
         await _applicationContext.Messages.AddAsync(message);
 
-        await _applicationContext.SaveChangesAsync();
         return message;
     }
 
@@ -39,7 +38,6 @@ public class MessageRepository : IMessageRepository
         }
 
         Message deletedMessage = _applicationContext.Messages.Remove(message).Entity;
-        await _applicationContext.SaveChangesAsync();
 
         return deletedMessage;
     }

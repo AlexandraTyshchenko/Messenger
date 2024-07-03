@@ -33,7 +33,7 @@ public class ConversationsController : BaseController
     [HttpPost("private")]
     public async Task<IActionResult> CreatePrivateConversation([FromQuery] Guid userId)
     {
-        ResultDto response = await _mediatoR.Send(new CreatePrivateConversationWithUserCommand
+        ResultDto<AffectedRowsDto> response = await _mediatoR.Send(new CreatePrivateConversationWithUserCommand
         {
             CreatorUserId = UserId,
             UserId = userId,
@@ -70,7 +70,7 @@ public class ConversationsController : BaseController
     [ConversationRoleFilter(Role.Admin)]
     public async Task<IActionResult> DeleteConversation([FromRoute] Guid conversationId)
     {
-        ResultDto response = await _mediatoR.Send(new DeleteConversationCommand
+        ResultDto<AffectedRowsDto> response = await _mediatoR.Send(new DeleteConversationCommand
         {
             ConversationId = conversationId
         });

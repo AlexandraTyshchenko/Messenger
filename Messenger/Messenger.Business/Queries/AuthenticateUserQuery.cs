@@ -1,10 +1,10 @@
-﻿using MediatR;
+﻿using FluentValidation;
+using MediatR;
 using Messenger.Business.Dtos;
 using Messenger.Business.Options;
 using Messenger.Infrastructure.Context;
 using Messenger.Infrastructure.Entities;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -17,6 +17,18 @@ namespace Messenger.Business.Queries;
 public class AuthenticateUserQuery : IRequest<ResultDto<RefreshTokenDto>>
 {
     public UserLoginDto UserLogin { get; set; }
+}
+
+public class AuthenticateUserQueryValidator : AbstractValidator<AuthenticateUserQuery>
+{
+    public AuthenticateUserQueryValidator()
+    {
+        RuleFor(x => x.UserLogin.UserName)
+            .NotEmpty().WithMessage("UserName is required");
+
+        RuleFor(x => x.UserLogin.Password)
+            .NotEmpty().WithMessage("Password is required");
+    }
 }
 
 public class AuthenticateUserQueryHandler : IRequestHandler<AuthenticateUserQuery, ResultDto<RefreshTokenDto>>

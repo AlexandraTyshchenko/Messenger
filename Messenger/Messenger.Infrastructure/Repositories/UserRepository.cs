@@ -1,6 +1,7 @@
 ﻿using Messenger.Infrastructure.Context;
 using Messenger.Infrastructure.Entities;
 using Messenger.Infrastructure.Interfaces;
+using Messenger.Infrastructure.Pagination;
 using Microsoft.EntityFrameworkCore;
 
 namespace Messenger.Infrastructure.Repositories;
@@ -19,13 +20,13 @@ public class UserRepository : IUserRepository
         return await _applicationContext.FindAsync<User>(userId);
     }
 
-    public async Task<IEnumerable<User>> GetUsersAsync(string userName)
+    public async Task<IPagedEntities<User>> GetUsersAsync(string userName, int page, int pageSize)
     {
-        var users = await _applicationContext.Users
-            .Where(x => x.UserName.Contains(userName))
-            .ToListAsync();
+        IQueryable<User> users = _applicationContext.Users
+            .Where(x => x.UserName.Contains(userName));
+        IPagedEntities<User> pagedUsers = await users.WithPagingAsync(page, pageSize);
 
-        return users;
+        return pagedUsers;
     }
 
     public async Task<IEnumerable<User>> GetUsersByIdsAsync(Guid[] userIds)

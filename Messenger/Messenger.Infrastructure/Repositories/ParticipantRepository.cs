@@ -26,7 +26,6 @@ public class ParticipantRepository : IParticipantRepository
         });
 
         await _applicationContext.AddRangeAsync(participants);
-        await _applicationContext.SaveChangesAsync();
     }
 
     public async Task<ParticipantInConversation> DeleteParticipantFromGroupConversationAsync(Guid userId, Guid conversationId)
@@ -40,7 +39,6 @@ public class ParticipantRepository : IParticipantRepository
 
         ParticipantInConversation deletedParticipantInConversation = _applicationContext.ParticipantsInConversation
             .Remove(participantInConversation).Entity;
-        await _applicationContext.SaveChangesAsync();
 
         return deletedParticipantInConversation;
     }
@@ -70,7 +68,6 @@ public class ParticipantRepository : IParticipantRepository
         ParticipantInConversation participant = await _applicationContext.ParticipantsInConversation.FindAsync(participantId);
 
         participant.Role = role;
-        await _applicationContext.SaveChangesAsync();
     }
 
     public async Task<ParticipantInConversation> GetParticipantFromGroupConversationAsync(Guid userId, Guid conversationId)

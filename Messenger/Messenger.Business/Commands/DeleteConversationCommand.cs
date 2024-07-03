@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using FluentValidation;
+using MediatR;
 using Messenger.Business.Dtos;
 using Messenger.Infrastructure;
 using Messenger.Infrastructure.Entities;
@@ -6,12 +7,21 @@ using System.Net;
 
 namespace Messenger.Business.Commands;
 
-public class DeleteConversationCommand : IRequest<ResultDto>
+public class DeleteConversationCommand : IRequest<ResultDto<AffectedRowsDto>>
 {
     public Guid ConversationId { get; set; }
 }
 
-public class DeleteConversationHandler : IRequestHandler<DeleteConversationCommand, ResultDto>
+public class DeleteConversationCommandValidator : AbstractValidator<DeleteConversationCommand>
+{
+    public DeleteConversationCommandValidator()
+    {
+        RuleFor(x => x.ConversationId)
+          .Must(guid => guid != Guid.Empty);
+    }
+}
+
+public class DeleteConversationHandler : IRequestHandler<DeleteConversationCommand, ResultDto<AffectedRowsDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
 
@@ -20,17 +30,23 @@ public class DeleteConversationHandler : IRequestHandler<DeleteConversationComma
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<ResultDto> Handle(DeleteConversationCommand request, CancellationToken cancellationToken)
+    public async Task<ResultDto<AffectedRowsDto>> Handle(DeleteConversationCommand request, CancellationToken cancellationToken)
     {
         Conversation conversation = await _unitOfWork.Conversations.DeleteConversationAsync(request.ConversationId);
 
         if (conversation == null)
         {
-            return ResultDto.FailureResult(HttpStatusCode.NotFound, $"Conversation with id {request.ConversationId} wasn't found.");
+            return ResultDto.FailureResult<AffectedRowsDto>(HttpStatusCode.NotFound, $"Conversation with id {request.ConversationId} wasn't found.");
         }
 
-        await _unitOfWork.SaveChangesAsync();
 
-        return ResultDto.SuccessResult(HttpStatusCode.OK);
+        int affectedRows = await _unitOfWork.SaveChangesAsync();
+
+        AffectedRowsDto result = new AffectedRowsDto
+        {
+            AffectedRows = affectedRows,
+        };
+
+        return ResultDto.SuccessResult<AffectedRowsDto>(result, HttpStatusCode.OK);
     }
 }

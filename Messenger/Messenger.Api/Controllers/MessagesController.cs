@@ -49,7 +49,7 @@ public class MessagesController : BaseController
     [PermissionsToManageMessages]
     public async Task<IActionResult> DeleteMessageFromConversation([FromRoute] Guid messageId)
     {
-        ResultDto response = await _mediator.Send(new DeleteMessageCommand { MessageId = messageId });
+        ResultDto<AffectedRowsDto> response = await _mediator.Send(new DeleteMessageCommand { MessageId = messageId });
 
         return response.ToHttpResponse();
     }

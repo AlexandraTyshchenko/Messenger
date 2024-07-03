@@ -42,8 +42,6 @@ public class ConversationRepository : IConversationRepository
 
         await _applicationContext.ParticipantsInConversation.AddAsync(participant);
 
-        await _applicationContext.SaveChangesAsync();
-
         return conversation;
     }
 
@@ -72,8 +70,6 @@ public class ConversationRepository : IConversationRepository
         await _applicationContext.ParticipantsInConversation.AddAsync(participantCreatorUser);
 
         await _applicationContext.ParticipantsInConversation.AddAsync(participantUser);
-
-        await _applicationContext.SaveChangesAsync();
     }
 
     public async Task<Conversation> DeleteConversationAsync(Guid conversationId)
@@ -84,8 +80,6 @@ public class ConversationRepository : IConversationRepository
             return null;
 
         Conversation deletedConversation = _applicationContext.Remove(conversation).Entity;
-
-        await _applicationContext.SaveChangesAsync();
 
         return deletedConversation;
     }

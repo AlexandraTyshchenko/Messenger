@@ -2,6 +2,7 @@
 using Messenger.Api.Extensions;
 using Messenger.Business.Dtos;
 using Messenger.Business.Queries;
+using Messenger.Infrastructure.Pagination;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,13 +21,15 @@ public class UsersController : BaseController
     }
 
     [HttpGet]
-    public async Task<IActionResult> SearchUsersByUserName([FromQuery] string userName)
+    public async Task<IActionResult> SearchUsersByUserName([FromQuery] SearchUsersParams searchParams)
     {
-        ResultDto<IEnumerable<UserBasicInfoDto>> response = await _mediatoR.Send(new GetUsersByUserNameQuery
+        ResultDto<IPagedEntities<UserBasicInfoDto>> response = await _mediatoR.Send(new GetUsersByUserNameQuery
         {
-            UserName = userName,
+            UserName = searchParams.UserName,
+            Page = searchParams.Page,
+            PageSize = searchParams.PageSize
         });
 
-        return response.ToHttpResponse<IEnumerable<UserBasicInfoDto>>();
+        return response.ToHttpResponse<IPagedEntities<UserBasicInfoDto>>();
     }
 }
