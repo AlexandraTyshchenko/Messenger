@@ -43,7 +43,7 @@ public class AddMessageToConversationCommandHandler : IRequestHandler<AddMessage
 
         if (conversation == null)
         {
-            return ResultDto<MessageWithSenderDto>.FailureResult<MessageWithSenderDto>(HttpStatusCode.NotFound,
+            return ResultDto.FailureResult<MessageWithSenderDto>(HttpStatusCode.NotFound,
                 "No conversation was found.");
         }
 
@@ -54,7 +54,7 @@ public class AddMessageToConversationCommandHandler : IRequestHandler<AddMessage
 
         var mappedMessage = _mapper.Map<MessageWithSenderDto>(message);
 
-        return ResultDto<MessageWithSenderDto>.SuccessResult(mappedMessage, HttpStatusCode.Created);
+        return ResultDto.SuccessResult(mappedMessage, HttpStatusCode.Created);
     }
 }
 

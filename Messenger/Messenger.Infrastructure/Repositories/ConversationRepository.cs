@@ -45,7 +45,7 @@ public class ConversationRepository : IConversationRepository
         return conversation;
     }
 
-    public async Task CreateConversationWithUserAsync(User creatorUser, User user)
+    public async Task<Conversation> CreateConversationWithUserAsync(User creatorUser, User user)
     {
         var conversation = new Conversation();
 
@@ -68,8 +68,9 @@ public class ConversationRepository : IConversationRepository
         };
 
         await _applicationContext.ParticipantsInConversation.AddAsync(participantCreatorUser);
-
         await _applicationContext.ParticipantsInConversation.AddAsync(participantUser);
+
+        return conversation;
     }
 
     public async Task<Conversation> DeleteConversationAsync(Guid conversationId)
@@ -88,6 +89,7 @@ public class ConversationRepository : IConversationRepository
     {
         Conversation conversation = await _applicationContext.Conversations
             .Include(x => x.Group)
+            .Include(x=>x.Messages)
             .Include(x => x.ParticipantsInConversation)
                 .ThenInclude(x => x.User)
             .FirstOrDefaultAsync(x => x.Id == conversationId);

@@ -42,6 +42,6 @@ public class GetParticipantsByConversationIdHandler : IRequestHandler<GetPartici
 
         var mappedParticipants = _mapper.Map<IEnumerable<UserBasicInfoDto>>(usersInConversation);
 
-        return ResultDto<IEnumerable<UserBasicInfoDto>>.SuccessResult(mappedParticipants, HttpStatusCode.OK);
+        return ResultDto.SuccessResult(mappedParticipants, HttpStatusCode.OK);
     }
 }

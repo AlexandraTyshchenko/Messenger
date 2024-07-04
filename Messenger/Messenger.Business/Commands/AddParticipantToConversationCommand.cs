@@ -25,7 +25,8 @@ public class AddParticipantToConversationCommandValidator : AbstractValidator<Ad
     }
 }
 
-public class AddParticipantToConversationCommandHandler : IRequestHandler<AddParticipantToConversationCommand, ResultDto<AffectedRowsDto>>
+public class AddParticipantToConversationCommandHandler : 
+    IRequestHandler<AddParticipantToConversationCommand, ResultDto<AffectedRowsDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
 
@@ -34,24 +35,29 @@ public class AddParticipantToConversationCommandHandler : IRequestHandler<AddPar
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<ResultDto<AffectedRowsDto>> Handle(AddParticipantToConversationCommand request, CancellationToken cancellationToken)
+    public async Task<ResultDto<AffectedRowsDto>> Handle(AddParticipantToConversationCommand request,
+        CancellationToken cancellationToken)
     {
-        IEnumerable<User> users = await _unitOfWork.Users.GetUsersByIdsAsync(request.UserIds);
-
-        IEnumerable<Guid> missingUserIds = request.UserIds.Where(id => !users.Select(x => x.Id).Contains(id)).ToList();
-
-        if (missingUserIds.Any())
-        {
-            return ResultDto<AffectedRowsDto>.FailureResult<AffectedRowsDto>(HttpStatusCode.NotFound, $"Users with ids {string.Join(", ", missingUserIds)} were not found.");
-        }
-
-        Conversation conversation = await _unitOfWork.Conversations.GetGroupConversationByIdAsync(request.ConversationId);
+        Conversation conversation = await _unitOfWork.Conversations
+           .GetGroupConversationByIdAsync(request.ConversationId);
 
         if (conversation == null)
         {
-            return ResultDto<AffectedRowsDto>.FailureResult<AffectedRowsDto>(HttpStatusCode.NotFound, "Group conversation was not found.");
+            return ResultDto.FailureResult<AffectedRowsDto>(HttpStatusCode.NotFound,
+                "Group conversation was not found.");
         }
 
+        IEnumerable<User> users = await _unitOfWork.Users.GetUsersByIdsAsync(request.UserIds);
+
+        IEnumerable<Guid> missingUserIds = request.UserIds.Where(id => !users.Select(x => x.Id)
+        .Contains(id)).ToList();
+
+        if (missingUserIds.Any())
+        {
+            return ResultDto.FailureResult<AffectedRowsDto>(HttpStatusCode.NotFound,
+                $"Users with ids {string.Join(", ", missingUserIds)} were not found.");
+        }
+       
         IEnumerable<ParticipantInConversation> existingParticipants = (await _unitOfWork.Participants
             .GetParticipantsByConversationIdAsync(request.ConversationId))
             .Where(x => users.Contains(x.User))
@@ -61,12 +67,14 @@ public class AddParticipantToConversationCommandHandler : IRequestHandler<AddPar
 
         if (existingParticipants.Any())
         {
-            return ResultDto<AffectedRowsDto>.FailureResult<AffectedRowsDto>(HttpStatusCode.Conflict, $"Users {participantsUserNames} already exist in conversation.");
+            return ResultDto.FailureResult<AffectedRowsDto>(HttpStatusCode.Conflict,
+                $"Users {participantsUserNames} already exist in conversation.");
         }
 
         if (conversation.Group == null)
         {
-            return ResultDto<AffectedRowsDto>.FailureResult<AffectedRowsDto>(HttpStatusCode.NotFound, $"Conversation with id {request.ConversationId} is not a group conversation.");
+            return ResultDto.FailureResult<AffectedRowsDto>(HttpStatusCode.NotFound,
+                $"Conversation with id {request.ConversationId} is not a group conversation.");
         }
 
         await _unitOfWork.Participants.AddParticipantsToConversationAsync(users, conversation);
@@ -77,6 +85,6 @@ public class AddParticipantToConversationCommandHandler : IRequestHandler<AddPar
             AffectedRows = affectedRows,
         };
 
-        return ResultDto<AffectedRowsDto>.SuccessResult(result,HttpStatusCode.OK);
+        return ResultDto.SuccessResult(result,HttpStatusCode.OK);
     }
 }

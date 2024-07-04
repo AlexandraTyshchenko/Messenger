@@ -47,6 +47,6 @@ public class DeleteConversationHandler : IRequestHandler<DeleteConversationComma
             AffectedRows = affectedRows,
         };
 
-        return ResultDto.SuccessResult<AffectedRowsDto>(result, HttpStatusCode.OK);
+        return ResultDto.SuccessResult(result, HttpStatusCode.OK);
     }
 }

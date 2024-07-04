@@ -46,6 +46,6 @@ public class DeleteMessageCommandHandler : IRequestHandler<DeleteMessageCommand,
             AffectedRows = affectedRows,
         };
 
-        return ResultDto<AffectedRowsDto>.SuccessResult(result, HttpStatusCode.OK);
+        return ResultDto.SuccessResult(result, HttpStatusCode.OK);
     }
 }

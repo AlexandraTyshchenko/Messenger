@@ -11,5 +11,4 @@ public class MessageWithSenderDto
     public string Text { get; set; }
     public DateTime SentAt { get; set; }
     public DateTime UpdatedAt { get; set; }
-    public string AttachmentUrl { get; set; }
 }

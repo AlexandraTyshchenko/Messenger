@@ -26,7 +26,8 @@ public class CreateGroupConversationCommandValidator : AbstractValidator<CreateG
     }
 }
 
-public class CreateGroupConversationCommandHandler : IRequestHandler<CreateGroupConversationCommand, ResultDto<ConversationWithParticipantsDto>>
+public class CreateGroupConversationCommandHandler : IRequestHandler<CreateGroupConversationCommand, 
+    ResultDto<ConversationWithParticipantsDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
@@ -48,6 +49,6 @@ public class CreateGroupConversationCommandHandler : IRequestHandler<CreateGroup
 
         var mappedConversation = _mapper.Map<ConversationWithParticipantsDto>(conversation);
 
-        return ResultDto<ConversationWithParticipantsDto>.SuccessResult(mappedConversation, HttpStatusCode.OK);
+        return ResultDto.SuccessResult(mappedConversation, HttpStatusCode.OK);
     }
 }

@@ -40,6 +40,6 @@ public class GetConversationsByUserIdQueryHandler : IRequestHandler<GetConversat
 
         var mappedConversations = _mapper.Map<IEnumerable<ConversationDto>>(conversations);
 
-        return ResultDto<IEnumerable<ConversationDto>>.SuccessResult(mappedConversations, HttpStatusCode.OK);
+        return ResultDto.SuccessResult(mappedConversations, HttpStatusCode.OK);
     }
 }

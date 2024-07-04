@@ -49,6 +49,6 @@ public class GetUsersByUserNameQueryHandler : IRequestHandler<GetUsersByUserName
         IPagedEntities<User> users = await _unitOfWork.Users.GetUsersAsync(request.UserName,request.Page,request.PageSize);    
         var mappedUsers = _mapper.MapPagedEntities<User, UserBasicInfoDto>(users);
 
-        return ResultDto<IPagedEntities<UserBasicInfoDto>>.SuccessResult(mappedUsers, HttpStatusCode.OK);
+        return ResultDto.SuccessResult(mappedUsers, HttpStatusCode.OK);
     }
 }

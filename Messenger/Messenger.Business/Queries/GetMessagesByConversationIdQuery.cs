@@ -39,6 +39,6 @@ public class GetMessagesByConversationIdQueryHandler : IRequestHandler<GetMessag
 
         var mappedMessages = _mapper.Map<IEnumerable<MessageWithSenderDto>>(messages);
 
-        return ResultDto<IEnumerable<MessageWithSenderDto>>.SuccessResult(mappedMessages, HttpStatusCode.OK);
+        return ResultDto.SuccessResult(mappedMessages, HttpStatusCode.OK);
     }
 }

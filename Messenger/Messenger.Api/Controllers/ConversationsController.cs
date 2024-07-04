@@ -33,13 +33,13 @@ public class ConversationsController : BaseController
     [HttpPost("private")]
     public async Task<IActionResult> CreatePrivateConversation([FromQuery] Guid userId)
     {
-        ResultDto<AffectedRowsDto> response = await _mediatoR.Send(new CreatePrivateConversationWithUserCommand
+        ResultDto<ConversationWithParticipantsDto> response = await _mediatoR.Send(new CreatePrivateConversationWithUserCommand
         {
             CreatorUserId = UserId,
             UserId = userId,
         });
 
-        return response.ToHttpResponse();
+        return response.ToHttpResponse<ConversationWithParticipantsDto>();
     }
 
     [HttpPost("group")]
@@ -51,19 +51,19 @@ public class ConversationsController : BaseController
             Group = groupModelDto,
         });
 
-        return response.ToHttpResponse();
+        return response.ToHttpResponse<ConversationWithParticipantsDto>();
     }
 
     [HttpGet("{conversationId}")]
     [ConversationRoleFilter(Role.Participant)]
     public async Task<IActionResult> GetConversationById([FromRoute] Guid conversationId)
     {
-        ResultDto<ConversationWithParticipantsDto> response = await _mediatoR.Send(new GetConversationByIdQuery
+        ResultDto<ConversationDto> response = await _mediatoR.Send(new GetConversationByIdQuery
         {
             ConversationId = conversationId
         });
 
-        return response.ToHttpResponse<ConversationWithParticipantsDto>();
+        return response.ToHttpResponse<ConversationDto>();
     }
 
     [HttpDelete("{conversationId}")]
