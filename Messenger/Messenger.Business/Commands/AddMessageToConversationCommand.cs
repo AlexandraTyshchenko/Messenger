@@ -19,10 +19,24 @@ public class AddMessageToConversationCommandValidator : AbstractValidator<AddMes
 {
     public AddMessageToConversationCommandValidator()
     {
+        RuleFor(x => x.ConversationId)
+            .NotEqual(Guid.Empty)
+            .WithMessage("ConversationId cannot be empty.");
+
+        RuleFor(x => x.SenderId)
+            .NotEqual(Guid.Empty)
+            .WithMessage("SenderId cannot be empty.");
+
+        RuleFor(x => x.Message)
+            .NotNull()
+            .WithMessage("Message cannot be null.");
+
         RuleFor(x => x.Message.Text)
-           .NotNull().WithMessage("Text cannot be null")
-           .NotEmpty().WithMessage("Text cannot be empty");
-    }   
+            .NotNull()
+            .WithMessage("Text cannot be null.")
+            .NotEmpty()
+            .WithMessage("Text cannot be empty.");
+    }
 }
 
 public class AddMessageToConversationCommandHandler : IRequestHandler<AddMessageToConversationCommand, ResultDto<MessageWithSenderDto>>

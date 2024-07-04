@@ -9,6 +9,6 @@ public interface IParticipantRepository
     Task UpdateParticipantRoleAsync(Guid participantId, Role role);
     Task<ParticipantInConversation> GetParticipantFromConversationAsync(Guid userId, Guid conversationId);
     Task<ParticipantInConversation> GetParticipantFromGroupConversationAsync(Guid userId, Guid conversationId);
-    Task AddParticipantsToConversationAsync(IEnumerable<User> users, Conversation conversation);
+    Task<IEnumerable<ParticipantInConversation>> AddParticipantsToConversationAsync(IEnumerable<User> users, Conversation conversation);
     Task<ParticipantInConversation> DeleteParticipantFromGroupConversationAsync(Guid userId, Guid conversationId);
 }

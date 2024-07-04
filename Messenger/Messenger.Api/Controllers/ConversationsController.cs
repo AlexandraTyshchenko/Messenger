@@ -27,7 +27,7 @@ public class ConversationsController : BaseController
         ResultDto<IEnumerable<ConversationDto>> response = await _mediatoR
             .Send(new GetConversationsByUserIdQuery { UserId = UserId });
 
-        return response.ToHttpResponse<IEnumerable<ConversationDto>>();
+        return response.ToHttpResponse();
     }
 
     [HttpPost("private")]
@@ -39,7 +39,7 @@ public class ConversationsController : BaseController
             UserId = userId,
         });
 
-        return response.ToHttpResponse<ConversationWithParticipantsDto>();
+        return response.ToHttpResponse();
     }
 
     [HttpPost("group")]
@@ -51,7 +51,7 @@ public class ConversationsController : BaseController
             Group = groupModelDto,
         });
 
-        return response.ToHttpResponse<ConversationWithParticipantsDto>();
+        return response.ToHttpResponse();
     }
 
     [HttpGet("{conversationId}")]
@@ -63,19 +63,19 @@ public class ConversationsController : BaseController
             ConversationId = conversationId
         });
 
-        return response.ToHttpResponse<ConversationDto>();
+        return response.ToHttpResponse();
     }
 
     [HttpDelete("{conversationId}")]
     [ConversationRoleFilter(Role.Admin)]
     public async Task<IActionResult> DeleteConversation([FromRoute] Guid conversationId)
     {
-        ResultDto<AffectedRowsDto> response = await _mediatoR.Send(new DeleteConversationCommand
+        ResultDto response = await _mediatoR.Send(new DeleteConversationCommand
         {
             ConversationId = conversationId
         });
 
-        return response.ToHttpResponse(); ;
+        return response.ToHttpResponse(); 
     }
 }
 

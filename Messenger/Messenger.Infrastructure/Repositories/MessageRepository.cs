@@ -8,6 +8,7 @@ namespace Messenger.Infrastructure.Repositories.Repositories;
 public class MessageRepository : IMessageRepository
 {
     private readonly ApplicationContext _applicationContext;
+
     public MessageRepository(ApplicationContext applicationContext)
     {
         _applicationContext = applicationContext;

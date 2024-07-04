@@ -29,7 +29,7 @@ public class MessagesController : BaseController
         ResultDto<IEnumerable<MessageWithSenderDto>> response = await _mediator
             .Send(new GetMessagesByConversationIdQuery { ConversationId = conversationId });
 
-        return response.ToHttpResponse<IEnumerable<MessageWithSenderDto>>();
+        return response.ToHttpResponse();
     }
 
     [HttpPost]
@@ -42,14 +42,14 @@ public class MessagesController : BaseController
             SenderId = UserId
         });
 
-        return response.ToHttpResponse<MessageWithSenderDto>();
+        return response.ToHttpResponse();
     }
 
     [HttpDelete("{messageId}")]
     [PermissionsToManageMessages]
     public async Task<IActionResult> DeleteMessageFromConversation([FromRoute] Guid messageId)
     {
-        ResultDto<AffectedRowsDto> response = await _mediator.Send(new DeleteMessageCommand { MessageId = messageId });
+        ResultDto response = await _mediator.Send(new DeleteMessageCommand { MessageId = messageId });
 
         return response.ToHttpResponse();
     }

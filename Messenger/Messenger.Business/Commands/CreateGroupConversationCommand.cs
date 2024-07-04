@@ -18,11 +18,21 @@ public class CreateGroupConversationCommandValidator : AbstractValidator<CreateG
 {
     public CreateGroupConversationCommandValidator()
     {
+        RuleFor(x => x.Group)
+            .NotNull()
+            .WithMessage("Group cannot be null.");
+
         RuleFor(x => x.Group.Title)
-           .NotEmpty();
+            .NotNull()
+            .WithMessage("Group title cannot be null.")
+            .NotEmpty()
+            .WithMessage("Group title cannot be empty.");
 
         RuleFor(x => x.Group.ImgUrl)
-           .NotEmpty();
+            .NotNull()
+            .WithMessage("Group image URL cannot be null.")
+            .NotEmpty()
+            .WithMessage("Group image URL cannot be empty.");
     }
 }
 
@@ -38,7 +48,8 @@ public class CreateGroupConversationCommandHandler : IRequestHandler<CreateGroup
         _mapper = mapper;
     }
 
-    public async Task<ResultDto<ConversationWithParticipantsDto>> Handle(CreateGroupConversationCommand request, CancellationToken cancellationToken)
+    public async Task<ResultDto<ConversationWithParticipantsDto>> Handle(CreateGroupConversationCommand request, 
+        CancellationToken cancellationToken)
     {
         Conversation conversation = await _unitOfWork.Conversations.CreateGroupConversationAsync(
             request.Group.Title,

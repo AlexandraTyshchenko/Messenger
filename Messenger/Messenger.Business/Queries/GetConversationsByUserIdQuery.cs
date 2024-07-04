@@ -19,7 +19,8 @@ public class GetConversationsByUserIdQueryValidator : AbstractValidator<GetConve
     public GetConversationsByUserIdQueryValidator()
     {
         RuleFor(x => x.UserId)
-          .Must(guid => guid != Guid.Empty);
+             .NotEqual(Guid.Empty)
+             .WithMessage("UserId cannot be an empty GUID.");
     }
 }
 

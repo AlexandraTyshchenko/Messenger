@@ -14,10 +14,11 @@ public class BaseController : ControllerBase
             if (_userId == Guid.Empty)
             {
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                if (userIdClaim != null)
+                if (_userId == null)
                 {
-                    _userId = new Guid(userIdClaim.Value);
+                    throw new InvalidOperationException("User id is null.");
                 }
+                _userId = new Guid(userIdClaim.Value);
             }
             return _userId;
         }

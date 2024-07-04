@@ -14,7 +14,7 @@ using System.Text;
 
 namespace Messenger.Business.Queries;
 
-public class AuthenticateUserQuery : IRequest<ResultDto<RefreshTokenDto>>
+public class AuthenticateUserQuery : IRequest<ResultDto<AccessTokenDto>>
 {
     public UserLoginDto UserLogin { get; set; }
 }
@@ -23,6 +23,10 @@ public class AuthenticateUserQueryValidator : AbstractValidator<AuthenticateUser
 {
     public AuthenticateUserQueryValidator()
     {
+        RuleFor(x => x.UserLogin)
+            .NotEmpty()
+            .WithMessage("UserLogin cannot be empty.");
+
         RuleFor(x => x.UserLogin.UserName)
             .NotEmpty().WithMessage("UserName is required");
 
@@ -31,7 +35,7 @@ public class AuthenticateUserQueryValidator : AbstractValidator<AuthenticateUser
     }
 }
 
-public class AuthenticateUserQueryHandler : IRequestHandler<AuthenticateUserQuery, ResultDto<RefreshTokenDto>>
+public class AuthenticateUserQueryHandler : IRequestHandler<AuthenticateUserQuery, ResultDto<AccessTokenDto>>
 {
     private readonly UserManager<User> _userManager;
     private readonly JwtSettings _jwtSettings;
@@ -46,23 +50,21 @@ public class AuthenticateUserQueryHandler : IRequestHandler<AuthenticateUserQuer
         _applicationContext = applicationContext;
     }
 
-    public async Task<ResultDto<RefreshTokenDto>> Handle(AuthenticateUserQuery request, CancellationToken cancellationToken)
+    public async Task<ResultDto<AccessTokenDto>> Handle(AuthenticateUserQuery request, CancellationToken cancellationToken)
     {
         User user = await ValidateUserAsync(request.UserLogin.UserName, request.UserLogin.Password);
 
         if (user == null)
         {
-            return ResultDto<RefreshTokenDto>.FailureResult<RefreshTokenDto>(
+            return ResultDto.FailureResult<AccessTokenDto>(
                 HttpStatusCode.Unauthorized, "Invalid credentials.");
         }
 
         string token = await CreateTokenAsync(user);
-        string refreshToken = CreateRefreshToken();
 
-        return ResultDto<RefreshTokenDto>.SuccessResult(new RefreshTokenDto
+        return ResultDto.SuccessResult(new AccessTokenDto
         {
             Token = token,
-            RefreshToken = refreshToken
         });
     }
 
@@ -78,13 +80,6 @@ public class AuthenticateUserQueryHandler : IRequestHandler<AuthenticateUserQuer
         var signingCredentials = GetSigningCredentials();
         var claims = await GetClaims(user);
         var tokenOptions = GenerateTokenOptions(signingCredentials, claims);
-        return new JwtSecurityTokenHandler().WriteToken(tokenOptions);
-    }
-
-    private string CreateRefreshToken()
-    {
-        var signingCredentials = GetSigningCredentials();
-        var tokenOptions = GenerateRefreshTokenOptions(signingCredentials);
         return new JwtSecurityTokenHandler().WriteToken(tokenOptions);
     }
 

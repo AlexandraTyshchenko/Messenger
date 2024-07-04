@@ -7,7 +7,7 @@ using System.Net;
 
 namespace Messenger.Business.Commands;
 
-public class DeleteMessageCommand : IRequest<ResultDto<AffectedRowsDto>>
+public class DeleteMessageCommand : IRequest<ResultDto>
 {
     public Guid MessageId { get; set; }
 }
@@ -17,11 +17,12 @@ public class DeleteMessageCommandValidator : AbstractValidator<DeleteMessageComm
     public DeleteMessageCommandValidator()
     {
         RuleFor(x => x.MessageId)
-          .Must(guid => guid != Guid.Empty);
+           .NotEqual(Guid.Empty)
+           .WithMessage("MessageId cannot be an empty GUID.");
     }
 }
 
-public class DeleteMessageCommandHandler : IRequestHandler<DeleteMessageCommand, ResultDto<AffectedRowsDto>>
+public class DeleteMessageCommandHandler : IRequestHandler<DeleteMessageCommand, ResultDto>
 {
     private readonly IUnitOfWork _unitOfWork;
 
@@ -30,22 +31,17 @@ public class DeleteMessageCommandHandler : IRequestHandler<DeleteMessageCommand,
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<ResultDto<AffectedRowsDto>> Handle(DeleteMessageCommand request, CancellationToken cancellationToken)
+    public async Task<ResultDto> Handle(DeleteMessageCommand request, CancellationToken cancellationToken)
     {
         Message message = await _unitOfWork.Messages.DeleteMessageAsync(request.MessageId);
 
         if (message == null)
         {
-            return ResultDto<AffectedRowsDto>.FailureResult<AffectedRowsDto>(HttpStatusCode.NotFound, $"Message with id {request.MessageId} wasn't found.");
+            return ResultDto.FailureResult(HttpStatusCode.NotFound, $"Message with id {request.MessageId} wasn't found.");
         }
 
-        int affectedRows = await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
 
-        AffectedRowsDto result = new AffectedRowsDto
-        {
-            AffectedRows = affectedRows,
-        };
-
-        return ResultDto.SuccessResult(result, HttpStatusCode.OK);
+        return ResultDto.SuccessResult( HttpStatusCode.OK);
     }
 }

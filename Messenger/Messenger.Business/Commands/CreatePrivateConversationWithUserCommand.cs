@@ -11,7 +11,7 @@ namespace Messenger.Business.Commands;
 public class CreatePrivateConversationWithUserCommand : IRequest<ResultDto<ConversationWithParticipantsDto>>
 {
     public Guid CreatorUserId { get; set; }
-    public Guid UserId { get; set; }
+    public Guid UserId { get; set; } 
 }
 
 public class CreatePrivateConversationWithUserCommandValidator : AbstractValidator<CreatePrivateConversationWithUserCommand>
@@ -19,10 +19,12 @@ public class CreatePrivateConversationWithUserCommandValidator : AbstractValidat
     public CreatePrivateConversationWithUserCommandValidator()
     {
         RuleFor(x => x.CreatorUserId)
-          .Must(guid => guid != Guid.Empty);
+            .NotEqual(Guid.Empty)
+            .WithMessage("CreatorUserId cannot be an empty GUID.");
 
         RuleFor(x => x.UserId)
-            .Must(guid => guid != Guid.Empty);
+            .NotEqual(Guid.Empty)
+            .WithMessage("UserId cannot be an empty GUID.");
     }
 }
 

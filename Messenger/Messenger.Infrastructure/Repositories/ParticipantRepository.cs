@@ -15,7 +15,7 @@ public class ParticipantRepository : IParticipantRepository
         _applicationContext = applicationContext;
     }
 
-    public async Task AddParticipantsToConversationAsync(IEnumerable<User> users, Conversation conversation)
+    public async Task<IEnumerable<ParticipantInConversation>> AddParticipantsToConversationAsync(IEnumerable<User> users, Conversation conversation)
     {
         IEnumerable<ParticipantInConversation> participants = users.Select(x => new ParticipantInConversation
         {
@@ -26,6 +26,7 @@ public class ParticipantRepository : IParticipantRepository
         });
 
         await _applicationContext.AddRangeAsync(participants);
+        return participants;
     }
 
     public async Task<ParticipantInConversation> DeleteParticipantFromGroupConversationAsync(Guid userId, Guid conversationId)

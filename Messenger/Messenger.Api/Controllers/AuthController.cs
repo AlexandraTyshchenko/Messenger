@@ -32,8 +32,8 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Authenticate([FromBody] UserLoginDto user)
     {
-        ResultDto<RefreshTokenDto> response = await _mediator.Send(new AuthenticateUserQuery { UserLogin = user });
+        ResultDto<AccessTokenDto> response = await _mediator.Send(new AuthenticateUserQuery { UserLogin = user });
 
-        return response.ToHttpResponse<RefreshTokenDto>();
+        return response.ToHttpResponse();
     }
 }

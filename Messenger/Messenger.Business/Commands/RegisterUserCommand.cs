@@ -17,6 +17,10 @@ public class RegisterUserCommandHandlerValidator : AbstractValidator<RegisterUse
 {
     public RegisterUserCommandHandlerValidator()
     {
+        RuleFor(x => x.UserRegistration)
+           .NotNull()
+           .WithMessage("UserRegistration cannot be null.");
+
         RuleFor(x => x.UserRegistration.FirstName)
             .NotEmpty().WithMessage("FirstName is required");
 

@@ -34,5 +34,4 @@ public class ExceptionHandlingMiddleware
         context.Response.ContentType = "text/plain";
         await context.Response.WriteAsync(exception.Message);
     }
-
 }

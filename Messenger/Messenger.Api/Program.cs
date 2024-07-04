@@ -46,9 +46,8 @@ builder.Services.AddSwaggerGen(opt =>
     });
 });
 
-var jwtConfig = builder.Configuration.GetSection("jwtConfig");
 
-var secretKey = jwtConfig["secret"];
+var jwtSettings = builder.Configuration.GetSection("JwtConfig").Get<JwtSettings>();
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtConfig"));
 
@@ -72,27 +71,25 @@ builder.Services.AddAuthentication(opt =>
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtConfig["validIssuer"],
-        ValidAudience = jwtConfig["validAudience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
+        ValidIssuer = jwtSettings.ValidIssuer,
+        ValidAudience = jwtSettings.ValidAudience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret))
     };
 });
 
-
-//builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
-builder.Services.AddValidatorsFromAssemblyContaining(typeof(CreateGroupConversationCommandValidator), includeInternalTypes: true);
-
+builder.Services.AddValidatorsFromAssemblyContaining(typeof(CreateGroupConversationCommandValidator), 
+    includeInternalTypes: true);
 
 var app = builder.Build();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();//todo ????????
+    app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();//todo ???????? ?? ??????
+app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 

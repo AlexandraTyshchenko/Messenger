@@ -30,6 +30,6 @@ public class UsersController : BaseController
             PageSize = searchParams.PageSize
         });
 
-        return response.ToHttpResponse<IPagedEntities<UserBasicInfoDto>>();
+        return response.ToHttpResponse();
     }
 }

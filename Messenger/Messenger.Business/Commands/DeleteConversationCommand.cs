@@ -7,7 +7,7 @@ using System.Net;
 
 namespace Messenger.Business.Commands;
 
-public class DeleteConversationCommand : IRequest<ResultDto<AffectedRowsDto>>
+public class DeleteConversationCommand : IRequest<ResultDto>
 {
     public Guid ConversationId { get; set; }
 }
@@ -17,11 +17,12 @@ public class DeleteConversationCommandValidator : AbstractValidator<DeleteConver
     public DeleteConversationCommandValidator()
     {
         RuleFor(x => x.ConversationId)
-          .Must(guid => guid != Guid.Empty);
+            .NotEqual(Guid.Empty)
+            .WithMessage("ConversationId cannot be an empty GUID.");
     }
 }
 
-public class DeleteConversationHandler : IRequestHandler<DeleteConversationCommand, ResultDto<AffectedRowsDto>>
+public class DeleteConversationHandler : IRequestHandler<DeleteConversationCommand, ResultDto>
 {
     private readonly IUnitOfWork _unitOfWork;
 
@@ -30,23 +31,17 @@ public class DeleteConversationHandler : IRequestHandler<DeleteConversationComma
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<ResultDto<AffectedRowsDto>> Handle(DeleteConversationCommand request, CancellationToken cancellationToken)
+    public async Task<ResultDto> Handle(DeleteConversationCommand request, CancellationToken cancellationToken)
     {
         Conversation conversation = await _unitOfWork.Conversations.DeleteConversationAsync(request.ConversationId);
 
         if (conversation == null)
         {
-            return ResultDto.FailureResult<AffectedRowsDto>(HttpStatusCode.NotFound, $"Conversation with id {request.ConversationId} wasn't found.");
+            return ResultDto.FailureResult(HttpStatusCode.NotFound, $"Conversation with id {request.ConversationId} wasn't found.");
         }
 
+        await _unitOfWork.SaveChangesAsync();
 
-        int affectedRows = await _unitOfWork.SaveChangesAsync();
-
-        AffectedRowsDto result = new AffectedRowsDto
-        {
-            AffectedRows = affectedRows,
-        };
-
-        return ResultDto.SuccessResult(result, HttpStatusCode.OK);
+        return ResultDto.SuccessResult(HttpStatusCode.OK);
     }
 }

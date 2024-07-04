@@ -1,7 +1,6 @@
 ﻿namespace Messenger.Business.Dtos;
 
-public class RefreshTokenDto
+public class AccessTokenDto
 {
     public string Token { get; set; }
-    public string RefreshToken { get; set; }
 }

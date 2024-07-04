@@ -7,7 +7,7 @@ using System.Net;
 
 namespace Messenger.Business.Commands;
 
-public class DeleteParticipantFromConversationCommand : IRequest<ResultDto<AffectedRowsDto>>
+public class DeleteParticipantFromConversationCommand : IRequest<ResultDto>
 {
     public Guid UserId { get; set; }
     public Guid ConversationId { get; set; }
@@ -16,17 +16,19 @@ public class DeleteParticipantFromConversationCommand : IRequest<ResultDto<Affec
 public class DeleteParticipantFromConversationCommandValidator : AbstractValidator<DeleteParticipantFromConversationCommand>
 {
     public DeleteParticipantFromConversationCommandValidator()
-    {
+    {  
         RuleFor(x => x.UserId)
-          .Must(guid => guid != Guid.Empty);
+            .NotEqual(Guid.Empty)
+            .WithMessage("UserId cannot be an empty GUID.");
 
         RuleFor(x => x.ConversationId)
-         .Must(guid => guid != Guid.Empty);
+            .NotEqual(Guid.Empty)
+            .WithMessage("ConversationId cannot be an empty GUID.");
     }
 }
 
 public class DeleteParticipantFromConversationCommandHandler
-    : IRequestHandler<DeleteParticipantFromConversationCommand, ResultDto<AffectedRowsDto>>
+    : IRequestHandler<DeleteParticipantFromConversationCommand, ResultDto>
 {
     private readonly IUnitOfWork _unitOfWork;
 
@@ -35,13 +37,13 @@ public class DeleteParticipantFromConversationCommandHandler
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<ResultDto<AffectedRowsDto>> Handle(DeleteParticipantFromConversationCommand request, CancellationToken cancellationToken)
+    public async Task<ResultDto> Handle(DeleteParticipantFromConversationCommand request, CancellationToken cancellationToken)
     {
         var conversation = await _unitOfWork.Conversations.GetConversationByIdAsync(request.ConversationId);
 
         if (conversation == null)
         {
-            return ResultDto<AffectedRowsDto>.FailureResult<AffectedRowsDto>(HttpStatusCode.NotFound, 
+            return ResultDto.FailureResult(HttpStatusCode.NotFound,
                 $"Conversation with id {request.ConversationId} wasn't found.");
         }
 
@@ -49,7 +51,7 @@ public class DeleteParticipantFromConversationCommandHandler
 
         if (participants.Count() <= 1)
         {
-            return ResultDto<AffectedRowsDto>.FailureResult<AffectedRowsDto>(HttpStatusCode.BadRequest, 
+            return ResultDto.FailureResult(HttpStatusCode.BadRequest,
                 "Cannot delete participant because it would leave the conversation with zero participants.");
         }
 
@@ -58,7 +60,7 @@ public class DeleteParticipantFromConversationCommandHandler
 
         if (participantInConversation == null)
         {
-            return ResultDto<AffectedRowsDto>.FailureResult<AffectedRowsDto>(HttpStatusCode.NotFound,
+            return ResultDto.FailureResult(HttpStatusCode.NotFound,
                 $"User with id {request.UserId} wasn't found in group conversation with id {request.ConversationId}.");
         }
 
@@ -75,13 +77,8 @@ public class DeleteParticipantFromConversationCommandHandler
             }
         }
 
-        int affectedRows = await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
 
-        AffectedRowsDto result = new AffectedRowsDto
-        {
-            AffectedRows = affectedRows,
-        };
-
-        return ResultDto.SuccessResult(result, HttpStatusCode.OK);
+        return ResultDto.SuccessResult(HttpStatusCode.OK);
     }
 }

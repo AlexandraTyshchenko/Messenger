@@ -18,7 +18,7 @@ public class GetParticipantsByConversationIdQueryValidator : AbstractValidator<G
     public GetParticipantsByConversationIdQueryValidator()
     {
         RuleFor(x => x.ConversationId)
-          .Must(guid => guid != Guid.Empty);
+          .NotEqual(Guid.Empty);
     }
 }
 

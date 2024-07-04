@@ -10,7 +10,6 @@ public class User : IdentityUser<Guid>
     public string ImgUrl { get; set; } = string.Empty;
     public string Bio { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
-    public virtual RefreshToken RefreshToken { get; set; }
     public ICollection<ParticipantInConversation> ParticipantsInConversation { get; set; } = new List<ParticipantInConversation>();
     public ICollection<Message> Messages { get; set; } = new List<Message>();
 

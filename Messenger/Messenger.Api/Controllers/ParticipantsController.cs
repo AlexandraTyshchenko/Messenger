@@ -31,14 +31,14 @@ public class ParticipantsController : BaseController
             ConversationId = conversationId
         });
 
-        return response.ToHttpResponse<IEnumerable<UserBasicInfoDto>>();
+        return response.ToHttpResponse();
     }
 
     [HttpPost]
     [ConversationRoleFilter(Role.Participant)]
     public async Task<IActionResult> AddParticipantsToConversation([FromBody] Guid[] userIds, [FromRoute] Guid conversationId)
     {
-        ResultDto<AffectedRowsDto> response = await _mediator.Send(new AddParticipantToConversationCommand
+        ResultDto<ConversationWithParticipantsDto> response = await _mediator.Send(new AddParticipantToConversationCommand
         {
             ConversationId = conversationId,
             UserIds = userIds
@@ -52,7 +52,7 @@ public class ParticipantsController : BaseController
     public async Task<IActionResult> DeleteParticipantsFromConversation([FromRoute] Guid userId,
         [FromRoute] Guid conversationId)
     {
-        ResultDto<AffectedRowsDto> response = await _mediator.Send(new DeleteParticipantFromConversationCommand
+        ResultDto response = await _mediator.Send(new DeleteParticipantFromConversationCommand
         {
             UserId = userId,
             ConversationId = conversationId

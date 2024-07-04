@@ -18,7 +18,8 @@ public class GetMessagesByConversationIdQueryValidator : AbstractValidator<GetMe
     public GetMessagesByConversationIdQueryValidator()
     {
         RuleFor(x => x.ConversationId)
-          .Must(guid => guid != Guid.Empty);
+            .NotEqual(Guid.Empty)
+            .WithMessage("ConversationId cannot be an empty GUID.");
     }
 }
 
