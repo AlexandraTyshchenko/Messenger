@@ -3,7 +3,6 @@ using Messenger.Api.Middleware;
 using Messenger.Business.Commands;
 using Messenger.Business.Extensions;
 using Messenger.Business.Options;
-using Messenger.Business.Queries;
 using Messenger.Infrastructure.Context;
 using Messenger.Infrastructure.Entities;
 using Messenger.Infrastructure.Extensions;
