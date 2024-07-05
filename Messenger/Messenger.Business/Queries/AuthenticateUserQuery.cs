@@ -83,19 +83,6 @@ public class AuthenticateUserQueryHandler : IRequestHandler<AuthenticateUserQuer
         return new JwtSecurityTokenHandler().WriteToken(tokenOptions);
     }
 
-    private JwtSecurityToken GenerateRefreshTokenOptions(SigningCredentials signingCredentials)
-    {
-        var tokenOptions = new JwtSecurityToken
-        (
-            issuer: _jwtSettings.ValidIssuer,
-            audience: _jwtSettings.ValidAudience,
-            claims: null,
-            expires: DateTime.Now.AddMinutes(_jwtSettings.RefreshTokenExpiresIn),
-            signingCredentials: signingCredentials
-        );
-        return tokenOptions;
-    }
-
     private JwtSecurityToken GenerateTokenOptions(SigningCredentials signingCredentials, List<Claim> claims)
     {
         var tokenOptions = new JwtSecurityToken
