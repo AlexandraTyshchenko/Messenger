@@ -31,12 +31,12 @@ public class ConversationsController : BaseController
     }
 
     [HttpPost("private")]
-    public async Task<IActionResult> CreatePrivateConversation([FromQuery] Guid userId)
+    public async Task<IActionResult> CreatePrivateConversation([FromBody] UserModelDto userModelDto)//todo from body add model
     {
         ResultDto<ConversationWithParticipantsDto> response = await _mediatoR.Send(new CreatePrivateConversationWithUserCommand
         {
             CreatorUserId = UserId,
-            UserId = userId,
+            UserId = userModelDto.UserId,
         });
 
         return response.ToHttpResponse();

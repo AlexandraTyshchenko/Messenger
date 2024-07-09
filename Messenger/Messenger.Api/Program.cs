@@ -76,9 +76,6 @@ builder.Services.AddAuthentication(opt =>
     };
 });
 
-builder.Services.AddValidatorsFromAssemblyContaining(typeof(CreateGroupConversationCommandValidator), 
-    includeInternalTypes: true);
-
 var app = builder.Build();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
