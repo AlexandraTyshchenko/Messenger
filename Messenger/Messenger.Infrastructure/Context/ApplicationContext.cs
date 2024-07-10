@@ -18,6 +18,7 @@ public class ApplicationContext : IdentityDbContext<User, UserRole, Guid>
     public DbSet<Message> Messages { get; set; }
     public DbSet<ParticipantInConversation> ParticipantsInConversation { get; set; }
     public DbSet<UserRole> UserRoles { get; set; }
+    public DbSet<UserConnection> UserConnections { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -27,6 +28,7 @@ public class ApplicationContext : IdentityDbContext<User, UserRole, Guid>
         modelBuilder.ApplyConfiguration(new ParticipantInConversationConfiguration());
         modelBuilder.ApplyConfiguration(new ConversationConfiguration());
         modelBuilder.ApplyConfiguration(new MessageConfiguration());
+        modelBuilder.ApplyConfiguration(new UserConnectionConfiguration());
         SeedData(modelBuilder);
     }
 

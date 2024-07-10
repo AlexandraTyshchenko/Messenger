@@ -1,10 +1,13 @@
 ﻿using AutoMapper;
 using FluentValidation;
 using MediatR;
+using Messenger.Api.Hubs;
 using Messenger.Business.Dtos;
 using Messenger.Infrastructure;
 using Messenger.Infrastructure.Entities;
+using Microsoft.AspNetCore.SignalR;
 using System.Net;
+using System.Text.Json;
 
 namespace Messenger.Business.Commands;
 
@@ -43,11 +46,13 @@ public class AddMessageToConversationCommandHandler : IRequestHandler<AddMessage
 {
     private readonly IMapper _mapper;
     private readonly IUnitOfWork _unitOfWork;
-
-    public AddMessageToConversationCommandHandler(IUnitOfWork unitOfWork, IMapper mapper)
+    private readonly IHubContext<ChatHub> _messageHub;
+    public AddMessageToConversationCommandHandler(IUnitOfWork unitOfWork, IMapper mapper,
+        IHubContext<ChatHub> messageHub)
     {
         _mapper = mapper;
         _unitOfWork = unitOfWork;
+        _messageHub = messageHub;
     }
     public async Task<ResultDto<MessageWithSenderDto>> Handle(AddMessageToConversationCommand request, CancellationToken cancellationToken)
     {
@@ -67,6 +72,8 @@ public class AddMessageToConversationCommandHandler : IRequestHandler<AddMessage
         await _unitOfWork.SaveChangesAsync();
 
         var mappedMessage = _mapper.Map<MessageWithSenderDto>(message);
+
+        await _messageHub.Clients.Group(conversation.Id.ToString()).SendAsync("ReceiveNotification", mappedMessage);
 
         return ResultDto.SuccessResult(mappedMessage, HttpStatusCode.Created);
     }

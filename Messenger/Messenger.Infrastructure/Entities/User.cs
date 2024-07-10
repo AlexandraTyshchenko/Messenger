@@ -12,5 +12,5 @@ public class User : IdentityUser<Guid>
     public bool IsActive { get; set; } = true;
     public ICollection<ParticipantInConversation> ParticipantsInConversation { get; set; } = new List<ParticipantInConversation>();
     public ICollection<Message> Messages { get; set; } = new List<Message>();
-
+    public ICollection<UserConnection> UserConnections { get; set; }
 }

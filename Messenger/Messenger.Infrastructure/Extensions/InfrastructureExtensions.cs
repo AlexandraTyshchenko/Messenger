@@ -22,6 +22,7 @@ public static class InfrastructureExtensions
         services.AddScoped<IMessageRepository, MessageRepository>();
         services.AddScoped<IParticipantRepository, ParticipantRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IConnectionRepository, ConnectionRepository>();
         return services;
     }
 }
