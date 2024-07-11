@@ -7,7 +7,6 @@ using Messenger.Infrastructure;
 using Messenger.Infrastructure.Entities;
 using Microsoft.AspNetCore.SignalR;
 using System.Net;
-using System.Text.Json;
 
 namespace Messenger.Business.Commands;
 

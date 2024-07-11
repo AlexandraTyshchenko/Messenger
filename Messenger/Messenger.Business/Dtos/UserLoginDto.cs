@@ -4,7 +4,7 @@ namespace Messenger.Business.Dtos;
 
 public class UserLoginDto
 {
-    public string? UserName { get; init; }
+    public string UserName { get; init; }
 
-    public string? Password { get; init; }
+    public string Password { get; init; }
 }

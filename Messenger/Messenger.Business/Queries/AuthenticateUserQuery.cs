@@ -52,9 +52,12 @@ public class AuthenticateUserQueryHandler : IRequestHandler<AuthenticateUserQuer
 
     public async Task<ResultDto<AccessTokenDto>> Handle(AuthenticateUserQuery request, CancellationToken cancellationToken)
     {
-        User user = await ValidateUserAsync(request.UserLogin.UserName, request.UserLogin.Password);
+        User user = await _userManager.FindByNameAsync(request.UserLogin.UserName);
 
-        if (user == null)
+
+        bool isValidated = await ValidateUserAsync(user, request.UserLogin.Password);
+
+        if (!isValidated)
         {
             return ResultDto.FailureResult<AccessTokenDto>(HttpStatusCode.BadRequest, "Invalid credentials.");
         }
@@ -67,11 +70,10 @@ public class AuthenticateUserQueryHandler : IRequestHandler<AuthenticateUserQuer
         });
     }
 
-    private async Task<User> ValidateUserAsync(string userName, string password)
+    private async Task<bool> ValidateUserAsync(User user, string password)
     {
-        var user = await _userManager.FindByNameAsync(userName);
         var result = user != null && await _userManager.CheckPasswordAsync(user, password);
-        return user;
+        return result;
     }
 
     private async Task<string> CreateTokenAsync(User user)
