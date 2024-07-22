@@ -35,19 +35,19 @@ public class ChatHub : Hub
         await _unitOfWork.SaveChangesAsync();
     }
 
-    public async Task JoinGroups()
-    {
-        var userId = Context.UserIdentifier;
-        IEnumerable<Conversation> conversations = await _unitOfWork.Conversations
-            .GetConversationsByUserIdAsync(new Guid(userId));
+    //public async Task JoinGroups()
+    //{
+    //    var userId = Context.UserIdentifier;
+    //    IEnumerable<Conversation> conversations = await _unitOfWork.Conversations
+    //        .GetConversationsByUserIdAsync(new Guid(userId));//todo add pagination here in future
 
-        foreach (var conversation in conversations)
-        {
-            await Groups.AddToGroupAsync(Context.ConnectionId, conversation.Id.ToString());
-            await Clients.Group(conversation.Id.ToString()).SendAsync("ReceiveMessage", $"successfully joined" +
-                $" to {conversation.Id}");
-        }
-    }
+    //    foreach (var conversation in conversations)
+    //    {
+    //        await Groups.AddToGroupAsync(Context.ConnectionId, conversation.Id.ToString());
+    //        await Clients.Group(conversation.Id.ToString()).SendAsync("ReceiveMessage", $"successfully joined" +
+    //            $" to {conversation.Id}");
+    //    }
+    //}
 
     //  [ConversationRoleFilter(Role.Participant)]
     public async Task JoinGroup(ConversationNotificationDto conversationMessageDto)

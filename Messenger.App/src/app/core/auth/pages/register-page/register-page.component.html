@@ -1,0 +1,97 @@
+<form [formGroup]="registerForm" (ngSubmit)="onRegisterFormSubmitted()">
+    <!-- Error Message -->
+    <div *ngIf="errorMessage !== null" class="alert alert-danger" role="alert">
+      {{ errorMessage }}
+    </div>
+  
+    <!-- First Name input -->
+    <div data-mdb-input-init class="form-outline mb-4">
+      <input
+        class="form-control form-control-lg"
+        type="text"
+        placeholder="First Name"
+        formControlName="firstName"
+      />
+      <label class="form-label" for="form3Example1">Enter first name</label>
+    </div>
+  
+    <!-- Last Name input -->
+    <div data-mdb-input-init class="form-outline mb-4">
+      <input
+        class="form-control form-control-lg"
+        type="text"
+        placeholder="Last Name"
+        formControlName="lastName"
+      />
+      <label class="form-label" for="form3Example2">Enter last name</label>
+    </div>
+  
+    <!-- Username input -->
+    <div data-mdb-input-init class="form-outline mb-4">
+      <input
+        class="form-control form-control-lg"
+        type="text"
+        placeholder="Username"
+        formControlName="userName"
+      />
+      <label class="form-label" for="form3Example3">Enter username</label>
+    </div>
+  
+    <!-- Email input -->
+    <div data-mdb-input-init class="form-outline mb-4">
+      <input
+        class="form-control form-control-lg"
+        type="email"
+        placeholder="Email"
+        formControlName="email"
+      />
+      <label class="form-label" for="form3Example4">Enter email</label>
+    </div>
+  
+    <!-- Phone Number input -->
+    <div data-mdb-input-init class="form-outline mb-4">
+      <input
+        class="form-control form-control-lg"
+        type="text"
+        placeholder="Phone Number"
+        formControlName="phoneNumber"
+      />
+      <label class="form-label" for="form3Example5">Enter phone number</label>
+    </div>
+  
+    <!-- Password input -->
+    <div data-mdb-input-init class="form-outline mb-3">
+      <input
+        type="password"
+        placeholder="Password"
+        formControlName="password"
+        class="form-control form-control-lg"
+      />
+      <label class="form-label" for="form3Example6">Enter password</label>
+    </div>
+  
+    <!-- Bio input -->
+    <div data-mdb-input-init class="form-outline mb-3">
+      <input
+        type="text"
+        placeholder="Bio"
+        formControlName="bio"
+        class="form-control form-control-lg"
+      />
+      <label class="form-label" for="form3Example7">Enter bio</label>
+    </div>
+  
+    <div class="text-center text-lg-start mt-4 pt-2">
+      <button
+        type="submit"
+        [disabled]="registerForm.invalid"
+        data-mdb-button-init
+        data-mdb-ripple-init
+        class="btn btn-primary btn-lg"
+        style="padding-left: 2.5rem; padding-right: 2.5rem"
+      >
+        Register
+      </button>
+    </div>
+  </form>
+  

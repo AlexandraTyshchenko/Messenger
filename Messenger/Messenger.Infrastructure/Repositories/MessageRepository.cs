@@ -1,6 +1,8 @@
-﻿using Messenger.Infrastructure.Context;
+﻿using Azure;
+using Messenger.Infrastructure.Context;
 using Messenger.Infrastructure.Entities;
 using Messenger.Infrastructure.Interfaces;
+using Messenger.Infrastructure.Pagination;
 using Microsoft.EntityFrameworkCore;
 
 namespace Messenger.Infrastructure.Repositories.Repositories;
@@ -35,7 +37,7 @@ public class MessageRepository : IMessageRepository
 
         if (message is null)
         {
-            return null; 
+            return null;
         }
 
         Message deletedMessage = _applicationContext.Messages.Remove(message).Entity;
@@ -53,14 +55,15 @@ public class MessageRepository : IMessageRepository
         return message;
     }
 
-    public async Task<IEnumerable<Message>> GetMessagesByConversationIdAsync(Guid conversationId)
+    public async Task<IPagedEntities<Message>> GetMessagesByConversationIdAsync(Guid conversationId,
+        int page, int pageSize)
     {
-        IEnumerable<Message> messages = await _applicationContext.Messages
+        IQueryable<Message> messages = _applicationContext.Messages
                                     .Where(m => m.Conversation.Id == conversationId)
                                     .Include(x => x.Sender)
-                                    .OrderBy(x => x.SentAt)
-                                    .ToListAsync();
+                                    .OrderByDescending(x => x.SentAt);
+        IPagedEntities<Message> pagedMessages = await messages.WithPagingAsync(page, pageSize);
 
-        return messages;
+        return pagedMessages;
     }
 }

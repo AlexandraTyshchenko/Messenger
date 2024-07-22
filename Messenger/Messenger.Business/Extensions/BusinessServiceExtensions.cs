@@ -2,8 +2,10 @@
 using FluentValidation;
 using MediatR;
 using Messenger.Business.Commands;
+using Messenger.Business.Interfaces;
 using Messenger.Business.Profiles;
 using Messenger.Business.Queries;
+using Messenger.Business.Services;
 using Messenger.Business.ValidationPipelines;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,7 +17,6 @@ public static class BusinessServiceExtensions
 {
     public static IServiceCollection AddBusinessServices(this IServiceCollection services, IConfiguration configuration)
     {
-
         services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssemblyContaining<GetConversationsByUserIdQueryHandler>();
@@ -31,6 +32,11 @@ public static class BusinessServiceExtensions
         });
         IMapper mapper = mapperConfig.CreateMapper();
         services.AddSingleton(mapper);
+
+        services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<IUrlHelperService, UrlHelperService>();
+        services.AddScoped<IEmailService, EmailService>();
+
         return services;
     }
 }

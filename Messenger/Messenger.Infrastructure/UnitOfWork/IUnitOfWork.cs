@@ -9,6 +9,6 @@ public interface IUnitOfWork : IDisposable
     IParticipantRepository Participants { get; }
     IUserRepository Users { get; }
     IConnectionRepository Connections { get; }
-
+    IRefreshTokenRepository RefreshTokens { get; }
     Task<int> SaveChangesAsync();
 }

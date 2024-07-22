@@ -2,7 +2,7 @@ import { APP_INITIALIZER, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { LoginPageComponent } from './core/auth/login/pages/login-page/login-page.component';
+import { LoginPageComponent } from './core/auth/pages/login-page/login-page.component';
 import {
   HttpClientModule,
   provideHttpClient,
@@ -12,7 +12,20 @@ import { JwtModule, JwtModuleOptions } from '@auth0/angular-jwt';
 import { ConversationsComponent } from './pages/conversations/conversations.component';
 import { HomePageComponent } from './pages/home-page/home-page.component';
 import { authInterceptor } from './core/auth/auth.interceptor';
-import { AuthService } from './core/auth/services/auth.service';
+import { AuthService } from './core/services/auth.service';
+import { CommonModule } from '@angular/common';  
+import { ReactiveFormsModule } from '@angular/forms';
+import { RegisterPageComponent } from './core/auth/pages/register-page/register-page.component';
+import { AuthPageComponent } from './pages/auth-page/auth-page.component';
+import { EmailConfirmationComponent } from './core/auth/pages/email-confirmation/email-confirmation.component';
+import { SuccessEmailConfirmationComponent } from './pages/success-email-confirmation/success-email-confirmation.component';
+import { ConversationItemComponent } from './components/conversation-item/conversation-item.component';
+import { ScrollerModule } from 'primeng/scroller';
+import { InfiniteScrollModule } from 'ngx-infinite-scroll';
+import { HeaderComponent } from './components/header/header.component';
+import { ChatComponent } from './components/chat/chat.component';
+import { MessageComponent } from './message/message.component';
+
 
 const JWT_Module_Options: JwtModuleOptions = {
   config: {
@@ -23,15 +36,26 @@ const JWT_Module_Options: JwtModuleOptions = {
 @NgModule({
   declarations: [
     AppComponent,
-    ConversationsComponent,
     HomePageComponent,
+    LoginPageComponent,
+    RegisterPageComponent,
+    AuthPageComponent,
+    EmailConfirmationComponent,
+    SuccessEmailConfirmationComponent,
     ConversationsComponent,
+    ConversationItemComponent,
+    HeaderComponent,
+    ChatComponent,
+    MessageComponent,
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
-    LoginPageComponent,
     HttpClientModule,
+    CommonModule,
+    ReactiveFormsModule, 
+    ScrollerModule,
+    InfiniteScrollModule,
     JwtModule.forRoot(JWT_Module_Options),
   ],
   providers: [

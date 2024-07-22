@@ -1,7 +1,9 @@
-﻿using Messenger.Infrastructure.Context;
+﻿using Azure;
+using Messenger.Infrastructure.Context;
 using Messenger.Infrastructure.Entities;
 using Messenger.Infrastructure.Enums;
 using Messenger.Infrastructure.Interfaces;
+using Messenger.Infrastructure.Pagination;
 using Microsoft.EntityFrameworkCore;
 
 namespace Messenger.Infrastructure.Repositories.Repositories;
@@ -97,14 +99,19 @@ public class ConversationRepository : IConversationRepository
         return conversation;
     }
 
-    public async Task<IEnumerable<Conversation>> GetConversationsByUserIdAsync(Guid userId)
+    public async Task<IPagedEntities<Conversation>> GetConversationsByUserIdAsync(Guid userId, int page, int pageSize)
     {
-        return await _applicationContext.Conversations
+        IQueryable<Conversation> conversations = _applicationContext.Conversations
              .Where(x => x.ParticipantsInConversation.Any(x => x.User.Id == userId))
              .Include(x => x.Group)
              .Include(x => x.Messages)
                  .ThenInclude(x => x.Sender)
-             .ToListAsync();
+             .Include(x => x.ParticipantsInConversation)
+                .ThenInclude(x => x.User);
+
+        IPagedEntities<Conversation> pagedConversations = await conversations.WithPagingAsync(page, pageSize);
+
+        return pagedConversations;
     }
 
     public async Task<Conversation> GetPrivateConversationWithUserAsync(Guid creatorUserId, Guid userId)

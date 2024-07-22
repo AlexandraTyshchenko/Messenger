@@ -1,0 +1,6 @@
+<div *ngIf="success === true" class="confirmation-message alert alert-success">
+  <p>Email is successfully submitted</p>
+</div>
+<div *ngIf="errorMessage !== null" class="alert alert-danger" role="alert">
+  {{ errorMessage }}
+</div>

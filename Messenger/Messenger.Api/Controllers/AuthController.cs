@@ -2,7 +2,6 @@
 using Messenger.Api.Extensions;
 using Messenger.Business.Commands;
 using Messenger.Business.Dtos;
-using Messenger.Business.Queries;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Messenger.Api.Controllers;
@@ -32,7 +31,30 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Authenticate([FromBody] UserLoginDto user)
     {
-        ResultDto<AccessTokenDto> response = await _mediator.Send(new AuthenticateUserQuery { UserLogin = user });
+        ResultDto<TokenDto> response = await _mediator.Send(new AuthenticateUserCommand { UserLogin = user });
+
+        return response.ToHttpResponse();
+    }
+
+    [HttpPost("refresh")]
+    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenDto refreshTokenDto)
+    {
+        ResultDto<TokenDto> response = await _mediator.Send(new RefreshTokenCommand
+        {
+            RefreshToken = refreshTokenDto.RefreshToken
+        });
+
+        return response.ToHttpResponse();
+    }
+
+    [HttpPost("confirmEmail")]
+    public async Task<IActionResult> ConfirmEmail([FromQuery] string token, [FromQuery] string email)
+    {
+        ResultDto response = await _mediator.Send(new ConfirmEmailCommand
+        {
+            Token = token,
+            Email = email
+        });
 
         return response.ToHttpResponse();
     }

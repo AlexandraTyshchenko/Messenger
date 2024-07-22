@@ -1,1 +1,25 @@
-<p>conversations works!</p>
+<div class="row">
+  <div class="col-md-5">
+    <div
+      class="container"
+      infiniteScroll
+      [scrollWindow]="false"
+      (scrolled)="onScroll()"
+    >
+      <div
+        *ngFor="let conversation of conversations; let i = index"
+        class="list-group-item d-flex justify-content-between align-items-start"
+        [class.active]="conversation.id === selectedConversationId"
+        (click)="setActive(i)"
+      >
+        <app-conversation-item
+          [conversation]="conversation"
+        ></app-conversation-item>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <app-chat ></app-chat>
+  </div>
+</div>
+ 

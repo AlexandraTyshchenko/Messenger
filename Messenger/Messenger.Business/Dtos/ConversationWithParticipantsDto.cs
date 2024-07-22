@@ -6,4 +6,5 @@ public class ConversationWithParticipantsDto
     public GroupDto Group { get; set; }
     public IEnumerable<UserBasicInfoDto> Participants { get; set; } = Enumerable.Empty<UserBasicInfoDto>();
     public int ParticipantsCount {  get; set; }
+    public MessageWithSenderDto LastMessage { get; set; }
 }

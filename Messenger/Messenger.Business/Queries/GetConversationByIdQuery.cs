@@ -7,7 +7,7 @@ using System.Net;
 
 namespace Messenger.Business.Queries;
 
-public class GetConversationByIdQuery : IRequest<ResultDto<ConversationDto>>
+public class GetConversationByIdQuery : IRequest<ResultDto<ConversationWithParticipantsDto>>
 {
     public Guid ConversationId { get; set; }
 }
@@ -18,11 +18,11 @@ public class GetConversationByIdQueryValidator : AbstractValidator<GetConversati
     {
         RuleFor(x => x.ConversationId)
             .NotEqual(Guid.Empty)
-            .WithMessage("ConversationId cannot be an empty GUID."); ;
+            .WithMessage("ConversationId cannot be an empty GUID."); 
     }
 }
 
-public class GetConversationByIdQueryHandler : IRequestHandler<GetConversationByIdQuery, ResultDto<ConversationDto>>
+public class GetConversationByIdQueryHandler : IRequestHandler<GetConversationByIdQuery, ResultDto<ConversationWithParticipantsDto>>
 {
 
     private readonly IUnitOfWork _unitOfWork;
@@ -34,17 +34,17 @@ public class GetConversationByIdQueryHandler : IRequestHandler<GetConversationBy
         _mapper = mapper;
     }
 
-    public async Task<ResultDto<ConversationDto>> Handle(GetConversationByIdQuery request, CancellationToken cancellationToken)
+    public async Task<ResultDto<ConversationWithParticipantsDto>> Handle(GetConversationByIdQuery request, CancellationToken cancellationToken)
     {
         var conversation = await _unitOfWork.Conversations.GetConversationByIdAsync(request.ConversationId);
 
         if (conversation == null)
         {
-            return ResultDto.FailureResult<ConversationDto>(HttpStatusCode.NotFound,
+            return ResultDto.FailureResult<ConversationWithParticipantsDto>(HttpStatusCode.NotFound,
                 $"Conversation with id {request.ConversationId} wasn't found.");
         }
 
-        var mappedConversation = _mapper.Map<ConversationDto>(conversation);
+        var mappedConversation = _mapper.Map<ConversationWithParticipantsDto>(conversation);
 
         return ResultDto.SuccessResult(mappedConversation);
     }

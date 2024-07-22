@@ -11,10 +11,12 @@ public class UnitOfWork : IUnitOfWork
     public IParticipantRepository Participants { get; }
     public IUserRepository Users { get; }
     public IConnectionRepository Connections { get; }
+    public IRefreshTokenRepository RefreshTokens { get; }
 
     public UnitOfWork(ApplicationContext applicationContext, IConversationRepository conversationRepository,
         IMessageRepository messageRepository, IParticipantRepository participantRepository, 
-        IUserRepository userRepository, IConnectionRepository connections)
+        IUserRepository userRepository, IConnectionRepository connections,
+        IRefreshTokenRepository refreshTokenRepository)
     {
         _applicationContext = applicationContext;
         Conversations = conversationRepository;
@@ -22,6 +24,7 @@ public class UnitOfWork : IUnitOfWork
         Participants = participantRepository;
         Users = userRepository;
         Connections = connections;
+        RefreshTokens = refreshTokenRepository;
     }
 
     public async Task<int> SaveChangesAsync()

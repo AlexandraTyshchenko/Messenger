@@ -2,15 +2,19 @@
 using FluentValidation;
 using MediatR;
 using Messenger.Business.Dtos;
+using Messenger.Business.Profiles;
+using Messenger.Business.Validators;
 using Messenger.Infrastructure;
 using Messenger.Infrastructure.Entities;
+using Messenger.Infrastructure.Pagination;
 using System.Net;
 
 namespace Messenger.Business.Queries;
 
-public class GetMessagesByConversationIdQuery : IRequest<ResultDto<IEnumerable<MessageWithSenderDto>>>
+public class GetMessagesByConversationIdQuery : IRequest<ResultDto<IPagedEntities<MessageWithSenderDto>>>
 {
     public Guid ConversationId { get; set; }
+    public PaginationParams PaginationParams { get; set; }
 }
 
 public class GetMessagesByConversationIdQueryValidator : AbstractValidator<GetMessagesByConversationIdQuery>
@@ -20,10 +24,14 @@ public class GetMessagesByConversationIdQueryValidator : AbstractValidator<GetMe
         RuleFor(x => x.ConversationId)
             .NotEqual(Guid.Empty)
             .WithMessage("ConversationId cannot be an empty GUID.");
+
+        RuleFor(x => x.PaginationParams)
+             .NotNull()
+             .SetValidator(new PaginationParamsValidator());
     }
 }
 
-public class GetMessagesByConversationIdQueryHandler : IRequestHandler<GetMessagesByConversationIdQuery, ResultDto<IEnumerable<MessageWithSenderDto>>>
+public class GetMessagesByConversationIdQueryHandler : IRequestHandler<GetMessagesByConversationIdQuery, ResultDto<IPagedEntities<MessageWithSenderDto>>>
 {
     private readonly IMapper _mapper;
     private readonly IUnitOfWork _unitOfWork;
@@ -34,12 +42,13 @@ public class GetMessagesByConversationIdQueryHandler : IRequestHandler<GetMessag
         _mapper = mapper;
     }
 
-    public async Task<ResultDto<IEnumerable<MessageWithSenderDto>>> Handle(GetMessagesByConversationIdQuery request, CancellationToken cancellationToken)
+    public async Task<ResultDto<IPagedEntities<MessageWithSenderDto>>> Handle(GetMessagesByConversationIdQuery request, CancellationToken cancellationToken)
     {
-        IEnumerable<Message> messages = await _unitOfWork.Messages.GetMessagesByConversationIdAsync(request.ConversationId);
+        IPagedEntities<Message> pagedMessages = await _unitOfWork.Messages
+            .GetMessagesByConversationIdAsync(request.ConversationId,
+            request.PaginationParams.Page, request.PaginationParams.PageSize);
 
-        var mappedMessages = _mapper.Map<IEnumerable<MessageWithSenderDto>>(messages);
-
-        return ResultDto.SuccessResult(mappedMessages, HttpStatusCode.OK);
+        var mappedUsers = _mapper.MapPagedEntities<Message, MessageWithSenderDto>(pagedMessages);
+        return ResultDto.SuccessResult(mappedUsers, HttpStatusCode.OK);
     }
 }

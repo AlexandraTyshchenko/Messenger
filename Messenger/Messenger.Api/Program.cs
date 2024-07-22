@@ -49,6 +49,8 @@ builder.Services.AddSwaggerGen(opt =>
 var jwtSettings = builder.Configuration.GetSection("JwtConfig").Get<JwtSettings>();
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtConfig"));
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+builder.Services.Configure<EmailConfirmationSettings>(builder.Configuration.GetSection("EmailConfirmationSettings"));
 
 builder.Services.AddIdentity<User, UserRole>(options =>
 {

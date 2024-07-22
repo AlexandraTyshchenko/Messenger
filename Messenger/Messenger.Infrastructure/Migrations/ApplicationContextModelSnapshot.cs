@@ -117,6 +117,28 @@ namespace Messenger.Infrastructure.Migrations
                     b.ToTable("ParticipantsInConversation");
                 });
 
+            modelBuilder.Entity("Messenger.Infrastructure.Entities.RefreshToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Token")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("RefreshTokens");
+                });
+
             modelBuilder.Entity("Messenger.Infrastructure.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -204,10 +226,10 @@ namespace Messenger.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("21cbea78-94c8-4be3-a377-5e4ff5346195"),
+                            Id = new Guid("edf48b62-f332-45a5-8f7d-507439ec5a41"),
                             AccessFailedCount = 0,
                             Bio = "Hello, I'm John.",
-                            ConcurrencyStamp = "3aa622d1-cb36-484c-979c-eff3ea9c70a0",
+                            ConcurrencyStamp = "6d93cf4b-690e-45a6-90b9-32e338cc8130",
                             Email = "john.doe@example.com",
                             EmailConfirmed = true,
                             FirstName = "John",
@@ -224,10 +246,10 @@ namespace Messenger.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("629b2d0e-2e80-402c-aaa6-73d75bf9490b"),
+                            Id = new Guid("a925a6fc-580a-47f1-9629-e42694f589d1"),
                             AccessFailedCount = 0,
                             Bio = "Hi, I'm Jane.",
-                            ConcurrencyStamp = "d1d4010a-937f-4f77-bc82-7c10d6de1dad",
+                            ConcurrencyStamp = "f495867b-41e9-42cf-b6e8-97e3959ce031",
                             Email = "jane.smith@example.com",
                             EmailConfirmed = true,
                             FirstName = "Jane",
@@ -244,10 +266,10 @@ namespace Messenger.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("e559cca0-dfe3-42ea-b7f1-b2071445a664"),
+                            Id = new Guid("02f01f19-cf14-47d4-bd87-fc3ac99da6d0"),
                             AccessFailedCount = 0,
                             Bio = "Hey, I'm Michael.",
-                            ConcurrencyStamp = "19342632-892a-4c66-a0b2-5d44b3e069e8",
+                            ConcurrencyStamp = "c6d91c7a-801b-447f-81a3-d8f6f9ded490",
                             Email = "michael.johnson@example.com",
                             EmailConfirmed = true,
                             FirstName = "Michael",
@@ -462,6 +484,15 @@ namespace Messenger.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Messenger.Infrastructure.Entities.RefreshToken", b =>
+                {
+                    b.HasOne("Messenger.Infrastructure.Entities.User", "User")
+                        .WithMany("RefreshTokens")
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Messenger.Infrastructure.Entities.UserConnection", b =>
                 {
                     b.HasOne("Messenger.Infrastructure.Entities.User", "User")
@@ -541,6 +572,8 @@ namespace Messenger.Infrastructure.Migrations
                     b.Navigation("Messages");
 
                     b.Navigation("ParticipantsInConversation");
+
+                    b.Navigation("RefreshTokens");
 
                     b.Navigation("UserConnections");
                 });

@@ -1,0 +1,30 @@
+/* Custom styles for conversation component */
+.ms-2.me-auto.d-flex.align-items-center.p-3 {
+    padding: 20px;
+  }
+  
+  .ms-2.me-auto.d-flex.align-items-center img {
+    width: 60px;
+    height: 48px;
+    margin-right: 20px;
+  }
+  
+  .flex-grow-1.ms-4 {
+    margin-left: 20px;
+  }
+  
+  .flex-grow-1.ms-4 .fw-bold {
+    font-size: 1.25rem; 
+    margin-bottom: 10px;
+  }
+  
+  .flex-grow-1.ms-4 .fs-6 {
+    font-size: 1.125rem; 
+    margin-bottom: 5px;
+  }
+  
+  .flex-grow-1.ms-4 .badge {
+    font-size: 1rem; 
+    padding: 10px;
+  }
+  

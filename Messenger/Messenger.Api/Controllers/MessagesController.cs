@@ -5,6 +5,7 @@ using Messenger.Business.Commands;
 using Messenger.Business.Dtos;
 using Messenger.Business.Queries;
 using Messenger.Infrastructure.Enums;
+using Messenger.Infrastructure.Pagination;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -24,10 +25,15 @@ public class MessagesController : BaseController
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetMessagesByConversationId([FromRoute] Guid conversationId)
+    public async Task<IActionResult> GetMessagesByConversationId([FromRoute] Guid conversationId,
+       [FromQuery] PaginationParams paginationParams)
     {
-        ResultDto<IEnumerable<MessageWithSenderDto>> response = await _mediator
-            .Send(new GetMessagesByConversationIdQuery { ConversationId = conversationId });
+        ResultDto<IPagedEntities<MessageWithSenderDto>> response = await _mediator
+            .Send(new GetMessagesByConversationIdQuery
+            {
+                ConversationId = conversationId,
+                PaginationParams = paginationParams
+            });
 
         return response.ToHttpResponse();
     }

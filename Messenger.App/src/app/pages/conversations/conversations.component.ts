@@ -1,30 +1,66 @@
-import { Component } from '@angular/core';
-import { Conversation } from '../../core/auth/classes/conversation.model';
-import { ConversationsService } from '../../core/auth/services/conversations.service';
+import { Component, HostListener } from '@angular/core';
+import { Conversation } from '../../core/classes/conversation.model';
+import { ConversationsService } from '../../core/services/conversations.service';
+import { PagedEntities } from '../../core/classes/pagination.model';
+import { ActivatedRoute, Router } from '@angular/router';
 
-@Component({ 
+@Component({
   selector: 'app-conversations',
   templateUrl: './conversations.component.html',
-  styleUrl: './conversations.component.css'
+  styleUrls: ['./conversations.component.css'],
 })
 export class ConversationsComponent {
   conversations: Conversation[] = [];
+  currentPage = 1;
+  itemsPerPage = 10;
+  selectedConversationId: string | null = null;
 
-  constructor(private conversationsService: ConversationsService) {}
+  constructor(
+    private conversationsService: ConversationsService,
+    private router: Router,
+    private route: ActivatedRoute,
+  ) {}
 
   ngOnInit() {
-    this.getConversations();
+    this.loadData();
+    this.route.queryParams.subscribe(params => {
+      this.selectedConversationId = params['conversationId'];
+    });
+
   }
 
-  getConversations() {
-    this.conversationsService.GetConversations().subscribe(
-      (data) => {
-        this.conversations = data; 
-        console.log('Conversations:', this.conversations);
-      },
-      (error) => {
-        console.error('Error fetching conversations:', error);
-      }
-    );
+  loadData() {
+    this.conversationsService
+      .GetConversations(this.currentPage, this.itemsPerPage)
+      .subscribe({
+        next: (response: PagedEntities<Conversation>) => {
+          this.conversations = response.entities;
+        },
+        error: (err) => console.error('Error fetching conversations:', err),
+      });
+  }
+
+  appendData() {
+    this.conversationsService
+      .GetConversations(this.currentPage, this.itemsPerPage)
+      .subscribe({
+        next: (response) =>
+          (this.conversations = [...this.conversations, ...response.entities]),
+        error: (err) => console.log(err),
+      });
+  }
+
+  onScroll() {
+    this.currentPage++;
+    this.appendData();
+    console.log('onscroll is invoked');
+  }
+
+  setActive(index: number) {
+    const selectedConversationId = this.conversations[index].id;
+    this.router.navigate([], {
+      queryParams: { conversationId: selectedConversationId },
+      queryParamsHandling: 'merge',
+    });
   }
 }

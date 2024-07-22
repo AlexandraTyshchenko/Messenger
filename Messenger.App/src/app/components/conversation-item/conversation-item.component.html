@@ -1,0 +1,30 @@
+<div class="ms-2 me-auto d-flex align-items-center p-3">
+  <!-- Left side: Image -->
+  <div>
+    <img
+      [src]="conversation.group == null ? 'assets/user_logo.png' : 'assets/logo.png'"
+      alt="Logo"
+      width="60"
+      height="48"
+      class="bi me-3"
+      role="img"
+      aria-label="logo"
+    />
+  </div>
+  
+  <!-- Right side: Text content -->
+  <div class="flex-grow-1 ms-4">
+    <div class="fw-bold mb-2 fs-5">
+      {{
+        conversation.group == null
+          ? getFirstParticipant(conversation)
+          : conversation.group.title
+      }}
+    </div>
+    <div class="fs-6">
+      {{ getSenderDisplayText(conversation) }}
+      {{ getSenderMessageText(conversation) }}
+      <span class="badge bg-primary rounded-pill ms-2">14</span>
+    </div>
+  </div>
+</div>

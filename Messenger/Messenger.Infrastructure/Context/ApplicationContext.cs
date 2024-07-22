@@ -19,6 +19,7 @@ public class ApplicationContext : IdentityDbContext<User, UserRole, Guid>
     public DbSet<ParticipantInConversation> ParticipantsInConversation { get; set; }
     public DbSet<UserRole> UserRoles { get; set; }
     public DbSet<UserConnection> UserConnections { get; set; }
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
