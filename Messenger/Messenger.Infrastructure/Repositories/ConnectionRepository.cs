@@ -30,4 +30,14 @@ public class ConnectionRepository : IConnectionRepository
         return await _applicationContext
             .UserConnections.Include(x => x.User).Where(x => userIds.Contains(x.User.Id)).ToListAsync();
     }
+
+    public async Task<IEnumerable<string>> GetUserConversationConnections(Guid userId)
+    {
+        var conversations = await _applicationContext.Conversations
+            .Where(c => c.ParticipantsInConversation.Any(p => p.User.Id == userId))
+            .Select(c => c.Id.ToString())
+            .ToListAsync();
+
+        return conversations;
+    }
 }

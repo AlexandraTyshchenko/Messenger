@@ -1,44 +1,72 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  AfterViewInit,
+  Input,
+  ViewChild,
+  ElementRef,
+  OnChanges,
+  SimpleChanges,
+} from '@angular/core';
 import { MessagesService } from '../../core/services/messages.service';
 import { PagedEntities } from '../../core/classes/pagination.model';
 import { Message } from '../../core/classes/message.model';
-import { ActivatedRoute, ParamMap } from '@angular/router';
-import { AuthService } from '../../core/services/auth.service';
+import { Conversation } from '../../core/classes/conversation.model';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { MessageDto } from '../../core/classes/message-dto.model';
+import { SignalRService } from '../../core/services/signalr.service';
 
 @Component({
   selector: 'app-chat',
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.css'],
 })
-export class ChatComponent implements OnInit  {
-  conversationId: string | null = null;
+export class ChatComponent implements OnInit, AfterViewInit, OnChanges {
+  @Input() conversation!: Conversation;
   messages: Message[] = [];
   currentUserId!: string;
   currentPage = 1;
   itemsPerPage = 10;
-  @ViewChild('messageInput') private messageInput!: ElementRef;
+  @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
+  messageForm: FormGroup;
 
   constructor(
     private messagesService: MessagesService,
-    private route: ActivatedRoute,
-    private authService: AuthService
-  ) {}
+    private fb: FormBuilder,
+    private signalRService: SignalRService
+  ) {
+    this.messageForm = this.fb.group({
+      message: ['', Validators.required],
+    });
+  }
 
   ngOnInit(): void {
-    this.currentUserId = this.authService.user()?.nameidentifier!;
-    this.route.queryParamMap.subscribe((params: ParamMap) => {
-      const id = params.get('conversationId');
-      if (id) {
-        this.conversationId = id;
-        this.loadMessages(this.conversationId);
-        this.scrollToBottom()
+    if (this.conversation) {
+      this.loadMessages(this.conversation.id);
+    }
+  }
+
+  ngAfterViewInit(): void {
+    this.signalRService.message$.subscribe((message) => {
+      if (message) {
+        this.addMessage(message);
       }
     });
+    this.scrollToBottom();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['conversation'] && !changes['conversation'].isFirstChange()) {
+      this.currentPage = 1;
+      this.messages = [];
+      this.loadMessages(this.conversation.id);
+    }
+
   }
 
   appendData() {
     this.messagesService
-      .GetMessages(this.conversationId!, this.currentPage, this.itemsPerPage)
+      .getMessages(this.conversation.id, this.currentPage, this.itemsPerPage)
       .subscribe({
         next: (response) => {
           this.messages = [...this.messages, ...response.entities];
@@ -50,17 +78,21 @@ export class ChatComponent implements OnInit  {
   onScroll() {
     this.currentPage++;
     this.appendData();
+    setTimeout(() => {
+      this.scrollToCenter();
+    }, 0);
     console.log('onscroll is invoked');
-
   }
 
   loadMessages(conversationId: string): void {
     this.messagesService
-      .GetMessages(conversationId, this.currentPage, this.itemsPerPage)
+      .getMessages(conversationId, this.currentPage, this.itemsPerPage)
       .subscribe({
         next: (pagedMessages: PagedEntities<Message>) => {
           this.messages = pagedMessages.entities;
-          console.log(this.currentPage);
+          setTimeout(() => {
+            this.scrollToBottom();
+          }, 0);
         },
         error: (error) => {
           console.error('Error loading messages:', error);
@@ -68,8 +100,48 @@ export class ChatComponent implements OnInit  {
       });
   }
 
+  scrollToCenter() {
+    if (!this.scrollContainer) {
+      return;
+    }
+    const container = this.scrollContainer.nativeElement;
+    container.scrollTop = container.scrollHeight * 0.1;
+  }
+
   scrollToBottom(): void {
-    const inputElement = this.messageInput.nativeElement;
-    inputElement.scrollIntoView({ behavior: 'smooth' });
+    if (!this.scrollContainer) {
+      return;
+    }
+    const container = this.scrollContainer.nativeElement;
+    container.scrollTop = container.scrollHeight;
+  }
+
+  sendMessage() {
+    if (this.messageForm.valid) {
+      const message = this.messageForm.value.message;
+      this.messagesService
+        .sendMessage(this.conversation.id, new MessageDto(message))
+        .subscribe({
+          next: (sentMessage: Message) => {
+            this.addMessage(sentMessage);
+            setTimeout(() => {
+              this.scrollToBottom();
+            }, 0);
+          },
+          error: (error) => {
+            console.error('Error loading messages:', error);
+          },
+        });
+      this.messageForm.reset();
+    }
+  }
+
+  private addMessage(message: Message) {
+    this.messages = [message, ...this.messages];
+    if (this.messages.length > this.itemsPerPage) {
+      this.messages.pop();
+    }
+
+    this.currentPage = 1;
   }
 }

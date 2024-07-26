@@ -8,18 +8,19 @@ import { PagedEntities } from '../classes/pagination.model';
 @Injectable({
   providedIn: 'root',
 })
+
 export class ConversationsService {
   constructor(private http: HttpClient) {}
 
 
   GetConversations(page: number, pageSize: number): Observable<PagedEntities<Conversation>> {
-    const url = `${environment.apiUrl}/Conversations`;
+    const url = `${environment.apiUrl}api/Conversations`;
     const params = {
       page: page.toString(),
       pageSize: pageSize.toString()
     };
-
     return this.http.get<PagedEntities<Conversation>>(url, { params });
   }
   
+ 
 }

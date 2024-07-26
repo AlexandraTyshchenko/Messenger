@@ -11,7 +11,7 @@ using System.Text.RegularExpressions;
 
 namespace Messenger.Business.Commands;
 
-public class AddParticipantToConversationCommand : IRequest<ResultDto<ConversationWithParticipantsDto>>
+public class AddParticipantToConversationCommand : IRequest<ResultDto<ConversationDto>>
 {
     public Guid[] UserIds { get; set; }
     public Guid ConversationId { get; set; }
@@ -34,7 +34,7 @@ public class AddParticipantToConversationCommandValidator : AbstractValidator<Ad
 }
 
 public class AddParticipantToConversationCommandHandler :
-    IRequestHandler<AddParticipantToConversationCommand, ResultDto<ConversationWithParticipantsDto>>
+    IRequestHandler<AddParticipantToConversationCommand, ResultDto<ConversationDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
@@ -47,13 +47,13 @@ public class AddParticipantToConversationCommandHandler :
         _chatHub = chatHub;
     }
 
-    public async Task<ResultDto<ConversationWithParticipantsDto>> Handle(AddParticipantToConversationCommand request, CancellationToken cancellationToken)
+    public async Task<ResultDto<ConversationDto>> Handle(AddParticipantToConversationCommand request, CancellationToken cancellationToken)
     {
         var conversation = await GetConversationAsync(request.ConversationId);
 
         if (conversation == null)
         {
-            return ResultDto.FailureResult<ConversationWithParticipantsDto>
+            return ResultDto.FailureResult<ConversationDto>
                 (HttpStatusCode.NotFound, "Group conversation was not found.");
         }
 
@@ -61,7 +61,7 @@ public class AddParticipantToConversationCommandHandler :
 
         if (missingUserIds.Any())
         {
-            return ResultDto.FailureResult<ConversationWithParticipantsDto>
+            return ResultDto.FailureResult<ConversationDto>
                 (HttpStatusCode.NotFound, $"Users with ids {string.Join(", ", missingUserIds)} were not found.");
         }
 
@@ -69,7 +69,7 @@ public class AddParticipantToConversationCommandHandler :
 
         if (existingParticipants.Any())
         {
-            return ResultDto.FailureResult<ConversationWithParticipantsDto>
+            return ResultDto.FailureResult<ConversationDto>
                 (HttpStatusCode.Conflict,
                 $"Users {string.Join(", ", existingParticipants.Select(x => x.User.UserName))}" +
                 $" already exist in conversation.");
@@ -84,7 +84,7 @@ public class AddParticipantToConversationCommandHandler :
         await NotifyGroupAsync(conversation.Id, $"participants {userNames}");
         await NotifyJoinedUsersConnection(userConnections, conversation);
 
-        var mappedConversationWithParticipants = _mapper.Map<ConversationWithParticipantsDto>(conversation);
+        var mappedConversationWithParticipants = _mapper.Map<ConversationDto>(conversation);
         return ResultDto.SuccessResult(mappedConversationWithParticipants, HttpStatusCode.OK);
     }
 
@@ -130,6 +130,6 @@ public class AddParticipantToConversationCommandHandler :
                 ConversationId = conversation.Id,
                 Message = $"you are joined to conversation {conversation.Group.Title}"
             });
-        }
+        }//todo remove ConversationNotificationDto and use simple messagedto instead
     }
 }

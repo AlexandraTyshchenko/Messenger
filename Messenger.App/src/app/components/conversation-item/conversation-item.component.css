@@ -1,30 +1,74 @@
 /* Custom styles for conversation component */
 .ms-2.me-auto.d-flex.align-items-center.p-3 {
-    padding: 20px;
-  }
-  
-  .ms-2.me-auto.d-flex.align-items-center img {
-    width: 60px;
-    height: 48px;
-    margin-right: 20px;
-  }
-  
-  .flex-grow-1.ms-4 {
-    margin-left: 20px;
-  }
-  
-  .flex-grow-1.ms-4 .fw-bold {
-    font-size: 1.25rem; 
-    margin-bottom: 10px;
-  }
-  
-  .flex-grow-1.ms-4 .fs-6 {
-    font-size: 1.125rem; 
-    margin-bottom: 5px;
-  }
-  
-  .flex-grow-1.ms-4 .badge {
-    font-size: 1rem; 
-    padding: 10px;
-  }
-  
+  padding: 20px;
+  display: flex; /* Ensure flexbox layout */
+  align-items: center; /* Center items vertically */
+}
+
+.ms-2.me-auto.d-flex.align-items-center .sender-image {
+  width: 30px;
+  height: 30px;
+  margin-right: 10px; 
+  border-radius: 50%; 
+}
+
+.flex-grow-1.ms-4 {
+  margin-left: 20px;
+}
+
+.flex-grow-1.ms-4 .fw-bold {
+  font-size: 1.25rem; 
+  margin-bottom: 10px;
+}
+
+.flex-grow-1.ms-4 .fs-6 {
+  font-size: 1.125rem; 
+  margin-bottom: 5px;
+}
+
+.flex-grow-1.ms-4 .badge {
+  font-size: 1rem; 
+  padding: 10px;
+}
+
+.me-3 {
+  margin-right: 1rem; /* Adjust margin between components */
+}
+
+.sender-info{
+  position: relative;
+  left: 20%;
+  bottom: 30px;
+}
+
+.d-flex {
+  display: flex;
+}
+
+.align-items-center {
+  align-items: center;
+}
+
+.conversation-image {
+  border-radius: 50%; 
+}
+
+.flex-grow-1 {
+  flex-grow: 1;
+}
+
+.ms-4 {
+  margin-left: 1.5rem; /* Adjust as needed */
+}
+
+.fw-bold {
+  font-weight: bold;
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem; /* Adjust as needed */
+}
+
+.fs-5 {
+  font-size: 1.25rem; /* Adjust as needed */
+}

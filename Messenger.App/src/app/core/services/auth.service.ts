@@ -1,5 +1,4 @@
 import {
-  DestroyRef,
   Injectable,
   inject,
   signal,
@@ -14,7 +13,7 @@ import { environment } from '../../../environments/environment.development';
 import { Login } from '../auth/login/interfaces';
 import { LoginResponse } from '../auth/login/types/login-response.type';
 import { LoginSuccess } from '../auth/login/interfaces';
-import { IS_PUBLIC } from '../auth/auth.interceptor';
+import { IS_PUBLIC } from '../interceptors/auth.interceptor';
 import { RefreshToken } from '../auth/login/classes/refresh-token.class';
 import { UserRegistration } from '../auth/login/classes/register-user.class';
 import { User } from '../../interfaces/user.interface';
@@ -53,7 +52,7 @@ export class AuthService {
   login(body: Login): Observable<LoginResponse> {
     return this.http
       .post<LoginResponse>(
-        `${environment.apiUrl}/Auth/login`,
+        `${environment.apiUrl}api/Auth/login`,
         body,
         this.CONTEXT
       )
@@ -74,7 +73,7 @@ export class AuthService {
 
   register(body: UserRegistration) {
     return this.http
-      .post(`${environment.apiUrl}/Auth/register`, body, this.CONTEXT)
+      .post(`${environment.apiUrl}api/Auth/register`, body, this.CONTEXT)
       .pipe(
         catchError((error) => {
           return throwError(() => new Error(error.error));
@@ -94,7 +93,7 @@ export class AuthService {
       .set('token', token);
   
     return this.http
-      .post(`${environment.apiUrl}/Auth/confirmEmail`, {}, { params })
+      .post(`${environment.apiUrl}api/Auth/confirmEmail`, {}, { params })
       .pipe(
         catchError((error) => {
           return throwError(() => new Error(error.error));
@@ -116,7 +115,7 @@ export class AuthService {
 
     return this.http
       .post<LoginResponse>(
-        `${environment.apiUrl}/Auth/refresh`,
+        `${environment.apiUrl}api/Auth/refresh`,
         new RefreshToken(refresh_token),
         this.CONTEXT
       )

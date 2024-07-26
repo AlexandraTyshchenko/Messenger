@@ -1,32 +1,59 @@
-import { Component, HostListener } from '@angular/core';
+import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
 import { Conversation } from '../../core/classes/conversation.model';
 import { ConversationsService } from '../../core/services/conversations.service';
 import { PagedEntities } from '../../core/classes/pagination.model';
 import { ActivatedRoute, Router } from '@angular/router';
+import { ToastDirective } from '../../directives/toast.directive';
+import { SignalRService } from '../../core/services/signalr.service';
+import { Message } from '../../core/classes/message.model';
 
 @Component({
   selector: 'app-conversations',
   templateUrl: './conversations.component.html',
   styleUrls: ['./conversations.component.css'],
 })
-export class ConversationsComponent {
+export class ConversationsComponent implements OnInit, AfterViewInit {
   conversations: Conversation[] = [];
   currentPage = 1;
   itemsPerPage = 10;
+  selectedConversation: Conversation | null = null;
   selectedConversationId: string | null = null;
+  conversationWithLatestMessage: Conversation | null = null;
+  @ViewChild('toast', { static: true, read: ToastDirective })
+  toast!: ToastDirective;
+  latestMessage: Message | null = null;
 
   constructor(
     private conversationsService: ConversationsService,
     private router: Router,
     private route: ActivatedRoute,
+    private signalRService: SignalRService
   ) {}
 
   ngOnInit() {
     this.loadData();
-    this.route.queryParams.subscribe(params => {
-      this.selectedConversationId = params['conversationId'];
-    });
+  }
 
+  hideMessage() {
+    this.toast.hide();
+  }
+
+  ngAfterViewInit(): void {
+    this.signalRService.onNotificationReceive();
+    this.signalRService.message$.subscribe((message) => {
+      if (message) {
+        this.conversationWithLatestMessage = this.conversations.find(
+          (x) => x.id === message.conversationId
+        )!;
+        this.conversationWithLatestMessage!.lastMessage = message;
+        this.handleMessage(message);
+      }
+    });
+  }
+
+  handleMessage(message: Message) {
+    this.toast.show();
+    console.log('Handling message:', message);
   }
 
   loadData() {
@@ -35,9 +62,19 @@ export class ConversationsComponent {
       .subscribe({
         next: (response: PagedEntities<Conversation>) => {
           this.conversations = response.entities;
+          this.selectConversationFromRoute();
         },
         error: (err) => console.error('Error fetching conversations:', err),
       });
+  }
+
+  selectConversationFromRoute() {
+    this.route.queryParams.subscribe((params) => {
+      this.selectedConversationId = params['conversationId'];
+      this.selectedConversation = this.conversations.find(
+        (x) => x.id === this.selectedConversationId
+      )!;
+    });
   }
 
   appendData() {
@@ -53,13 +90,12 @@ export class ConversationsComponent {
   onScroll() {
     this.currentPage++;
     this.appendData();
-    console.log('onscroll is invoked');
   }
 
   setActive(index: number) {
-    const selectedConversationId = this.conversations[index].id;
+    this.selectedConversation = this.conversations[index];
     this.router.navigate([], {
-      queryParams: { conversationId: selectedConversationId },
+      queryParams: { conversationId: this.selectedConversation.id },
       queryParamsHandling: 'merge',
     });
   }

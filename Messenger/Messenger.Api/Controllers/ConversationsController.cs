@@ -25,7 +25,7 @@ public class ConversationsController : BaseController
     [HttpGet]
     public async Task<IActionResult> GetConversations([FromQuery] PaginationParams paginationParams)
     {
-        ResultDto<IPagedEntities<ConversationWithParticipantsDto>> response = await _mediatoR
+        ResultDto<IPagedEntities<ConversationDto>> response = await _mediatoR
             .Send(new GetConversationsByUserIdQuery
             {
                 UserId = UserId,
@@ -38,7 +38,7 @@ public class ConversationsController : BaseController
     [HttpPost("private")]
     public async Task<IActionResult> CreatePrivateConversation([FromBody] UserModelDto userModelDto)
     {
-        ResultDto<ConversationWithParticipantsDto> response = await _mediatoR.Send(new CreatePrivateConversationWithUserCommand
+        ResultDto<ConversationDto> response = await _mediatoR.Send(new CreatePrivateConversationWithUserCommand
         {
             CreatorUserId = UserId,
             UserId = userModelDto.UserId,
@@ -50,7 +50,7 @@ public class ConversationsController : BaseController
     [HttpPost("group")]
     public async Task<IActionResult> CreateGroupConversation([FromBody] GroupModelDto groupModelDto)
     {
-        ResultDto<ConversationWithParticipantsDto> response = await _mediatoR.Send(new CreateGroupConversationCommand
+        ResultDto<ConversationDto> response = await _mediatoR.Send(new CreateGroupConversationCommand
         {
             CreatorUserId = UserId,
             Group = groupModelDto,
@@ -63,7 +63,7 @@ public class ConversationsController : BaseController
     [ConversationRoleFilter(Role.Participant)]
     public async Task<IActionResult> GetConversationById([FromRoute] Guid conversationId)
     {
-        ResultDto<ConversationWithParticipantsDto> response = await _mediatoR.Send(new GetConversationByIdQuery
+        ResultDto<ConversationDto> response = await _mediatoR.Send(new GetConversationByIdQuery
         {
             ConversationId = conversationId
         });

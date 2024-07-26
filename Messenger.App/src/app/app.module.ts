@@ -11,7 +11,7 @@ import {
 import { JwtModule, JwtModuleOptions } from '@auth0/angular-jwt';
 import { ConversationsComponent } from './pages/conversations/conversations.component';
 import { HomePageComponent } from './pages/home-page/home-page.component';
-import { authInterceptor } from './core/auth/auth.interceptor';
+import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { AuthService } from './core/services/auth.service';
 import { CommonModule } from '@angular/common';  
 import { ReactiveFormsModule } from '@angular/forms';
@@ -24,8 +24,9 @@ import { ScrollerModule } from 'primeng/scroller';
 import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 import { HeaderComponent } from './components/header/header.component';
 import { ChatComponent } from './components/chat/chat.component';
-import { MessageComponent } from './message/message.component';
-
+import { MessageComponent } from './components/message/message.component';
+import { errorInterceptor } from './core/interceptors/error.interceptor';
+import { ToastDirective } from './directives/toast.directive';
 
 const JWT_Module_Options: JwtModuleOptions = {
   config: {
@@ -47,6 +48,7 @@ const JWT_Module_Options: JwtModuleOptions = {
     HeaderComponent,
     ChatComponent,
     MessageComponent,
+    ToastDirective,
   ],
   imports: [
     BrowserModule,
@@ -59,7 +61,7 @@ const JWT_Module_Options: JwtModuleOptions = {
     JwtModule.forRoot(JWT_Module_Options),
   ],
   providers: [
-    provideHttpClient(withInterceptors([authInterceptor])),
+    provideHttpClient(withInterceptors([authInterceptor,errorInterceptor])),
     {
       provide: APP_INITIALIZER,
       useFactory: initializerFactory,

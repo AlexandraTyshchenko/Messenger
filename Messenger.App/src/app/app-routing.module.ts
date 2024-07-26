@@ -7,7 +7,6 @@ import { RegisterPageComponent } from './core/auth/pages/register-page/register-
 import { AuthPageComponent } from './pages/auth-page/auth-page.component';
 import { EmailConfirmationComponent } from './core/auth/pages/email-confirmation/email-confirmation.component';
 import { SuccessEmailConfirmationComponent } from './pages/success-email-confirmation/success-email-confirmation.component';
-import { ChatComponent } from './components/chat/chat.component';
 
 const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'home' },

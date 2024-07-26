@@ -8,7 +8,7 @@ using System.Net;
 
 namespace Messenger.Business.Commands;
 
-public class CreatePrivateConversationWithUserCommand : IRequest<ResultDto<ConversationWithParticipantsDto>>
+public class CreatePrivateConversationWithUserCommand : IRequest<ResultDto<ConversationDto>>
 {
     public Guid CreatorUserId { get; set; }
     public Guid UserId { get; set; } 
@@ -29,7 +29,7 @@ public class CreatePrivateConversationWithUserCommandValidator : AbstractValidat
 }
 
 public class CreatePrivateConversationWithUserCommandHandler : IRequestHandler<CreatePrivateConversationWithUserCommand,
-    ResultDto<ConversationWithParticipantsDto>>
+    ResultDto<ConversationDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
@@ -40,7 +40,7 @@ public class CreatePrivateConversationWithUserCommandHandler : IRequestHandler<C
         _mapper = mapper;
     }
 
-    public async Task<ResultDto<ConversationWithParticipantsDto>> Handle(CreatePrivateConversationWithUserCommand request,
+    public async Task<ResultDto<ConversationDto>> Handle(CreatePrivateConversationWithUserCommand request,
         CancellationToken cancellationToken)
     {
         Conversation existingConversation = await _unitOfWork.Conversations
@@ -48,7 +48,7 @@ public class CreatePrivateConversationWithUserCommandHandler : IRequestHandler<C
 
         if (existingConversation != null)
         {
-            return ResultDto.FailureResult<ConversationWithParticipantsDto>(HttpStatusCode.Conflict,
+            return ResultDto.FailureResult<ConversationDto>(HttpStatusCode.Conflict,
                 "Conversation with this user already exists.");
         }
 
@@ -58,13 +58,13 @@ public class CreatePrivateConversationWithUserCommandHandler : IRequestHandler<C
 
         if (user == null)
         {
-            return ResultDto.FailureResult<ConversationWithParticipantsDto>(HttpStatusCode.NotFound, "User was not found.");
+            return ResultDto.FailureResult<ConversationDto>(HttpStatusCode.NotFound, "User was not found.");
         }
 
         Conversation result = await _unitOfWork.Conversations.CreateConversationWithUserAsync(creatorUser, user);
         await _unitOfWork.SaveChangesAsync();
 
-        var mappedConversation = _mapper.Map<ConversationWithParticipantsDto>(result);
+        var mappedConversation = _mapper.Map<ConversationDto>(result);
 
         return ResultDto.SuccessResult(mappedConversation, HttpStatusCode.Created);
     }

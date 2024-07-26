@@ -6,4 +6,5 @@ public interface IConnectionRepository
 {
     Task AddConnectionAsync(User user, string connectionId);
     Task<IEnumerable<UserConnection>> GetUserConnectionsAsync(Guid[] userIds);
+    Task<IEnumerable<string>> GetUserConversationConnections(Guid userId);
 }

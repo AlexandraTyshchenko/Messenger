@@ -7,7 +7,7 @@ using System.Net;
 
 namespace Messenger.Business.Queries;
 
-public class GetConversationByIdQuery : IRequest<ResultDto<ConversationWithParticipantsDto>>
+public class GetConversationByIdQuery : IRequest<ResultDto<ConversationDto>>
 {
     public Guid ConversationId { get; set; }
 }
@@ -22,7 +22,7 @@ public class GetConversationByIdQueryValidator : AbstractValidator<GetConversati
     }
 }
 
-public class GetConversationByIdQueryHandler : IRequestHandler<GetConversationByIdQuery, ResultDto<ConversationWithParticipantsDto>>
+public class GetConversationByIdQueryHandler : IRequestHandler<GetConversationByIdQuery, ResultDto<ConversationDto>>
 {
 
     private readonly IUnitOfWork _unitOfWork;
@@ -34,17 +34,17 @@ public class GetConversationByIdQueryHandler : IRequestHandler<GetConversationBy
         _mapper = mapper;
     }
 
-    public async Task<ResultDto<ConversationWithParticipantsDto>> Handle(GetConversationByIdQuery request, CancellationToken cancellationToken)
+    public async Task<ResultDto<ConversationDto>> Handle(GetConversationByIdQuery request, CancellationToken cancellationToken)
     {
         var conversation = await _unitOfWork.Conversations.GetConversationByIdAsync(request.ConversationId);
 
         if (conversation == null)
         {
-            return ResultDto.FailureResult<ConversationWithParticipantsDto>(HttpStatusCode.NotFound,
+            return ResultDto.FailureResult<ConversationDto>(HttpStatusCode.NotFound,
                 $"Conversation with id {request.ConversationId} wasn't found.");
         }
 
-        var mappedConversation = _mapper.Map<ConversationWithParticipantsDto>(conversation);
+        var mappedConversation = _mapper.Map<ConversationDto>(conversation);
 
         return ResultDto.SuccessResult(mappedConversation);
     }

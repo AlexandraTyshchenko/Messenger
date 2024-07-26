@@ -1,9 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { environment } from '../../../environments/environment.development';
 import { PagedEntities } from '../classes/pagination.model';
 import { Message } from '../classes/message.model';
+import { MessageDto } from '../classes/message-dto.model';
 
 @Injectable({
   providedIn: 'root',
@@ -11,17 +12,29 @@ import { Message } from '../classes/message.model';
 export class MessagesService {
   constructor(private http: HttpClient) {}
 
-  GetMessages(
+  private messageSentSubject = new Subject<Message>();
+
+  public messageSent$ = this.messageSentSubject.asObservable();
+
+  getMessages(
     conversationId: string,
     page: number,
     pageSize: number
   ): Observable<PagedEntities<Message>> {
-    const url = `${environment.apiUrl}/Conversations/${conversationId}/Messages`;
+    const url = `${environment.apiUrl}api/Conversations/${conversationId}/Messages`;
     const params = {
       page: page.toString(),
       pageSize: pageSize.toString(),
     };
 
     return this.http.get<PagedEntities<Message>>(url, { params });
+  }
+
+  sendMessage(
+    conversationId: string,
+    messageDto: MessageDto
+  ): Observable<Message> {
+    const url = `${environment.apiUrl}api/Conversations/${conversationId}/Messages`;
+    return this.http.post<Message>(url, messageDto);
   }
 }

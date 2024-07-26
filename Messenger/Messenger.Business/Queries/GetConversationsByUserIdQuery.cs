@@ -11,7 +11,7 @@ using System.Net;
 
 namespace Messenger.Business.Queries;
 
-public class GetConversationsByUserIdQuery : IRequest<ResultDto<IPagedEntities<ConversationWithParticipantsDto>>>
+public class GetConversationsByUserIdQuery : IRequest<ResultDto<IPagedEntities<ConversationDto>>>
 {
     public Guid UserId { get; set; }
     public PaginationParams PaginationParams { get; set; }
@@ -32,7 +32,7 @@ public class GetConversationsByUserIdQueryValidator : AbstractValidator<GetConve
     }
 }
 
-public class GetConversationsByUserIdQueryHandler : IRequestHandler<GetConversationsByUserIdQuery, ResultDto<IPagedEntities<ConversationWithParticipantsDto>>>
+public class GetConversationsByUserIdQueryHandler : IRequestHandler<GetConversationsByUserIdQuery, ResultDto<IPagedEntities<ConversationDto>>>
 {
     private readonly IMapper _mapper;
     private readonly IUnitOfWork _unitOfWork;
@@ -43,14 +43,14 @@ public class GetConversationsByUserIdQueryHandler : IRequestHandler<GetConversat
         _mapper = mapper;
     }
 
-    public async Task<ResultDto<IPagedEntities<ConversationWithParticipantsDto>>> Handle(GetConversationsByUserIdQuery request, CancellationToken cancellationToken)
+    public async Task<ResultDto<IPagedEntities<ConversationDto>>> Handle(GetConversationsByUserIdQuery request, CancellationToken cancellationToken)
     {
         IPagedEntities<Conversation> conversations = await _unitOfWork.Conversations
             .GetConversationsByUserIdAsync(request.UserId, request.PaginationParams.Page, 
             request.PaginationParams.PageSize);
 
         var mappedConversations = _mapper.MapPagedEntities<Conversation, 
-            ConversationWithParticipantsDto>(conversations);
+            ConversationDto>(conversations);
 
 
         return ResultDto.SuccessResult(mappedConversations, HttpStatusCode.OK);

@@ -1,13 +1,10 @@
-﻿using Messenger.Business.Dtos;
-using Messenger.Infrastructure;
+﻿using Messenger.Infrastructure;
 using Messenger.Infrastructure.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.VisualBasic;
 
 namespace Messenger.Api.Hubs;
 
-[Authorize]
 public class ChatHub : Hub
 {
     private readonly IUnitOfWork _unitOfWork;
@@ -16,6 +13,7 @@ public class ChatHub : Hub
     {
         _unitOfWork = unitOfWork;
     }
+    [Authorize]
 
     public async override Task OnConnectedAsync()
     {
@@ -34,34 +32,34 @@ public class ChatHub : Hub
 
         await _unitOfWork.SaveChangesAsync();
     }
+    [Authorize]
 
-    //public async Task JoinGroups()
-    //{
-    //    var userId = Context.UserIdentifier;
-    //    IEnumerable<Conversation> conversations = await _unitOfWork.Conversations
-    //        .GetConversationsByUserIdAsync(new Guid(userId));//todo add pagination here in future
-
-    //    foreach (var conversation in conversations)
-    //    {
-    //        await Groups.AddToGroupAsync(Context.ConnectionId, conversation.Id.ToString());
-    //        await Clients.Group(conversation.Id.ToString()).SendAsync("ReceiveMessage", $"successfully joined" +
-    //            $" to {conversation.Id}");
-    //    }
-    //}
-
-    //  [ConversationRoleFilter(Role.Participant)]
-    public async Task JoinGroup(ConversationNotificationDto conversationMessageDto)
+    public async Task JoinGroups()
     {
-        string userId = Context.UserIdentifier;
+        var userId = Context.UserIdentifier;
+        IEnumerable<string> conversationsConnections = await _unitOfWork.Connections
+            .GetUserConversationConnections(new Guid(userId));
 
-        ParticipantInConversation participantInConversation = await _unitOfWork.Participants
-            .GetParticipantFromConversationAsync(new Guid(userId), conversationMessageDto.ConversationId);
-
-        if (participantInConversation == null)
+        foreach (var conversationsConnection in conversationsConnections)
         {
-            return;
+            await Groups.AddToGroupAsync(Context.ConnectionId, conversationsConnection);
+            await Clients.Group(conversationsConnection).SendAsync("JoinGroups", $"successfully joined" +
+                $" to {conversationsConnection}");
         }
-
-        await Groups.AddToGroupAsync(Context.ConnectionId, conversationMessageDto.ConversationId.ToString());
     }
+
+    //public async Task JoinGroup(ConversationNotificationDto conversationMessageDto)
+    //{
+    //    string userId = Context.UserIdentifier;
+
+    //    ParticipantInConversation participantInConversation = await _unitOfWork.PrivateConversationParticipants
+    //        .GetParticipantFromConversationAsync(new Guid(userId), conversationMessageDto.ConversationId);
+
+    //    if (participantInConversation == null)
+    //    {
+    //        return;
+    //    }
+
+    //    await Groups.AddToGroupAsync(Context.ConnectionId, conversationMessageDto.ConversationId.ToString());
+    //}
 }
