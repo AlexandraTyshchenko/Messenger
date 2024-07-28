@@ -26,7 +26,7 @@ export class SignalRService {
       .build();
 
     this.message$ = this.messageSubject.asObservable().pipe(
-      filter((message): message is Message => message !== null && message.sender.id !== this.authService.user()?.nameidentifier)
+      filter((message): message is Message => message !== null)
     );
   }
 

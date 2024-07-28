@@ -15,6 +15,7 @@ import { Conversation } from '../../core/classes/conversation.model';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MessageDto } from '../../core/classes/message-dto.model';
 import { SignalRService } from '../../core/services/signalr.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-chat',
@@ -33,7 +34,8 @@ export class ChatComponent implements OnInit, AfterViewInit, OnChanges {
   constructor(
     private messagesService: MessagesService,
     private fb: FormBuilder,
-    private signalRService: SignalRService
+    private signalRService: SignalRService,
+    private authService:AuthService
   ) {
     this.messageForm = this.fb.group({
       message: ['', Validators.required],
@@ -41,6 +43,7 @@ export class ChatComponent implements OnInit, AfterViewInit, OnChanges {
   }
 
   ngOnInit(): void {
+    this.currentUserId = this.authService.user()!.nameidentifier;
     if (this.conversation) {
       this.loadMessages(this.conversation.id);
     }
@@ -61,7 +64,6 @@ export class ChatComponent implements OnInit, AfterViewInit, OnChanges {
       this.messages = [];
       this.loadMessages(this.conversation.id);
     }
-
   }
 
   appendData() {
@@ -123,7 +125,6 @@ export class ChatComponent implements OnInit, AfterViewInit, OnChanges {
         .sendMessage(this.conversation.id, new MessageDto(message))
         .subscribe({
           next: (sentMessage: Message) => {
-            this.addMessage(sentMessage);
             setTimeout(() => {
               this.scrollToBottom();
             }, 0);
@@ -141,7 +142,6 @@ export class ChatComponent implements OnInit, AfterViewInit, OnChanges {
     if (this.messages.length > this.itemsPerPage) {
       this.messages.pop();
     }
-
     this.currentPage = 1;
   }
 }

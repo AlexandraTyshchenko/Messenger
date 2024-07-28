@@ -28,10 +28,6 @@ body {
     border-left: 1px solid #eaeaea;
 }
 
-.people-list {
-    transition: .5s;
-}
-
 .people-list .chat-list li {
     padding: 10px 15px;
     list-style: none;
@@ -53,11 +49,6 @@ body {
 
 .people-list .chat-list img {
     width: 45px;
-    border-radius: 50%;
-}
-
-.people-list img {
-    float: left;
     border-radius: 50%;
 }
 
@@ -212,19 +203,6 @@ body {
 
 .me {
     color: #1d8ecd;
-}
-
-.float-right {
-    float: right;
-}
-
-.clearfix:after {
-    visibility: hidden;
-    display: block;
-    font-size: 0;
-    content: " ";
-    clear: both;
-    height: 0;
 }
 
 @media only screen and (max-width: 767px) {

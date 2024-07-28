@@ -10,7 +10,8 @@ import { Message } from '../../core/classes/message.model';
   templateUrl: './conversation-item.component.html',
   styleUrls: ['./conversation-item.component.css'],
 })
-export class ConversationItemComponent implements OnInit {
+export class ConversationItemComponent {
+
   @Input() conversation!: Conversation;
   lastMessageSenderImgUrl: string | undefined = undefined;
 
@@ -19,36 +20,9 @@ export class ConversationItemComponent implements OnInit {
   }
 
   imgUrl!: string;
-  constructor(
-    private authService: AuthService,
-    private conversationDataService: ConversationDataService
-  ) {}
-
-  ngOnInit(): void {
-    this.lastMessageSenderImgUrl = this.conversation.lastMessage?.sender.imgUrl;
-  }
+  constructor(private conversationDataService: ConversationDataService) {}
 
   getImage(): string {
     return this.conversationDataService.getConversationImage(this.conversation);
-  }
-  getSenderDisplayText(): string {
-    const userId = this.authService.user()?.nameidentifier;
-
-    if (this.conversation.lastMessage !== null) {
-      if (this.conversation.lastMessage.sender?.id === userId) {
-        return 'you:';
-      } else {
-        const firstName = this.conversation.lastMessage?.sender.firstName ?? '';
-        const lastName = this.conversation.lastMessage?.sender.lastName ?? '';
-        return `${firstName} ${lastName}:`;
-      }
-    }
-    return '';
-  }
-
-  getSenderMessageText(): string {
-    if (this.conversation.lastMessage !== null)
-      return this.conversation.lastMessage?.text;
-    return 'messages haven`t been added yet';
   }
 }

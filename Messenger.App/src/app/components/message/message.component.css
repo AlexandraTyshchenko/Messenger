@@ -19,9 +19,6 @@ body {
 
 .chat .message .message-data {
     margin-bottom: 15px;
-}
-
-.chat .message .message-data-time {
     color: #434651;
     padding-left: 6px;
 }
@@ -51,7 +48,7 @@ body {
     background: #efefef;
 }
 
-.chat .message :after {
+.chat .message .my-message:after {
     bottom: 100%;
     left: 30px;
     border-bottom-color: #efefef;
@@ -66,8 +63,8 @@ body {
 
 .chat .message .other-message:after {
     border-bottom-color: #e8f1f3;
-    left: 10px; 
-    border-left-color: transparent; 
+    left: 10px;
+    border-left-color: transparent;
     border-width: 10px;
 }
 
@@ -77,19 +74,19 @@ body {
 
 .message-other-wrapper {
     display: flex;
-    align-items: flex-start; 
+    align-items: flex-start;
 }
 
 .sender-image {
-    margin-right: 10px; 
+    margin-right: 10px;
     border-radius: 50%;
 }
 
 .message.other-message {
-    margin-left: 10px; 
-    padding-right: 10px; 
+    margin-left: 10px;
+    padding-right: 10px;
 }
 
-.sender-info{
+.sender-info {
     margin: 10px;
 }

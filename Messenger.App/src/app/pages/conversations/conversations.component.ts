@@ -6,6 +6,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ToastDirective } from '../../directives/toast.directive';
 import { SignalRService } from '../../core/services/signalr.service';
 import { Message } from '../../core/classes/message.model';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-conversations',
@@ -27,7 +28,8 @@ export class ConversationsComponent implements OnInit, AfterViewInit {
     private conversationsService: ConversationsService,
     private router: Router,
     private route: ActivatedRoute,
-    private signalRService: SignalRService
+    private signalRService: SignalRService,
+    private authService:AuthService
   ) {}
 
   ngOnInit() {
@@ -46,7 +48,9 @@ export class ConversationsComponent implements OnInit, AfterViewInit {
           (x) => x.id === message.conversationId
         )!;
         this.conversationWithLatestMessage!.lastMessage = message;
-        this.handleMessage(message);
+        if(message.sender.id!==this.authService.user()!.nameidentifier){
+          this.handleMessage(message);
+        }
       }
     });
   }

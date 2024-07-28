@@ -2,18 +2,21 @@
 using Messenger.Infrastructure.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 
 namespace Messenger.Api.Hubs;
+
+[Authorize]
 
 public class ChatHub : Hub
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ILogger<ChatHub> _logger;
 
     public ChatHub(IUnitOfWork unitOfWork)
     {
         _unitOfWork = unitOfWork;
     }
-    [Authorize]
 
     public async override Task OnConnectedAsync()
     {
@@ -23,16 +26,15 @@ public class ChatHub : Hub
 
         if (user == null)
         {
-           // await Clients.Caller.SendAsync("Error", "User not found.");
-           // Context.Abort();
-            return;
+           await Clients.Caller.SendAsync("Error", "User not found.");
+           Context.Abort();
+           return;
         }
 
         await _unitOfWork.Connections.AddConnectionAsync(user, connectionId);
 
         await _unitOfWork.SaveChangesAsync();
     }
-    [Authorize]
 
     public async Task JoinGroups()
     {
@@ -47,19 +49,4 @@ public class ChatHub : Hub
                 $" to {conversationsConnection}");
         }
     }
-
-    //public async Task JoinGroup(ConversationNotificationDto conversationMessageDto)
-    //{
-    //    string userId = Context.UserIdentifier;
-
-    //    ParticipantInConversation participantInConversation = await _unitOfWork.PrivateConversationParticipants
-    //        .GetParticipantFromConversationAsync(new Guid(userId), conversationMessageDto.ConversationId);
-
-    //    if (participantInConversation == null)
-    //    {
-    //        return;
-    //    }
-
-    //    await Groups.AddToGroupAsync(Context.ConnectionId, conversationMessageDto.ConversationId.ToString());
-    //}
 }

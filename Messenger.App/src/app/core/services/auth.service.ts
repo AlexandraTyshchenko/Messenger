@@ -37,7 +37,8 @@ export class AuthService {
       const user: User = {
         emailaddress: decodedJWT["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"],
         name: decodedJWT["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"],
-        nameidentifier: decodedJWT["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"]
+        nameidentifier: decodedJWT["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"],
+        imgUrl: decodedJWT["ImgUrl"]
       };
       return signal(user);
     }

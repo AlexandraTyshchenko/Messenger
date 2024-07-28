@@ -6,33 +6,13 @@
         alt="Logo"
         width="55"
         height="55"
-        class="bi me-3 conversation-image"
+        class="me-3 conversation-image"
         role="img"
         aria-label="logo"
       />
     </div>
-    
     <div class="flex-grow-1 ms-4">
-      <div class="fw-bold mb-2 fs-5">
-        {{
-          getTitle()
-        }}
-      </div>
+      <div class="fw-bold mb-2 fs-5">{{ getTitle() }}</div>
     </div>
-  </div>
-
-  <div class="sender-info">
-    <img
-      *ngIf="lastMessageSenderImgUrl"
-      [src]="lastMessageSenderImgUrl"
-      alt="Logo"
-      width="20"
-      height="16"
-      class="bi me-3 rounded-image sender-image"
-      role="img"
-      aria-label="logo"
-    />
-    {{ getSenderDisplayText() }}
-    {{ getSenderMessageText() }}
   </div>
 </div>

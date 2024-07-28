@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
@@ -6,10 +6,15 @@ import { AuthService } from '../../core/services/auth.service';
   templateUrl: './header.component.html',
   styleUrl: './header.component.css',
 })
-export class HeaderComponent {
+export class HeaderComponent implements OnInit {
   constructor(public authService: AuthService) {}
-
+  imgUrl: string | null = null;
   title = 'Messenger.App';
+
+  ngOnInit(): void {
+    this.imgUrl = this.authService.user()!.imgUrl;
+  }
+
 
   logout() {
     this.authService.logout();

@@ -27,6 +27,8 @@ import { ChatComponent } from './components/chat/chat.component';
 import { MessageComponent } from './components/message/message.component';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
 import { ToastDirective } from './directives/toast.directive';
+import { ConversationWithLastMessageComponent } from './components/conversation-with-last-message/conversation-with-last-message.component';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 const JWT_Module_Options: JwtModuleOptions = {
   config: {
@@ -49,6 +51,7 @@ const JWT_Module_Options: JwtModuleOptions = {
     ChatComponent,
     MessageComponent,
     ToastDirective,
+    ConversationWithLastMessageComponent,
   ],
   imports: [
     BrowserModule,
@@ -58,6 +61,7 @@ const JWT_Module_Options: JwtModuleOptions = {
     ReactiveFormsModule, 
     ScrollerModule,
     InfiniteScrollModule,
+    NgbModule,
     JwtModule.forRoot(JWT_Module_Options),
   ],
   providers: [

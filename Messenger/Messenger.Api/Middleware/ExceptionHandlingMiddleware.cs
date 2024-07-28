@@ -1,38 +1,40 @@
 ﻿using FluentValidation;
-using Microsoft.AspNetCore.Http;
-using System.Net;
 
-namespace Messenger.Api.Middleware;
-
-public class ExceptionHandlingMiddleware
+namespace Messenger.Api.Middleware
 {
-    private readonly RequestDelegate _next;
-
-    public ExceptionHandlingMiddleware(RequestDelegate next)
+    public class ExceptionHandlingMiddleware
     {
-        _next = next;
-    }
+        private readonly RequestDelegate _next;
+        private readonly ILogger<ExceptionHandlingMiddleware> _logger;
 
-    public async Task InvokeAsync(HttpContext context)
-    {
-        try
+        public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
         {
-            await _next(context);
+            _next = next;
+            _logger = logger;
         }
-        catch (ValidationException ex)
-        {
-            await HandleExceptionAsync(context, ex, StatusCodes.Status400BadRequest);
-        }
-        catch (Exception ex)
-        {
-            await HandleExceptionAsync(context, ex, StatusCodes.Status500InternalServerError);
-        }
-    }
 
-    private async Task HandleExceptionAsync(HttpContext context, Exception exception, int statusCode)
-    {
-        context.Response.StatusCode = statusCode;
-        context.Response.ContentType = "text/plain";
-        await context.Response.WriteAsync(exception.Message);
+        public async Task InvokeAsync(HttpContext context)
+        {
+            try
+            {
+                await _next(context);
+            }
+            catch (ValidationException ex)
+            {
+                await HandleExceptionAsync(context, ex, StatusCodes.Status400BadRequest);
+            }
+            catch (Exception ex)
+            {
+                await HandleExceptionAsync(context, ex, StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        private async Task HandleExceptionAsync(HttpContext context, Exception exception, int statusCode)
+        {
+            context.Response.StatusCode = statusCode;
+            context.Response.ContentType = "text/plain";
+            await context.Response.WriteAsync(exception.Message);
+            _logger.LogError(exception, exception.Message);
+        }
     }
 }

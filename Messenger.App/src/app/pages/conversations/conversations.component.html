@@ -12,9 +12,9 @@
         [class.active]="conversation.id === selectedConversationId"
         (click)="setActive(i)"
       >
-        <app-conversation-item
+        <app-conversation-with-last-message
           [conversation]="conversation"
-        ></app-conversation-item>
+        ></app-conversation-with-last-message>
         <span class="badge bg-primary rounded-pill ms-2">14</span>
       </div>
     </div>
@@ -46,10 +46,10 @@
         />
       </svg>
     </div>
-     <app-conversation-item
+     <app-conversation-with-last-message
       *ngIf="conversationWithLatestMessage"
       [conversation]="conversationWithLatestMessage"
     > 
-     </app-conversation-item> 
+     </app-conversation-with-last-message> 
   </div>
 </div>
