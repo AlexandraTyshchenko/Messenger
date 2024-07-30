@@ -7,6 +7,7 @@ import {
   ElementRef,
   OnChanges,
   SimpleChanges,
+  Inject,
 } from '@angular/core';
 import { MessagesService } from '../../core/services/messages.service';
 import { PagedEntities } from '../../core/classes/pagination.model';
@@ -14,8 +15,11 @@ import { Message } from '../../core/classes/message.model';
 import { Conversation } from '../../core/classes/conversation.model';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MessageDto } from '../../core/classes/message-dto.model';
+import { ISignalRService } from '../../core/interfaces/signalr.interface';
+import { IAuthServiceToken, IMessagesServiceToken, ISignalRServiceToken } from '../../core/tokens';
+import { IAuthService } from '../../core/interfaces/auth.interface';
 import { SignalRService } from '../../core/services/signalr.service';
-import { AuthService } from '../../core/services/auth.service';
+import { IMessagesService } from '../../core/interfaces/message.interface';
 
 @Component({
   selector: 'app-chat',
@@ -34,8 +38,8 @@ export class ChatComponent implements OnInit, AfterViewInit, OnChanges {
   constructor(
     private messagesService: MessagesService,
     private fb: FormBuilder,
-    private signalRService: SignalRService,
-    private authService:AuthService
+    @Inject(ISignalRServiceToken) private signalRService: SignalRService,
+    @Inject(IAuthServiceToken) private authService: IAuthService
   ) {
     this.messageForm = this.fb.group({
       message: ['', Validators.required],
@@ -55,6 +59,7 @@ export class ChatComponent implements OnInit, AfterViewInit, OnChanges {
         this.addMessage(message);
       }
     });
+  
     this.scrollToBottom();
   }
 

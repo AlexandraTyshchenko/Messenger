@@ -42,17 +42,17 @@ export class ConversationsComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit(): void {
     this.signalRService.onNotificationReceive();
-    this.signalRService.message$.subscribe((message) => {
-      if (message) {
-        this.conversationWithLatestMessage = this.conversations.find(
-          (x) => x.id === message.conversationId
-        )!;
-        this.conversationWithLatestMessage!.lastMessage = message;
-        if(message.sender.id!==this.authService.user()!.nameidentifier){
-          this.handleMessage(message);
-        }
-      }
-    });
+    // this.signalRService.message$.subscribe((message) => {
+    //   if (message) {
+    //     this.conversationWithLatestMessage = this.conversations.find(
+    //       (x) => x.id === message.conversationId
+    //     )!;
+    //     this.conversationWithLatestMessage!.lastMessage = message;
+    //     if(message.sender.id!==this.authService.user()!.nameidentifier){
+    //       this.handleMessage(message);
+    //     }
+    //   }
+    // });
   }
 
   handleMessage(message: Message) {

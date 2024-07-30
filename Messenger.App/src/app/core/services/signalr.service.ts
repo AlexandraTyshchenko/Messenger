@@ -5,16 +5,16 @@ import { filter } from 'rxjs/operators';
 import { environment } from '../../../environments/environment.development';
 import { Message } from '../classes/message.model';
 import { AuthService } from './auth.service';
+import { ISignalRService } from '../interfaces/signalr.interface';
 
 @Injectable({
   providedIn: 'root',
 })
-export class SignalRService {
+export class SignalRService implements ISignalRService {
   private hubConnection: signalR.HubConnection;
   private messageSubject = new BehaviorSubject<Message | null>(null);
-  public message$: Observable<Message>;
 
-  constructor(private authService: AuthService) {
+  constructor() {
     this.hubConnection = new signalR.HubConnectionBuilder()
       .withUrl(`${environment.apiUrl}chathub`, {
         accessTokenFactory: () => {
@@ -24,11 +24,7 @@ export class SignalRService {
       })
       .withAutomaticReconnect()
       .build();
-
-    this.message$ = this.messageSubject.asObservable().pipe(
-      filter((message): message is Message => message !== null)
-    );
-  }
+ }
 
   public startConnection(): void {
     this.hubConnection
@@ -54,4 +50,9 @@ export class SignalRService {
       this.messageSubject.next(message);
     });
   }
+
+  get message$(): Observable<Message | null>{
+    return this.messageSubject.asObservable();
+  }
+
 }

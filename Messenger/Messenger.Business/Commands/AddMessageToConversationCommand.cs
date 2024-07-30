@@ -72,7 +72,7 @@ public class AddMessageToConversationCommandHandler : IRequestHandler<AddMessage
 
         var mappedMessage = _mapper.Map<MessageWithSenderDto>(message);
 
-        string connectionId = conversation.Id.ToString().ToUpper();
+        string connectionId = conversation.Id.ToString().ToUpper();//todo add extension method
 
         await _messageHub.Clients.Group(connectionId).SendAsync("ReceiveNotification", mappedMessage);
 

@@ -17,11 +17,12 @@ import { IS_PUBLIC } from '../interceptors/auth.interceptor';
 import { RefreshToken } from '../auth/login/classes/refresh-token.class';
 import { UserRegistration } from '../auth/login/classes/register-user.class';
 import { User } from '../../interfaces/user.interface';
+import { IAuthService } from '../interfaces/auth.interface';
 
 @Injectable({
   providedIn: 'root',
 })
-export class AuthService {
+export class AuthService implements IAuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly jwtHelper = inject(JwtHelperService);

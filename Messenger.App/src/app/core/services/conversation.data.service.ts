@@ -1,6 +1,8 @@
-import { Injectable } from '@angular/core';
+import { Inject, Injectable } from '@angular/core';
 import { Conversation } from '../classes/conversation.model';
 import { AuthService } from './auth.service';
+import { IAuthServiceToken } from '../tokens';
+import { IAuthService } from '../interfaces/auth.interface';
 
 @Injectable({
   providedIn: 'root',
@@ -10,7 +12,8 @@ export class ConversationDataService {
   private readonly defaultGroupImage = 'assets/logo.png';
   private readonly defaultUserImage = 'assets/user_logo.png';
 
-  constructor(private authService: AuthService) {
+  constructor(@Inject(IAuthServiceToken) private authService: IAuthService
+) {
     this.userId = authService.user()?.nameidentifier!;
   }
 

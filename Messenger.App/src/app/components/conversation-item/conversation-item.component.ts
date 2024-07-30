@@ -1,9 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { Conversation } from '../../core/classes/conversation.model';
-import { AuthService } from '../../core/services/auth.service';
-import { MessagesService } from '../../core/services/messages.service';
 import { ConversationDataService } from '../../core/services/conversation.data.service';
-import { Message } from '../../core/classes/message.model';
 
 @Component({
   selector: 'app-conversation-item',

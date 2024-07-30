@@ -1,7 +1,9 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Inject, Input, OnInit } from '@angular/core';
 import { Conversation } from '../../core/classes/conversation.model';
 import { AuthService } from '../../core/services/auth.service';
 import { ConversationDataService } from '../../core/services/conversation.data.service';
+import { IAuthServiceToken } from '../../core/tokens';
+import { IAuthService } from '../../core/interfaces/auth.interface';
 
 @Component({
   selector: 'app-conversation-with-last-message',
@@ -11,7 +13,8 @@ import { ConversationDataService } from '../../core/services/conversation.data.s
 export class ConversationWithLastMessageComponent implements OnInit {
   @Input() conversation!: Conversation;
   lastMessageSenderImgUrl: string | undefined = undefined;
-  constructor(private authService: AuthService) {}
+  constructor(@Inject(IAuthServiceToken) private authService: IAuthService
+) {}
 
   ngOnInit(): void {
     this.lastMessageSenderImgUrl = this.conversation.lastMessage?.sender.imgUrl;
