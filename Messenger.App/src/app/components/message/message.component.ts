@@ -1,8 +1,6 @@
-import { Component, Inject, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { Message } from '../../core/classes/message.model';
 import { AuthService } from '../../core/services/auth.service';
-import { IAuthServiceToken } from '../../core/tokens';
-import { IAuthService } from '../../core/interfaces/auth.interface';
 
 @Component({
   selector: 'app-message',
@@ -14,7 +12,7 @@ export class MessageComponent implements OnInit {
   @Input() message!: Message;
   sentAt!: string;
 
-  constructor(@Inject(IAuthServiceToken) private authService: IAuthService) {}
+  constructor(private authService: AuthService) {}
 
   ngOnInit(): void {
     if (this.message.sentAt) {
@@ -42,8 +40,8 @@ export class MessageComponent implements OnInit {
       if (this.message.sender?.id === userId) {
         return '';
       } else {
-        const firstName = this.message?.sender.firstName ?? '';
-        const lastName = this.message?.sender.lastName ?? '';
+        const firstName = this.message?.sender?.firstName ?? '';
+        const lastName = this.message?.sender?.lastName ?? '';
         return `${firstName} ${lastName}`;
       }
     }

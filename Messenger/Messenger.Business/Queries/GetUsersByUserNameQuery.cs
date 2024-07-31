@@ -21,9 +21,7 @@ public class GetUsersByUserNameQueryValidator : AbstractValidator<GetUsersByUser
 {
     public GetUsersByUserNameQueryValidator()
     {
-        RuleFor(x => x.UserName)
-            .NotNull()
-            .NotEmpty().WithMessage("UserName is required");
+        RuleFor(x => x.UserName);
 
         RuleFor(x => x.PaginationParams)
            .NotNull()

@@ -1,7 +1,5 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { AuthService } from '../../core/services/auth.service';
-import { IAuthServiceToken } from '../../core/tokens';
-import { IAuthService } from '../../core/interfaces/auth.interface';
 
 @Component({
   selector: 'app-header',
@@ -9,7 +7,7 @@ import { IAuthService } from '../../core/interfaces/auth.interface';
   styleUrl: './header.component.css',
 })
 export class HeaderComponent implements OnInit {
-  constructor(@Inject(IAuthServiceToken) public authService: IAuthService
+  constructor(public authService: AuthService
 ) {}
   imgUrl: string | null = null;
   title = 'Messenger.App';

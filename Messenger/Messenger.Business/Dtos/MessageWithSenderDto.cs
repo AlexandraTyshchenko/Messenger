@@ -8,4 +8,6 @@ public class MessageWithSenderDto
     public string Text { get; set; }
     public DateTime SentAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public bool IsJoinMessage { get; set; } = false;
+
 }

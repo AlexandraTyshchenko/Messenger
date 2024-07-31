@@ -1,18 +1,16 @@
 import { Injectable } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { filter } from 'rxjs/operators';
 import { environment } from '../../../environments/environment.development';
 import { Message } from '../classes/message.model';
-import { AuthService } from './auth.service';
-import { ISignalRService } from '../interfaces/signalr.interface';
 
 @Injectable({
   providedIn: 'root',
 })
-export class SignalRService implements ISignalRService {
+export class SignalRService  {
   private hubConnection: signalR.HubConnection;
   private messageSubject = new BehaviorSubject<Message | null>(null);
+  private joinNotificationSubject = new BehaviorSubject<Message | null>(null);
 
   constructor() {
     this.hubConnection = new signalR.HubConnectionBuilder()
@@ -51,8 +49,17 @@ export class SignalRService implements ISignalRService {
     });
   }
 
+  public onJoinNotification(): void {
+    this.hubConnection.on('JoinNotification', (message: Message) => {
+      this.joinNotificationSubject.next(message);
+    });
+  }
+
   get message$(): Observable<Message | null>{
     return this.messageSubject.asObservable();
   }
 
+  get joinNotification$(): Observable<Message | null> {
+    return this.joinNotificationSubject.asObservable();
+  }
 }

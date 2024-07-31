@@ -4,6 +4,7 @@ using Messenger.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Messenger.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    partial class ApplicationContextModelSnapshot : ModelSnapshot
+    [Migration("20240730094835_MessageMigration")]
+    partial class MessageMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -72,7 +75,7 @@ namespace Messenger.Infrastructure.Migrations
                     b.Property<bool>("IsSeen")
                         .HasColumnType("bit");
 
-                    b.Property<Guid?>("SenderId")
+                    b.Property<Guid>("SenderId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("SentAt")
@@ -229,10 +232,10 @@ namespace Messenger.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("8ddb7c0f-6044-4896-9ecb-ef1108c48141"),
+                            Id = new Guid("18720494-30bd-4e9b-b6fe-9ae9ba631eed"),
                             AccessFailedCount = 0,
                             Bio = "Hello, I'm John.",
-                            ConcurrencyStamp = "513f2014-da31-4b23-ac2d-7ddc6e1176c5",
+                            ConcurrencyStamp = "69023d9f-3c19-4819-a521-1960cd7b13f4",
                             Email = "john.doe@example.com",
                             EmailConfirmed = true,
                             FirstName = "John",
@@ -249,10 +252,10 @@ namespace Messenger.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("e8f1f051-74ad-48eb-b72d-8d7bf1ec4e85"),
+                            Id = new Guid("5871f66d-678f-4bdd-b548-f4d4b6b2af9a"),
                             AccessFailedCount = 0,
                             Bio = "Hi, I'm Jane.",
-                            ConcurrencyStamp = "559db8b3-b451-4577-a441-49cbb9248a44",
+                            ConcurrencyStamp = "b42e4036-aa91-43ec-9106-4e415cd05afe",
                             Email = "jane.smith@example.com",
                             EmailConfirmed = true,
                             FirstName = "Jane",
@@ -269,10 +272,10 @@ namespace Messenger.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("2f7004e5-2fe7-47b6-8e34-cc20e139ab42"),
+                            Id = new Guid("2bfc7ef4-7962-40ed-8f22-173e87e92941"),
                             AccessFailedCount = 0,
                             Bio = "Hey, I'm Michael.",
-                            ConcurrencyStamp = "16deaa1d-e229-44c8-8c0c-31ef3540de0f",
+                            ConcurrencyStamp = "aca14c7c-b716-43f6-97f9-8b79254882bf",
                             Email = "michael.johnson@example.com",
                             EmailConfirmed = true,
                             FirstName = "Michael",
@@ -460,7 +463,8 @@ namespace Messenger.Infrastructure.Migrations
                     b.HasOne("Messenger.Infrastructure.Entities.User", "Sender")
                         .WithMany("Messages")
                         .HasForeignKey("SenderId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
 
                     b.Navigation("Conversation");
 

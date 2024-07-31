@@ -2,19 +2,26 @@
   <div class="chat">
     <div class="message">
       <div class="m-b-0">
-        <div *ngIf="myMessage === true; else otherMessage" class="clearfix float-right">
-          <div class="message my-message">
-            <div class="message-data">{{ message.text }}</div>
-          </div>
-          <div>
-            <span class="message-data-time">{{ sentAt }}</span>
-          </div>
+        <div *ngIf= "message.isJoinMessage===true; else simpleMessage" class="center-message">
+          <div class="message-data">{{ message.text }}</div>
+          <span class="message-data-time">{{ sentAt }}</span>
         </div>
+        <ng-template #simpleMessage>
+          <div  *ngIf="myMessage === true; else otherMessage" class="clearfix float-right">
+            <div class="message my-message">
+              <div class="message-data">{{ message.text }}</div>
+            </div>
+            <div>
+              <span class="message-data-time">{{ sentAt }}</span>
+            </div>
+          </div>
+        </ng-template>
+       
         <ng-template #otherMessage>
           <div class="clearfix">
             <div class="sender-info">
               <img
-                [src]="message.sender.imgUrl"
+                [src]="message.sender?.imgUrl"
                 alt="Logo"
                 width="30"
                 height="30"

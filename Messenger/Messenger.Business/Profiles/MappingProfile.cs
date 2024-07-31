@@ -35,5 +35,10 @@ public class MappingProfile : Profile
 
         CreateMap<UserRegistrationDto, User>();
         CreateMap<UserLoginDto, User>();
+
+        CreateMap<Conversation, ParticipantsInConversationDto>()
+            .ForMember(dest=>dest.ConversationId,opt=>opt.MapFrom(x=>x.Id))
+            .ForMember(dest=>dest.Participants,opt=>opt.MapFrom(x=>x.ParticipantsInConversation));
+
     }
 }

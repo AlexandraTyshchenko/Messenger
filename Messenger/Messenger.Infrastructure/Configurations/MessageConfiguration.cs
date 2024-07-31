@@ -8,12 +8,12 @@ public class MessageConfiguration : IEntityTypeConfiguration<Message>
 {
     public void Configure(EntityTypeBuilder<Message> builder)
     {
-        builder.Property<Guid>("SenderId");
+        builder.Property<Guid?>("SenderId");
 
         builder.HasOne(m => m.Sender)
             .WithMany(c => c.Messages)
             .HasForeignKey("SenderId")
-            .OnDelete(DeleteBehavior.NoAction);
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.Property<Guid>("ConversationId");
 

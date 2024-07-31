@@ -15,11 +15,10 @@ import { Message } from '../../core/classes/message.model';
 import { Conversation } from '../../core/classes/conversation.model';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MessageDto } from '../../core/classes/message-dto.model';
-import { ISignalRService } from '../../core/interfaces/signalr.interface';
-import { IAuthServiceToken, IMessagesServiceToken, ISignalRServiceToken } from '../../core/tokens';
-import { IAuthService } from '../../core/interfaces/auth.interface';
 import { SignalRService } from '../../core/services/signalr.service';
-import { IMessagesService } from '../../core/interfaces/message.interface';
+import { AuthService } from '../../core/services/auth.service';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { AddParticipantsComponent } from '../add-participants/add-participants.component';
 
 @Component({
   selector: 'app-chat',
@@ -38,8 +37,9 @@ export class ChatComponent implements OnInit, AfterViewInit, OnChanges {
   constructor(
     private messagesService: MessagesService,
     private fb: FormBuilder,
-    @Inject(ISignalRServiceToken) private signalRService: SignalRService,
-    @Inject(IAuthServiceToken) private authService: IAuthService
+    private signalRService: SignalRService,
+    private authService: AuthService,
+    private modalService: NgbModal
   ) {
     this.messageForm = this.fb.group({
       message: ['', Validators.required],
@@ -57,9 +57,11 @@ export class ChatComponent implements OnInit, AfterViewInit, OnChanges {
     this.signalRService.message$.subscribe((message) => {
       if (message) {
         this.addMessage(message);
+        console.log(message)
       }
     });
-  
+    console.log(this.messages);
+
     this.scrollToBottom();
   }
 
@@ -89,6 +91,12 @@ export class ChatComponent implements OnInit, AfterViewInit, OnChanges {
       this.scrollToCenter();
     }, 0);
     console.log('onscroll is invoked');
+  }
+
+  addParticipants() {
+    this.modalService.open(AddParticipantsComponent, {
+      size: 'lg',
+    }).componentInstance.conversationId = this.conversation.id;
   }
 
   loadMessages(conversationId: string): void {

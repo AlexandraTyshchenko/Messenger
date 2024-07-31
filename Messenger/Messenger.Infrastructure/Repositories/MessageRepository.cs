@@ -1,5 +1,4 @@
-﻿using Azure;
-using Messenger.Infrastructure.Context;
+﻿using Messenger.Infrastructure.Context;
 using Messenger.Infrastructure.Entities;
 using Messenger.Infrastructure.Interfaces;
 using Messenger.Infrastructure.Pagination;
@@ -16,14 +15,16 @@ public class MessageRepository : IMessageRepository
         _applicationContext = applicationContext;
     }
 
-    public async Task<Message> AddMessageToConversationAsync(string text, Conversation conversation, User sender)
+    public async Task<Message> AddMessageToConversationAsync(string text, Conversation conversation, 
+        User sender = null, bool isJoinMessage = false)
     {
         var message = new Message
         {
             Text = text,
             SentAt = DateTime.UtcNow,
-            Sender = sender!,
-            Conversation = conversation
+            Sender = sender,
+            Conversation = conversation,
+            IsJoinMessage = isJoinMessage
         };
 
         await _applicationContext.Messages.AddAsync(message);

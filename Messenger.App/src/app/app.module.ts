@@ -29,9 +29,10 @@ import { errorInterceptor } from './core/interceptors/error.interceptor';
 import { ToastDirective } from './directives/toast.directive';
 import { ConversationWithLastMessageComponent } from './components/conversation-with-last-message/conversation-with-last-message.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-import { IAuthServiceToken, IMessagesServiceToken, ISignalRServiceToken } from './core/tokens';
-import { SignalRService } from './core/services/signalr.service';
-import { MessageService } from 'primeng/api';
+import { AddParticipantsComponent } from './components/add-participants/add-participants.component';
+import { SearchUsersComponent } from './components/search-users/search-users.component';
+// import {MatSnackBarModule} from '@angular/material/snack-bar';
+
 
 const JWT_Module_Options: JwtModuleOptions = {
   config: {
@@ -55,6 +56,8 @@ const JWT_Module_Options: JwtModuleOptions = {
     MessageComponent,
     ToastDirective,
     ConversationWithLastMessageComponent,
+    AddParticipantsComponent,
+    SearchUsersComponent,
   ],
   imports: [
     BrowserModule,
@@ -75,9 +78,6 @@ const JWT_Module_Options: JwtModuleOptions = {
       multi: true,
       deps: [AuthService],
     },
-    {provide: ISignalRServiceToken, useClass: SignalRService },
-    {provide: IAuthServiceToken, useClass: AuthService },
-    {provide: IMessagesServiceToken, useClass: MessageService },
   ],
 
   bootstrap: [AppComponent],

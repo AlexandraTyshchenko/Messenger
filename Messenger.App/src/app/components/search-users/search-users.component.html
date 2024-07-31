@@ -1,0 +1,50 @@
+<div class="modal-header">
+    <h4 class="modal-title">Search Users</h4>
+   
+  </div>
+  <div class="modal-body">
+    <form [formGroup]="searchForm">
+      <div class="mb-3">
+        <label for="searchQuery" class="form-label">Search Query</label>
+        <input
+          type="text"
+          id="searchQuery"
+          class="form-control"
+          formControlName="searchQuery"
+          placeholder="Enter username"
+        />
+      </div>
+    </form>
+  
+    <div class="mb-3">
+        <h5>Selected Users</h5>
+        <div class="d-flex flex-wrap">
+          <span *ngFor="let user of selectedUsers" class="badge bg-primary me-2 mb-2">
+            {{ user.userName }}
+          </span>
+        </div>
+      </div>
+    <div
+      class="container"
+      infiniteScroll
+      [scrollWindow]="false"
+      (scrolled)="onScroll()"
+    >
+      <div *ngIf="users.length > 0" class="mt-3">
+        <ul class="list-group">
+          <li
+            *ngFor="let user of users"
+            class="list-group-item d-flex justify-content-between align-items-center"
+          >
+            {{ user.userName }}
+            <input
+              class="form-check-input"
+              (click)="select(user)"
+              type="checkbox"
+              [checked]="isSelected(user)"
+            />
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>

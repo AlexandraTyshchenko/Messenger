@@ -23,17 +23,19 @@ export class ConversationsComponent implements OnInit, AfterViewInit {
   @ViewChild('toast', { static: true, read: ToastDirective })
   toast!: ToastDirective;
   latestMessage: Message | null = null;
+  notificationMessage: string | null = null;
 
   constructor(
     private conversationsService: ConversationsService,
     private router: Router,
     private route: ActivatedRoute,
     private signalRService: SignalRService,
-    private authService:AuthService
+    private authService: AuthService
   ) {}
 
   ngOnInit() {
     this.loadData();
+    this.notificationMessage = null;
   }
 
   hideMessage() {
@@ -42,21 +44,33 @@ export class ConversationsComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit(): void {
     this.signalRService.onNotificationReceive();
-    // this.signalRService.message$.subscribe((message) => {
-    //   if (message) {
-    //     this.conversationWithLatestMessage = this.conversations.find(
-    //       (x) => x.id === message.conversationId
-    //     )!;
-    //     this.conversationWithLatestMessage!.lastMessage = message;
-    //     if(message.sender.id!==this.authService.user()!.nameidentifier){
-    //       this.handleMessage(message);
-    //     }
-    //   }
-    // });
+    this.signalRService.onJoinNotification();
+    this.signalRService.joinNotification$.subscribe((message) => {
+      if (message) {
+        this.loadData();
+        this.notificationMessage = message.text;
+        this.handleMessage(message);
+      }
+    });
+
+    this.signalRService.message$.subscribe((message) => {
+      if (message) {
+        this.conversationWithLatestMessage = this.conversations.find(
+          (x) => x.id === message.conversationId
+        )!;
+        this.conversationWithLatestMessage!.lastMessage = message;
+        this.handleMessage(message);
+      }
+    });
   }
 
   handleMessage(message: Message) {
-    this.toast.show();
+    if (
+      message.sender?.id !== this.authService.user()!.nameidentifier ||
+      message.sender === null
+    ) {
+      this.toast.show();
+    }
     console.log('Handling message:', message);
   }
 

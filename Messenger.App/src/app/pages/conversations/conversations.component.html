@@ -6,6 +6,14 @@
       [scrollWindow]="false"
       (scrolled)="onScroll()"
     >
+      <div *ngIf="notificationMessage" class="alert alert-success alert-dismissible fade show">
+        Your have been added to conversation
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="alert"
+        ></button>
+      </div>
       <div
         *ngFor="let conversation of conversations; let i = index"
         class="list-group-item d-flex justify-content-between align-items-start"
@@ -33,7 +41,7 @@
     class="toast fade position-fixed bottom-0 end-0 m-3"
   >
     <div (click)="hideMessage()" class="cross position-relative">
-      <svg 
+      <svg
         xmlns="http://www.w3.org/2000/svg"
         width="16"
         height="16"
@@ -46,10 +54,10 @@
         />
       </svg>
     </div>
-     <app-conversation-with-last-message
+    <app-conversation-with-last-message
       *ngIf="conversationWithLatestMessage"
       [conversation]="conversationWithLatestMessage"
-    > 
-     </app-conversation-with-last-message> 
+    >
+    </app-conversation-with-last-message>
   </div>
 </div>

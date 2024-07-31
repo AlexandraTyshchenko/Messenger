@@ -5,12 +5,11 @@ import { environment } from '../../../environments/environment.development';
 import { PagedEntities } from '../classes/pagination.model';
 import { Message } from '../classes/message.model';
 import { MessageDto } from '../classes/message-dto.model';
-import { IMessagesService } from '../interfaces/message.interface';
 
 @Injectable({
   providedIn: 'root',
 })
-export class MessagesService implements IMessagesService{
+export class MessagesService {
   constructor(private http: HttpClient) {}
 
   private messageSentSubject = new Subject<Message>();

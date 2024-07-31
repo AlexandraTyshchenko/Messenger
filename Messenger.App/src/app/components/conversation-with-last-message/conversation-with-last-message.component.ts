@@ -1,9 +1,6 @@
-import { Component, Inject, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { Conversation } from '../../core/classes/conversation.model';
 import { AuthService } from '../../core/services/auth.service';
-import { ConversationDataService } from '../../core/services/conversation.data.service';
-import { IAuthServiceToken } from '../../core/tokens';
-import { IAuthService } from '../../core/interfaces/auth.interface';
 
 @Component({
   selector: 'app-conversation-with-last-message',
@@ -13,23 +10,23 @@ import { IAuthService } from '../../core/interfaces/auth.interface';
 export class ConversationWithLastMessageComponent implements OnInit {
   @Input() conversation!: Conversation;
   lastMessageSenderImgUrl: string | undefined = undefined;
-  constructor(@Inject(IAuthServiceToken) private authService: IAuthService
-) {}
+  constructor(private authService: AuthService) {}
 
   ngOnInit(): void {
-    this.lastMessageSenderImgUrl = this.conversation.lastMessage?.sender.imgUrl;
+    this.lastMessageSenderImgUrl =
+      this.conversation.lastMessage?.sender?.imgUrl;
   }
 
   getSenderDisplayText(): string {
     const userId = this.authService.user()?.nameidentifier;
 
-    if (this.conversation.lastMessage !== null) {
+    if (this.conversation.lastMessage) {
       if (this.conversation.lastMessage.sender?.id === userId) {
-        return 'you:';
+        return 'You';
       } else {
-        const firstName = this.conversation.lastMessage?.sender.firstName ?? '';
-        const lastName = this.conversation.lastMessage?.sender.lastName ?? '';
-        return `${firstName} ${lastName}:`;
+        const firstName = this.conversation.lastMessage.sender?.firstName ?? '';
+        const lastName = this.conversation.lastMessage.sender?.lastName ??  '';
+        return `${firstName} ${lastName} `;
       }
     }
     return '';
