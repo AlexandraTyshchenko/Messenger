@@ -12,10 +12,6 @@ import { MessageDto } from '../classes/message-dto.model';
 export class MessagesService {
   constructor(private http: HttpClient) {}
 
-  private messageSentSubject = new Subject<Message>();
-
-  public messageSent$ = this.messageSentSubject.asObservable();
-
   getMessages(
     conversationId: string,
     page: number,

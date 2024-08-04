@@ -25,7 +25,7 @@ public class ConnectionRepository : IConnectionRepository
         await _applicationContext.UserConnections.AddAsync(connection);
     }
 
-    public async Task<IEnumerable<UserConnection>> GetUserConnectionsAsync(Guid[] userIds)
+    public async Task<IEnumerable<UserConnection>> GetUsersConnectionsAsync(Guid[] userIds)
     {
         return await _applicationContext
             .UserConnections.Include(x => x.User).Where(x => userIds.Contains(x.User.Id)).ToListAsync();
@@ -39,5 +39,14 @@ public class ConnectionRepository : IConnectionRepository
             .ToListAsync();
 
         return conversations;
+    }
+
+    public async Task<IEnumerable<UserConnection>> GetUserConnections(Guid userId)
+    {
+        return await _applicationContext
+            .UserConnections
+            .Include(x => x.User)
+            .Where(x => x.User.Id == userId)
+            .ToListAsync();
     }
 }

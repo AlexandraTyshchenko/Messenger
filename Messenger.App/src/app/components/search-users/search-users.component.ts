@@ -8,18 +8,20 @@ import { PagedEntities } from '../../core/classes/pagination.model';
 @Component({
   selector: 'app-search-users',
   templateUrl: './search-users.component.html',
-  styleUrl: './search-users.component.css'
+  styleUrls: ['./search-users.component.css']
 })
 export class SearchUsersComponent {
+  @Input() filterFunction: ((user: UserInfo) => boolean) | null = null;
   searchForm: FormGroup;
   users: UserInfo[] = [];
   private searchSubject = new Subject<string>();
-  selectedUsers: Set<UserInfo> = new Set();
+  selectedUsers: UserInfo[] = []; 
   currentPage = 1;
-  itemsPerPage = 3;
+  itemsPerPage = 10;
   query: string = '';
-  @Input() conversationId!: string; 
-  @Output() selectedUsersChange = new EventEmitter<Set<UserInfo>>(); 
+  @Output() selectedUsersChange = new EventEmitter<UserInfo[]>(); 
+
+  defaultImageUrl: string = "../../../assets/user_logo.png"; 
 
   constructor(
     private fb: FormBuilder,
@@ -53,6 +55,9 @@ export class SearchUsersComponent {
     this.userService.getUsers(this.query, this.currentPage, this.itemsPerPage).subscribe({
       next: (response: PagedEntities<UserInfo>) => {
         this.users = response.entities;
+        if (this.filterFunction) {
+          this.users = this.users.filter(this.filterFunction);
+        }
       },
       error: (err) => {
         console.error('Error fetching users:', err);
@@ -61,17 +66,18 @@ export class SearchUsersComponent {
   }
 
   select(user: UserInfo) {
-    if (this.selectedUsers.has(user)) {
-      this.selectedUsers.delete(user);
+    const index = this.selectedUsers.findIndex(x => x.id === user.id);
+    if (index > -1) {
+      this.selectedUsers.splice(index, 1);
     } else {
-      this.selectedUsers.add(user);
+      this.selectedUsers.push(user);
     }
     this.selectedUsersChange.emit(this.selectedUsers); 
     console.log(this.selectedUsers);
   }
 
   isSelected(user: UserInfo): boolean {
-    return this.selectedUsers.has(user);
+    return this.selectedUsers.some(x => x.id === user.id);
   }
 
   appendData() {

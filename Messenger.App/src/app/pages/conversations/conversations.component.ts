@@ -43,35 +43,62 @@ export class ConversationsComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
+    this.initializeSignalRSubscriptions();
+  }
+  
+  private initializeSignalRSubscriptions(): void {
     this.signalRService.onNotificationReceive();
     this.signalRService.onJoinNotification();
-    this.signalRService.joinNotification$.subscribe((message) => {
+    this.signalRService.onLeaveConversationNotification();
+  
+    this.subscribeToNotifications();
+    this.subscribeToMessages();
+  }
+  
+  private subscribeToNotifications(): void {
+    this.signalRService.joinNotification$.subscribe(message => this.handleNotification(message));
+    this.signalRService.leaveConversationNotification$.subscribe(message => this.handleNotification(message));
+  }
+  
+  private subscribeToMessages(): void {
+    this.signalRService.message$.subscribe(message => {
       if (message) {
-        this.loadData();
-        this.notificationMessage = message.text;
-        this.handleMessage(message);
-      }
-    });
-
-    this.signalRService.message$.subscribe((message) => {
-      if (message) {
-        this.conversationWithLatestMessage = this.conversations.find(
-          (x) => x.id === message.conversationId
-        )!;
-        this.conversationWithLatestMessage!.lastMessage = message;
+        this.updateConversationWithMessage(message);
         this.handleMessage(message);
       }
     });
   }
+  createPrivateConersation(){
+
+  }
+  createGroupConversation(){
+    
+  }
+  private handleNotification(message: any): void {
+    console.log(message)
+    console.log(this.notificationMessage)
+    if (message) {
+      this.loadData();
+      this.notificationMessage = message.text;
+      this.handleMessage(message);
+    }
+  }
+  
+  private updateConversationWithMessage(message: any): void {
+    this.conversationWithLatestMessage = this.conversations.find(
+      conversation => conversation.id === message.conversationId
+    )!;
+    this.conversationWithLatestMessage!.lastMessage = message;
+  }
+  
 
   handleMessage(message: Message) {
     if (
-      message.sender?.id !== this.authService.user()!.nameidentifier ||
-      message.sender === null
+      message.sender?.id !== this.authService.user()!.nameidentifier &&
+      message.sender !== null
     ) {
       this.toast.show();
     }
-    console.log('Handling message:', message);
   }
 
   loadData() {

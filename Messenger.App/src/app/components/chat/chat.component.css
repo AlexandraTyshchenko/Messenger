@@ -252,11 +252,16 @@ body {
   overflow-y: scroll;
 }
 
-.three-dots {
-  position: relative;
-  left: 300px;
-}
+
 
 .three-dots:hover {
+  cursor: pointer;
+}
+
+.ngbDropdownItem {
+  cursor: pointer;
+}
+
+ul[ngbDropdownMenu] a[ngbDropdownItem] {
   cursor: pointer;
 }

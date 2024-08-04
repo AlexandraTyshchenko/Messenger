@@ -5,6 +5,7 @@ namespace Messenger.Infrastructure.Interfaces;
 public interface IConnectionRepository
 {
     Task AddConnectionAsync(User user, string connectionId);
-    Task<IEnumerable<UserConnection>> GetUserConnectionsAsync(Guid[] userIds);
+    Task<IEnumerable<UserConnection>> GetUsersConnectionsAsync(Guid[] userIds);
+    Task<IEnumerable<UserConnection>> GetUserConnections(Guid userId);
     Task<IEnumerable<string>> GetUserConversationConnections(Guid userId);
 }

@@ -26,7 +26,7 @@ public class ParticipantsController : BaseController
     [ConversationRoleFilter(Role.Participant)]
     public async Task<IActionResult> GetParticipantsByConversationId([FromRoute] Guid conversationId)
     {
-        ResultDto<IEnumerable<UserBasicInfoDto>> response = await _mediator.Send(new GetParticipantsByConversationIdQuery
+        ResultDto<IEnumerable<ParticipantsDto>> response = await _mediator.Send(new GetParticipantsByConversationIdQuery
         {
             ConversationId = conversationId
         });

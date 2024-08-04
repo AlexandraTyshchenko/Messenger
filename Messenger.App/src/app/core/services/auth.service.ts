@@ -8,7 +8,6 @@ import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
-import { JwtHelperService } from '@auth0/angular-jwt';
 import { environment } from '../../../environments/environment.development';
 import { Login } from '../auth/login/interfaces';
 import { LoginResponse } from '../auth/login/types/login-response.type';
@@ -17,6 +16,7 @@ import { IS_PUBLIC } from '../interceptors/auth.interceptor';
 import { RefreshToken } from '../auth/login/classes/refresh-token.class';
 import { UserRegistration } from '../auth/login/classes/register-user.class';
 import { User } from '../../interfaces/user.interface';
+import { JwtHelperService } from '@auth0/angular-jwt';
 
 @Injectable({
   providedIn: 'root',

@@ -1,17 +1,10 @@
-import {
-  HttpContextToken,
-  HttpInterceptorFn,
-  HttpRequest,
-} from '@angular/common/http';
+import { HttpContextToken, HttpInterceptorFn, HttpRequest } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authSvc = inject(AuthService);
-  // whenever this HttpContextToken is attached to a request
-  // as we did to login request earlier
-  // it means the user does not need to be authenticated
-  // so we don't attach authorization header
+
   if (req.context.get(IS_PUBLIC)) {
     return next(req);
   }

@@ -37,7 +37,7 @@ public class AuthenticateUserCommandHandler : IRequestHandler<AuthenticateUserCo
     private readonly ITokenService _tokenService;
 
     public AuthenticateUserCommandHandler(UserManager<User> userManager,
-        IOptions<JwtSettings> jwtSettings, ITokenService tokenService)
+        ITokenService tokenService)
     {
         _userManager = userManager;
         _tokenService = tokenService;

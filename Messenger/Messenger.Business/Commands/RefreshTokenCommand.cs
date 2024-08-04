@@ -41,7 +41,6 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
         _jwtSettings = jwtSettings.Value;
         _unitOfWork = unitOfWork;
         _tokenService = tokenService;
-
     }
 
     public async Task<ResultDto<TokenDto>> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)

@@ -1,4 +1,29 @@
 <div class="row">
+  <div  ngbDropdown>
+    <div
+      class="three-dots"
+      ngbDropdownToggle
+      id="dropdownMenuButton"
+    >  Actions
+
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        fill="currentColor"
+        class="bi bi-three-dots-vertical"
+        viewBox="0 0 16 16"
+      >
+        <path
+          d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0"
+        />
+      </svg>
+      <ul ngbDropdownMenu aria-labelledby="dropdownMenuButton">
+        <li><a (click)="createPrivateConersation()" ngbDropdownItem >Create private conversation</a></li>
+        <li><a (click)="createGroupConversation()" ngbDropdownItem >Create group conversation</a></li>
+      </ul>
+    </div>
+  </div>
   <div class="col-md-5">
     <div
       class="container"
@@ -6,9 +31,9 @@
       [scrollWindow]="false"
       (scrolled)="onScroll()"
     >
-      <div *ngIf="notificationMessage" class="alert alert-success alert-dismissible fade show">
-        Your have been added to conversation
-        <button
+      <div *ngIf="notificationMessage" class="alert alert-info alert-dismissible fade show">
+        {{notificationMessage}}
+                <button
           type="button"
           class="btn-close"
           data-bs-dismiss="alert"
@@ -54,10 +79,12 @@
         />
       </svg>
     </div>
+    
     <app-conversation-with-last-message
       *ngIf="conversationWithLatestMessage"
       [conversation]="conversationWithLatestMessage"
     >
     </app-conversation-with-last-message>
+    
   </div>
 </div>

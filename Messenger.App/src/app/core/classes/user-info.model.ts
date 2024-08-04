@@ -1,4 +1,3 @@
-import { Guid } from 'guid-typescript';
 
 export class UserInfo {
   id: string;

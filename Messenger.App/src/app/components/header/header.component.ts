@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { AfterViewInit, Component, Inject, OnInit } from '@angular/core';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
@@ -6,16 +6,20 @@ import { AuthService } from '../../core/services/auth.service';
   templateUrl: './header.component.html',
   styleUrl: './header.component.css',
 })
-export class HeaderComponent implements OnInit {
+export class HeaderComponent implements OnInit, AfterViewInit{
   constructor(public authService: AuthService
 ) {}
   imgUrl: string | null = null;
   title = 'Messenger.App';
 
   ngOnInit(): void {
-    this.imgUrl = this.authService.user()!.imgUrl;
   }
 
+  ngAfterViewInit(): void {
+    if(this.authService.isAuthenticated()){
+      this.imgUrl = this.authService.user()!.imgUrl;
+    }
+  }
 
   logout() {
     this.authService.logout();

@@ -1,8 +1,4 @@
-import {
-  HttpInterceptorFn,
-  HttpErrorResponse,
-  HttpStatusCode,
-} from '@angular/common/http';
+import { HttpInterceptorFn, HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, switchMap, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
@@ -40,7 +36,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       if (error.error && error.error.errors) {
         const errors = error.error.errors;
         for (let i = 0; i < errors.length; i++) {
-          console.error(errors[i].message);
+          console.error(errors[i].error);
         }
         return throwError(
           () =>
@@ -50,7 +46,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         );
       }
 
-      return throwError(() => new Error(error.message));
+      return throwError(() => new Error(error.error));
     })
   );
 };

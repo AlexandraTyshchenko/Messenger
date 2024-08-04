@@ -1,7 +1,10 @@
-﻿using FluentValidation;
+﻿using AutoMapper;
+using FluentValidation;
 using MediatR;
 using Messenger.Business.Dtos;
+using Messenger.Business.Interfaces;
 using Messenger.Infrastructure;
+using Messenger.Infrastructure.Entities;
 using Messenger.Infrastructure.Enums;
 using System.Net;
 
@@ -16,7 +19,7 @@ public class DeleteParticipantFromConversationCommand : IRequest<ResultDto>
 public class DeleteParticipantFromConversationCommandValidator : AbstractValidator<DeleteParticipantFromConversationCommand>
 {
     public DeleteParticipantFromConversationCommandValidator()
-    {  
+    {
         RuleFor(x => x.UserId)
             .NotEqual(Guid.Empty)
             .WithMessage("UserId cannot be an empty GUID.");
@@ -31,10 +34,15 @@ public class DeleteParticipantFromConversationCommandHandler
     : IRequestHandler<DeleteParticipantFromConversationCommand, ResultDto>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IHubService _hubService;
+    private readonly IMapper _mapper;
 
-    public DeleteParticipantFromConversationCommandHandler(IUnitOfWork unitOfWork)
+
+    public DeleteParticipantFromConversationCommandHandler(IUnitOfWork unitOfWork, IHubService hubService,IMapper mapper)
     {
         _unitOfWork = unitOfWork;
+        _hubService = hubService;
+        _mapper = mapper;
     }
 
     public async Task<ResultDto> Handle(DeleteParticipantFromConversationCommand request, CancellationToken cancellationToken)
@@ -77,7 +85,20 @@ public class DeleteParticipantFromConversationCommandHandler
             }
         }
 
+        var messageText = $"{participantInConversation.User.UserName} was deleted from сonversation '{conversation.Group.Title}'";
+
+        Message message = await _unitOfWork.Messages.AddMessageToConversationAsync(messageText, conversation, null, true);
+
+        var mappedMessage = _mapper.Map<MessageWithSenderDto>(message);
+
         await _unitOfWork.SaveChangesAsync();
+
+        IEnumerable<UserConnection> connections = await _unitOfWork.Connections.GetUserConnections(request.UserId);
+
+        await _hubService.NotifyGroupAsync(conversation.Id, mappedMessage, "ReceiveNotification");
+        MessageDto leaveConversationMessageDto = new MessageDto { Text = $"You are deleted from conversation {conversation.Group.Title}" };
+
+        await _hubService.NotifyUsersConnectionsAsync(connections, leaveConversationMessageDto, "LeaveConversationNotification");
 
         return ResultDto.SuccessResult(HttpStatusCode.OK);
     }

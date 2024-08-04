@@ -27,3 +27,8 @@
 .fs-5 {
   font-size: 1.25rem;
 }
+
+.fs-5 {
+  white-space: nowrap;  
+  word-break: keep-all;  
+}

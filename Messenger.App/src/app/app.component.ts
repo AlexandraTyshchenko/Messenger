@@ -8,9 +8,7 @@ import { SignalRService } from './core/services/signalr.service';
   styleUrl: './app.component.css',
 })
 export class AppComponent {
-  constructor(private signalRService: SignalRService) {}
+  constructor() {}
 
-  ngOnInit(): void {
-    this.signalRService.startConnection();
-  }
+
 }

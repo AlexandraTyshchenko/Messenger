@@ -7,10 +7,13 @@ import { Message } from '../classes/message.model';
 @Injectable({
   providedIn: 'root',
 })
-export class SignalRService  {
+export class SignalRService {
   private hubConnection: signalR.HubConnection;
   private messageSubject = new BehaviorSubject<Message | null>(null);
   private joinNotificationSubject = new BehaviorSubject<Message | null>(null);
+  private leaveConversationNotification = new BehaviorSubject<Message | null>(
+    null
+  );
 
   constructor() {
     this.hubConnection = new signalR.HubConnectionBuilder()
@@ -22,7 +25,7 @@ export class SignalRService  {
       })
       .withAutomaticReconnect()
       .build();
- }
+  }
 
   public startConnection(): void {
     this.hubConnection
@@ -55,11 +58,21 @@ export class SignalRService  {
     });
   }
 
-  get message$(): Observable<Message | null>{
+  public onLeaveConversationNotification(): void {
+    this.hubConnection.on('LeaveConversationNotification', (message: Message) => {
+      this.joinNotificationSubject.next(message);
+    });
+  }
+
+  get message$(): Observable<Message | null> {
     return this.messageSubject.asObservable();
   }
 
   get joinNotification$(): Observable<Message | null> {
     return this.joinNotificationSubject.asObservable();
+  }
+
+  get leaveConversationNotification$(): Observable<Message | null> {
+    return this.leaveConversationNotification.asObservable();
   }
 }

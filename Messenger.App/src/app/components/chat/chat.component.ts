@@ -19,6 +19,8 @@ import { SignalRService } from '../../core/services/signalr.service';
 import { AuthService } from '../../core/services/auth.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { AddParticipantsComponent } from '../add-participants/add-participants.component';
+import { ParticipantsListComponent } from '../participants-list/participants-list.component';
+import { LeaveConversationConfirmationModalComponent } from '../leave-conversation-confirmation-modal/leave-conversation-confirmation-modal.component';
 
 @Component({
   selector: 'app-chat',
@@ -99,6 +101,12 @@ export class ChatComponent implements OnInit, AfterViewInit, OnChanges {
     }).componentInstance.conversationId = this.conversation.id;
   }
 
+  showParticipants(){
+    this.modalService.open(ParticipantsListComponent, {
+      size: 'lg',
+    }).componentInstance.conversationId = this.conversation.id;
+  }
+
   loadMessages(conversationId: string): void {
     this.messagesService
       .getMessages(conversationId, this.currentPage, this.itemsPerPage)
@@ -156,5 +164,13 @@ export class ChatComponent implements OnInit, AfterViewInit, OnChanges {
       this.messages.pop();
     }
     this.currentPage = 1;
+  }
+
+  leaveConversation(){
+    const modalRef = this.modalService.open(LeaveConversationConfirmationModalComponent, {
+      size: 'lg',
+    });
+  
+    modalRef.componentInstance.conversationId = this.conversation.id;
   }
 }
