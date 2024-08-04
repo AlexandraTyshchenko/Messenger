@@ -7,6 +7,9 @@ import { ToastDirective } from '../../directives/toast.directive';
 import { SignalRService } from '../../core/services/signalr.service';
 import { Message } from '../../core/classes/message.model';
 import { AuthService } from '../../core/services/auth.service';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { GroupConversationFormComponent } from '../../components/group-conversation-form/group-conversation-form.component';
+import { SearchUsersComponent } from '../../components/search-users/search-users.component';
 
 @Component({
   selector: 'app-conversations',
@@ -30,7 +33,8 @@ export class ConversationsComponent implements OnInit, AfterViewInit {
     private router: Router,
     private route: ActivatedRoute,
     private signalRService: SignalRService,
-    private authService: AuthService
+    private authService: AuthService,
+    private modalService: NgbModal
   ) {}
 
   ngOnInit() {
@@ -44,7 +48,13 @@ export class ConversationsComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit(): void {
     this.initializeSignalRSubscriptions();
+    
+    this.conversationsService.conversation$.subscribe({
+      next: () => this.loadData(),
+      error: (err) => console.error('Error subscribing to conversation$: ', err)
+    });
   }
+  
   
   private initializeSignalRSubscriptions(): void {
     this.signalRService.onNotificationReceive();
@@ -69,10 +79,14 @@ export class ConversationsComponent implements OnInit, AfterViewInit {
     });
   }
   createPrivateConersation(){
-
+    this.modalService.open(SearchUsersComponent, {
+      size: 'lg',
+    });
   }
   createGroupConversation(){
-    
+    this.modalService.open(GroupConversationFormComponent, {
+      size: 'lg',
+    });
   }
   private handleNotification(message: any): void {
     console.log(message)
@@ -103,7 +117,7 @@ export class ConversationsComponent implements OnInit, AfterViewInit {
 
   loadData() {
     this.conversationsService
-      .GetConversations(this.currentPage, this.itemsPerPage)
+      .getConversations(this.currentPage, this.itemsPerPage)
       .subscribe({
         next: (response: PagedEntities<Conversation>) => {
           this.conversations = response.entities;
@@ -124,7 +138,7 @@ export class ConversationsComponent implements OnInit, AfterViewInit {
 
   appendData() {
     this.conversationsService
-      .GetConversations(this.currentPage, this.itemsPerPage)
+      .getConversations(this.currentPage, this.itemsPerPage)
       .subscribe({
         next: (response) =>
           (this.conversations = [...this.conversations, ...response.entities]),

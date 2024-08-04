@@ -4,6 +4,10 @@ import { FormBuilder, FormGroup } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { UserService } from '../../core/services/user.service';
 import { PagedEntities } from '../../core/classes/pagination.model';
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { ConversationsService } from '../../core/services/conversations.service';
+import { UserDto } from '../../core/classes/user-dto.model';
+import { Conversation } from '../../core/classes/conversation.model';
 
 @Component({
   selector: 'app-search-users',
@@ -11,11 +15,9 @@ import { PagedEntities } from '../../core/classes/pagination.model';
   styleUrls: ['./search-users.component.css']
 })
 export class SearchUsersComponent {
-  @Input() filterFunction: ((user: UserInfo) => boolean) | null = null;
   searchForm: FormGroup;
   users: UserInfo[] = [];
   private searchSubject = new Subject<string>();
-  selectedUsers: UserInfo[] = []; 
   currentPage = 1;
   itemsPerPage = 10;
   query: string = '';
@@ -26,6 +28,8 @@ export class SearchUsersComponent {
   constructor(
     private fb: FormBuilder,
     private userService: UserService,
+    public activeModal: NgbActiveModal,
+    private conversationsService:ConversationsService
   ) {
     this.searchForm = this.fb.group({
       searchQuery: [''],
@@ -54,10 +58,7 @@ export class SearchUsersComponent {
   searchUsers() {
     this.userService.getUsers(this.query, this.currentPage, this.itemsPerPage).subscribe({
       next: (response: PagedEntities<UserInfo>) => {
-        this.users = response.entities;
-        if (this.filterFunction) {
-          this.users = this.users.filter(this.filterFunction);
-        }
+        this.users = response.entities;        
       },
       error: (err) => {
         console.error('Error fetching users:', err);
@@ -65,20 +66,6 @@ export class SearchUsersComponent {
     });
   }
 
-  select(user: UserInfo) {
-    const index = this.selectedUsers.findIndex(x => x.id === user.id);
-    if (index > -1) {
-      this.selectedUsers.splice(index, 1);
-    } else {
-      this.selectedUsers.push(user);
-    }
-    this.selectedUsersChange.emit(this.selectedUsers); 
-    console.log(this.selectedUsers);
-  }
-
-  isSelected(user: UserInfo): boolean {
-    return this.selectedUsers.some(x => x.id === user.id);
-  }
 
   appendData() {
     this.userService.getUsers(this.query, this.currentPage, this.itemsPerPage)
@@ -88,6 +75,17 @@ export class SearchUsersComponent {
         error: (err) => console.error('Error fetching additional users:', err),
       });
   }
+
+  createPrivateConversation(id: string) {
+    const userDto = new UserDto(id);
+
+    this.conversationsService.createPrivateConversation(userDto).subscribe({
+      next: (response:Conversation) =>
+        this.activeModal.close(),
+      error: (err) => console.error('Error fetching additional users:', err),
+    });
+}
+
 
   onScroll() {
     this.currentPage++;

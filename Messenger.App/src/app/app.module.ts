@@ -9,7 +9,7 @@ import { HomePageComponent } from './pages/home-page/home-page.component';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { AuthService } from './core/services/auth.service';
 import { CommonModule } from '@angular/common';  
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RegisterPageComponent } from './core/auth/pages/register-page/register-page.component';
 import { AuthPageComponent } from './pages/auth-page/auth-page.component';
 import { EmailConfirmationComponent } from './core/auth/pages/email-confirmation/email-confirmation.component';
@@ -31,6 +31,7 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { ParticipantsListComponent } from './components/participants-list/participants-list.component';
 import { DeleteParticipantConfirmationModalComponent } from './components/delete-participant-confirmation-modal/delete-participant-confirmation-modal.component';
 import { LeaveConversationConfirmationModalComponent } from './components/leave-conversation-confirmation-modal/leave-conversation-confirmation-modal.component';
+import { GroupConversationFormComponent } from './components/group-conversation-form/group-conversation-form.component';
 
 
 const JWT_Module_Options: JwtModuleOptions = {
@@ -59,6 +60,7 @@ const JWT_Module_Options: JwtModuleOptions = {
         ParticipantsListComponent,
         DeleteParticipantConfirmationModalComponent,
         LeaveConversationConfirmationModalComponent,
+        GroupConversationFormComponent,
     ],
     bootstrap: [AppComponent], imports: [BrowserModule,
         AppRoutingModule,
@@ -67,6 +69,7 @@ const JWT_Module_Options: JwtModuleOptions = {
         ScrollerModule,
         InfiniteScrollModule,
         NgbModule,
+        FormsModule,
         JwtModule.forRoot(JWT_Module_Options)], providers: [
         provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])),
         {

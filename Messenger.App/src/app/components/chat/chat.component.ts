@@ -62,7 +62,6 @@ export class ChatComponent implements OnInit, AfterViewInit, OnChanges {
         console.log(message)
       }
     });
-    console.log(this.messages);
 
     this.scrollToBottom();
   }

@@ -26,13 +26,7 @@ public class CreateGroupConversationCommandValidator : AbstractValidator<CreateG
             .NotNull()
             .WithMessage("Group title cannot be null.")
             .NotEmpty()
-            .WithMessage("Group title cannot be empty.");
-
-        RuleFor(x => x.Group.ImgUrl)
-            .NotNull()
-            .WithMessage("Group image URL cannot be null.")
-            .NotEmpty()
-            .WithMessage("Group image URL cannot be empty.");
+            .WithMessage("Group title cannot be empty.");     
     }
 }
 

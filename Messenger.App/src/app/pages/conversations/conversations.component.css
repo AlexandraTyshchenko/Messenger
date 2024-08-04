@@ -37,3 +37,10 @@
   right: 0.5rem;
 }
 
+.ngbDropdownItem {
+  cursor: pointer;
+}
+
+ul[ngbDropdownMenu] a[ngbDropdownItem] {
+  cursor: pointer;
+}
