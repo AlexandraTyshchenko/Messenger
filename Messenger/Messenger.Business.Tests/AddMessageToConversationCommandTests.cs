@@ -18,15 +18,19 @@ public class AddMessageToConversationCommandHandlerTests
     private Mock<IHubService> _hubServiceMock;
     private AddMessageToConversationCommandHandler _handler;
 
-    [SetUp]
-    public void SetUp()
+    [OneTimeSetUp]
+    public void OneTimeSetUp()
     {
         var configuration = new MapperConfiguration(cfg =>
         {
             cfg.AddProfile<MappingProfile>();
         });
         _mapper = configuration.CreateMapper();
+    }
 
+    [SetUp]//todo read
+    public void SetUp()
+    {
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _hubServiceMock = new Mock<IHubService>();
         _handler = new AddMessageToConversationCommandHandler(
@@ -55,6 +59,7 @@ public class AddMessageToConversationCommandHandlerTests
          {
              Id = command.SenderId,
          });
+
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
@@ -64,7 +69,32 @@ public class AddMessageToConversationCommandHandlerTests
     }
 
     [Test]
-    public async Task Handle_ShouldCallAddMessageToConversationAsync_WhenConversationIsFound()
+    public async Task Handle_ShouldReturnFailure_WhenSenderNotFound()
+    {
+        // Arrange
+        var command = new AddMessageToConversationCommand
+        {
+            SenderId = Guid.NewGuid(),
+            ConversationId = Guid.NewGuid(),
+            Message = new MessageDto { Text = "Hello" }
+        };
+
+        _unitOfWorkMock.Setup(u => u.Conversations.GetConversationByIdAsync(It.IsAny<Guid>()))
+            .ReturnsAsync(new Conversation());
+
+        _unitOfWorkMock.Setup(r => r.Users.GetUserByIdAsync(command.SenderId))
+         .ReturnsAsync((User)null);
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        Assert.AreEqual(HttpStatusCode.NotFound, result.HttpStatusCode);
+        Assert.IsFalse(result.Success);
+    }
+
+    [Test]
+    public async Task Handle_ShouldReturnCorrectMessageWithOkStatusCode_WhenConversationIsFound()
     {
         // Arrange
         var command = new AddMessageToConversationCommand
@@ -97,17 +127,23 @@ public class AddMessageToConversationCommandHandlerTests
         _unitOfWorkMock.Setup(u => u.Users.GetUserByIdAsync(command.SenderId))
             .ReturnsAsync(sender);
 
-        _unitOfWorkMock.Setup(u => u.Messages.AddMessageToConversationAsync(command.Message.Text, conversation, sender,false))
+        _unitOfWorkMock.Setup(u => u.Messages.AddMessageToConversationAsync(command.Message.Text, conversation, sender, false))
             .ReturnsAsync(message);
 
         _hubServiceMock.Setup(h => h.NotifyGroupAsync(conversation.Id, It.IsAny<MessageWithSenderDto>(), "ReceiveNotification"))
             .Returns(Task.CompletedTask);
 
+        var mappedMessage = _mapper.Map<MessageWithSenderDto>(message);
+
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        _unitOfWorkMock.Verify(u => u.Messages.AddMessageToConversationAsync(command.Message.Text, conversation, sender,false), Times.Once);
+        Assert.IsTrue(result.Success);
+        Assert.AreEqual(HttpStatusCode.Created, result.HttpStatusCode);
+        Assert.AreEqual(mappedMessage.Id, result.Payload.Id);
+        Assert.AreEqual(mappedMessage.SentAt, result.Payload.SentAt);
+        Assert.AreEqual(mappedMessage.Sender.Id, result.Payload.Sender.Id);
     }
 
     [Test]
@@ -165,7 +201,4 @@ public class AddMessageToConversationCommandHandlerTests
             "ReceiveNotification"),
         Times.Once);
     }
-
-
-
 }

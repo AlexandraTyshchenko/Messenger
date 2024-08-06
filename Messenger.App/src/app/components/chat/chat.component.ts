@@ -58,8 +58,8 @@ export class ChatComponent implements OnInit, AfterViewInit, OnChanges {
   ngAfterViewInit(): void {
     this.signalRService.message$.subscribe((message) => {
       if (message) {
-        this.addMessage(message);
         console.log(message)
+        this.addMessage(message);
       }
     });
 

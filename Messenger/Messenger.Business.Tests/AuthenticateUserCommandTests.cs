@@ -16,23 +16,24 @@ public class AuthenticateUserCommandTests
     private Mock<UserManager<User>> _userManagerMock;
     private Mock<ITokenService> _tokenServiceMock;
     private AuthenticateUserCommandHandler _handler;
-    [SetUp]
-    public void SetUp()
+
+    [OneTimeSetUp]
+    public void OneTimeSetUp()
     {
         var configuration = new MapperConfiguration(cfg =>
         {
             cfg.AddProfile<MappingProfile>();
         });
         _mapper = configuration.CreateMapper();
-
         _userManagerMock = new Mock<UserManager<User>>(
             Mock.Of<IUserStore<User>>(),
-            null, null, null, null, null, null, null, null
-        );
+            null, null, null, null, null, null, null, null);
+    }
 
+    [SetUp]
+    public void SetUp()
+    {
         _tokenServiceMock = new Mock<ITokenService>();
-
-
         _handler = new AuthenticateUserCommandHandler(
             _userManagerMock.Object,
             _tokenServiceMock.Object
@@ -92,55 +93,34 @@ public class AuthenticateUserCommandTests
     }
 
     [Test]
-    public async Task Handle_ShouldReturnSuccess_WhenEmailIsConfirmed()
+    public async Task Handle_ShouldReturnBadRequest_WhenEmailIsNotConfirmed()
     {
         // Arrange
+        var user = new User { UserName = "testuser" };
         var command = new AuthenticateUserCommand
         {
-            UserLogin = new UserLoginDto
-            {
-                UserName = "testuser",
-                Password = "password123"
-            }
-        };
-
-        var user = new User
-        {
-            UserName = command.UserLogin.UserName
-        };
-
-        var token = "generated-token";
-        var refreshToken = "generated-refresh-token";
-        var tokenDto = new TokenDto
-        {
-            Token = token,
-            RefreshToken = refreshToken
+            UserLogin = new UserLoginDto { UserName = "testuser", Password = "password" }
         };
 
         _userManagerMock.Setup(um => um.FindByNameAsync(command.UserLogin.UserName))
             .ReturnsAsync(user);
-
         _userManagerMock.Setup(um => um.CheckPasswordAsync(user, command.UserLogin.Password))
             .ReturnsAsync(true);
-
         _userManagerMock.Setup(um => um.IsEmailConfirmedAsync(user))
-            .ReturnsAsync(true);
-
-        _tokenServiceMock.Setup(ts => ts.CreateTokenAsync(user))
-            .ReturnsAsync(token);
-
-        _tokenServiceMock.Setup(ts => ts.GenerateRefreshToken())
-            .Returns(refreshToken);
-
-        _tokenServiceMock.Setup(ts => ts.StoreRefreshTokenAsync(user, refreshToken))
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync(false);
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.IsTrue(result.Success);
-        Assert.AreEqual(HttpStatusCode.OK, result.HttpStatusCode);
+        Assert.IsFalse(result.Success);
+        Assert.AreEqual(HttpStatusCode.BadRequest, result.HttpStatusCode);
+        Assert.AreEqual("Email not confirmed.", result.ErrorMessage);
+
+        // Verify that no further methods were called
+        _tokenServiceMock.Verify(ts => ts.CreateTokenAsync(It.IsAny<User>()), Times.Never);
+        _tokenServiceMock.Verify(ts => ts.GenerateRefreshToken(), Times.Never);
+        _tokenServiceMock.Verify(ts => ts.StoreRefreshTokenAsync(It.IsAny<User>(), It.IsAny<string>()), Times.Never);
     }
 
     [Test]
@@ -176,40 +156,5 @@ public class AuthenticateUserCommandTests
         Assert.AreEqual("Invalid credentials.", result.ErrorMessage);
     }
 
-    [Test]
-    public async Task Handle_ShouldReturnFailure_WhenEmailIsNotConfirmed()
-    {
-        // Arrange
-        var command = new AuthenticateUserCommand
-        {
-            UserLogin = new UserLoginDto
-            {
-                UserName = "testuser",
-                Password = "password123"
-            }
-        };
-
-        var user = new User
-        {
-            UserName = command.UserLogin.UserName
-        };
-
-        _userManagerMock.Setup(um => um.FindByNameAsync(command.UserLogin.UserName))
-            .ReturnsAsync(user);
-
-        _userManagerMock.Setup(um => um.CheckPasswordAsync(user, command.UserLogin.Password))
-            .ReturnsAsync(true);
-
-        _userManagerMock.Setup(um => um.IsEmailConfirmedAsync(user))
-            .ReturnsAsync(false);
-
-        // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
-
-        // Assert
-        Assert.IsFalse(result.Success);
-        Assert.AreEqual(HttpStatusCode.BadRequest, result.HttpStatusCode);
-        Assert.AreEqual("Email not confirmed.", result.ErrorMessage);
-    }
 
 }

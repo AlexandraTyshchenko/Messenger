@@ -38,7 +38,7 @@ public class ParticipantsController : BaseController
     [ConversationRoleFilter(Role.Participant)]
     public async Task<IActionResult> AddParticipantsToConversation([FromBody] Guid[] userIds, [FromRoute] Guid conversationId)
     {
-        ResultDto<ParticipantsInConversationDto> response = await _mediator.Send(new AddParticipantToConversationCommand
+        ResultDto<IEnumerable<ParticipantsDto>> response = await _mediator.Send(new AddParticipantToConversationCommand
         {
             ConversationId = conversationId,
             UserIds = userIds

@@ -93,7 +93,7 @@ public class DeleteParticipantFromConversationCommandHandler
 
         await _unitOfWork.SaveChangesAsync();
 
-        IEnumerable<UserConnection> connections = await _unitOfWork.Connections.GetUserConnections(request.UserId);
+        IEnumerable<UserConnection> connections = await _unitOfWork.Connections.GetUserConnectionsAsync(request.UserId);
 
         await _hubService.NotifyGroupAsync(conversation.Id, mappedMessage, "ReceiveNotification");
         MessageDto leaveConversationMessageDto = new MessageDto { Text = $"You are deleted from conversation {conversation.Group.Title}" };

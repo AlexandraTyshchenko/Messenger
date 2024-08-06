@@ -16,7 +16,7 @@ public class MessageRepository : IMessageRepository
     }
 
     public async Task<Message> AddMessageToConversationAsync(string text, Conversation conversation, 
-        User sender = null, bool isJoinMessage = false)
+        User sender = null, bool isJoinMessage = false)//todo add dto
     {
         var message = new Message
         {

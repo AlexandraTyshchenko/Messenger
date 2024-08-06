@@ -5,6 +5,7 @@ using Messenger.Business.Interfaces;
 using Messenger.Business.Profiles;
 using Messenger.Infrastructure;
 using Messenger.Infrastructure.Entities;
+using Microsoft.AspNetCore.Identity;
 using Moq;
 using System.Net;
 
@@ -19,20 +20,25 @@ public class CreatePrivateConversationWithUserCommandTests
     private Mock<IHubService> _hubServiceMock;
     private CreatePrivateConversationWithUserCommandHandler _handler;
 
-    [SetUp]
-    public void SetUp()
+    [OneTimeSetUp]
+    public void OneTimeSetUp()
     {
         var configuration = new MapperConfiguration(cfg =>
         {
             cfg.AddProfile<MappingProfile>();
         });
         _mapper = configuration.CreateMapper();
+    }
 
+    [SetUp]
+    public void SetUp()
+    {
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _hubServiceMock = new Mock<IHubService>();
         _handler = new CreatePrivateConversationWithUserCommandHandler(
             _unitOfWorkMock.Object,
-            _mapper
+            _mapper,
+            _hubServiceMock.Object
         );
     }
 
@@ -74,8 +80,10 @@ public class CreatePrivateConversationWithUserCommandTests
             .ReturnsAsync((Conversation)null);
 
         _unitOfWorkMock.Setup(u => u.Users.GetUserByIdAsync(command.UserId))
-            .ReturnsAsync((User)null); 
+            .ReturnsAsync((User)null);
 
+        _unitOfWorkMock.Setup(u => u.Users.GetUserByIdAsync(command.CreatorUserId))
+            .ReturnsAsync(new User { });
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
@@ -83,6 +91,33 @@ public class CreatePrivateConversationWithUserCommandTests
         Assert.IsFalse(result.Success);
         Assert.AreEqual(HttpStatusCode.NotFound, result.HttpStatusCode);
         Assert.AreEqual("User was not found.", result.ErrorMessage);
+    }
+
+    [Test]
+    public async Task Handle_ShouldReturnNotFound_WhenCreatorUserDoesNotExist()
+    {
+        // Arrange
+        var command = new CreatePrivateConversationWithUserCommand
+        {
+            CreatorUserId = Guid.NewGuid(),
+            UserId = Guid.NewGuid()
+        };
+
+        _unitOfWorkMock.Setup(u => u.Conversations.GetPrivateConversationWithUserAsync(command.CreatorUserId, command.UserId))
+            .ReturnsAsync((Conversation)null);
+
+        _unitOfWorkMock.Setup(u => u.Users.GetUserByIdAsync(command.UserId))
+            .ReturnsAsync(new User());
+
+        _unitOfWorkMock.Setup(u => u.Users.GetUserByIdAsync(command.CreatorUserId))
+         .ReturnsAsync((User)null);
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        Assert.IsFalse(result.Success);
+        Assert.AreEqual(HttpStatusCode.NotFound, result.HttpStatusCode);
+        Assert.AreEqual("Creator user was not found.", result.ErrorMessage);
     }
 
     [Test]
@@ -113,7 +148,8 @@ public class CreatePrivateConversationWithUserCommandTests
 
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync())
             .ReturnsAsync(1);
-
+        _unitOfWorkMock.Setup(u => u.Connections.GetUserConnectionsAsync(command.CreatorUserId))
+            .ReturnsAsync(new List<UserConnection>());
         ConversationDto conversationDto = _mapper.Map<ConversationDto>(newConversation);
 
         // Act

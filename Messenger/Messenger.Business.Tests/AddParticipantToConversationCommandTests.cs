@@ -6,6 +6,7 @@ using Messenger.Business.Profiles;
 using Messenger.Infrastructure;
 using Messenger.Infrastructure.Entities;
 using Moq;
+using System.Collections.Generic;
 using System.Net;
 
 namespace Messenger.Business.Tests;
@@ -18,15 +19,19 @@ public class AddParticipantToConversationCommandTests
     private Mock<IHubService> _hubServiceMock;
     private AddParticipantToConversationCommandHandler _handler;
 
-    [SetUp]
-    public void SetUp()
+    [OneTimeSetUp]
+    public void OneTimeSetUp()
     {
         var configuration = new MapperConfiguration(cfg =>
         {
             cfg.AddProfile<MappingProfile>();
         });
         _mapper = configuration.CreateMapper();
+    }
 
+    [SetUp]
+    public void SetUp()
+    {
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _hubServiceMock = new Mock<IHubService>();
         _handler = new AddParticipantToConversationCommandHandler(
@@ -56,16 +61,32 @@ public class AddParticipantToConversationCommandTests
         Assert.AreEqual(HttpStatusCode.NotFound, result.HttpStatusCode);
         Assert.IsFalse(result.Success);
         Assert.AreEqual("Group conversation was not found.", result.ErrorMessage);
+
+        _hubServiceMock.Verify(h => h.NotifyGroupAsync(It.IsAny<Guid>(), It.IsAny<MessageWithSenderDto>(),
+            It.IsAny<string>()), Times.Never);
     }
 
     [Test]
     public async Task Handle_ShouldReturnNotFound_WhenSomeUsersDoNotExist()
     {
         // Arrange
+        var existingUserId = Guid.NewGuid();
+        var missingUserId = Guid.NewGuid();
+
+        var existingUser = new User
+        {
+            Id = existingUserId,
+        };
+
+        var missingUser = new User
+        {
+            Id = missingUserId,
+        };
+
         var command = new AddParticipantToConversationCommand
         {
             ConversationId = Guid.NewGuid(),
-            UserIds = new[] { Guid.NewGuid(), Guid.NewGuid() }
+            UserIds = new[] { existingUserId, missingUserId }
         };
 
         var conversation = new Conversation
@@ -77,12 +98,9 @@ public class AddParticipantToConversationCommandTests
             .ReturnsAsync(conversation);
 
         _unitOfWorkMock.Setup(u => u.Users.GetUsersByIdsAsync(command.UserIds))
-            .ReturnsAsync(new List<User> { });
+            .ReturnsAsync(new List<User> { existingUser });
 
-        var missingUserIds = command.UserIds.ToList();
-
-        _unitOfWorkMock.Setup(u => u.Users.GetUsersByIdsAsync(command.UserIds))
-            .ReturnsAsync((IEnumerable<User>)new List<User> { /* existing users */ });
+        var missingUserIds = new Guid[] { missingUserId }; 
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -131,637 +149,71 @@ public class AddParticipantToConversationCommandTests
     }
 
     [Test]
-    public async Task Handle_ShouldRetrieveConversation_WhenConversationIdIsValid()
+
+    public async Task Handle_ShouldReturnCorrectParticipantsWithOkStatusCode_WhenConversationAndUsersIdsAreValid()
     {
         // Arrange
-        var command = new AddParticipantToConversationCommand
-        {
-            ConversationId = Guid.NewGuid(),
-            UserIds = new[] { Guid.NewGuid(), Guid.NewGuid() }
-        };
+        var conversationId = Guid.NewGuid();
 
+        var userId1 = Guid.NewGuid();
+        var userId2 = Guid.NewGuid();
+
+        var userIds = new[] { userId1, userId2 };
+        var users = userIds.Select(id => new User { Id = id, UserName = $"User{id}" }).ToList();
         var conversation = new Conversation
         {
-            Id = command.ConversationId,
+            Id = conversationId,
             Group = new Group { Title = "Test Group" }
         };
+        var participants = users.Select(user => new ParticipantInConversation { User = user }).ToList();
 
-        var users = new List<User>
-        {
-            new User { Id = command.UserIds[0], UserName = "User1" },
-            new User { Id = command.UserIds[1], UserName = "User2" }
-        };
+        var joinMessage = new Message { Id = Guid.NewGuid(), Text = "Test message" };
 
-        var existingParticipants = new List<ParticipantInConversation>();
-
-        var participants = users.Select(u => new ParticipantInConversation { User = u }).ToList();
-
-        var userConnections = users.Select(u => new UserConnection { User = new User { Id = u.Id } }).ToList();
-
-        var joinMessage = new Message()
-        {
-            Id = Guid.NewGuid(),
-        };
-
-        _unitOfWorkMock.Setup(u => u.Conversations.GetGroupConversationByIdAsync(command.ConversationId))
+        _unitOfWorkMock.Setup(uow => uow.Conversations.GetGroupConversationByIdAsync(conversationId))
             .ReturnsAsync(conversation);
-
-        _unitOfWorkMock.Setup(u => u.Users.GetUsersByIdsAsync(command.UserIds))
+        _unitOfWorkMock.Setup(uow => uow.Users.GetUsersByIdsAsync(userIds))
             .ReturnsAsync(users);
-
-        _unitOfWorkMock.Setup(u => u.Participants.GetParticipantsByConversationIdAsync(command.ConversationId))
-            .ReturnsAsync(existingParticipants);
-
-        _unitOfWorkMock.Setup(u => u.Participants.AddParticipantsToConversationAsync(users, conversation))
+        _unitOfWorkMock.Setup(uow => uow.Participants.GetParticipantsByConversationIdAsync(conversationId))
+            .ReturnsAsync(new List<ParticipantInConversation>()); // No existing participants
+        _unitOfWorkMock.Setup(uow => uow.Participants.AddParticipantsToConversationAsync(users, conversation))
             .ReturnsAsync(participants);
-
-        _unitOfWorkMock.Setup(u => u.Connections.GetUsersConnectionsAsync(command.UserIds))
-            .ReturnsAsync(userConnections);
-
-        _unitOfWorkMock.Setup(u => u.Messages.AddMessageToConversationAsync(It.IsAny<string>(), conversation, null, true))
+        _unitOfWorkMock.Setup(uow => uow.Messages.AddMessageToConversationAsync(It.IsAny<string>(), conversation, null, true))
             .ReturnsAsync(joinMessage);
 
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync())
+        _unitOfWorkMock.Setup(uow => uow.Connections.GetUsersConnectionsAsync(userIds))
+            .ReturnsAsync(new List<UserConnection> { new UserConnection { User = participants.First().User } });
+
+        _unitOfWorkMock.Setup(uow => uow.SaveChangesAsync())
             .ReturnsAsync(1);
 
+        var mappedParticipants = _mapper.Map<IEnumerable<ParticipantsDto>>(participants);
         var mappedJoinMessage = _mapper.Map<MessageWithSenderDto>(joinMessage);
 
-        _hubServiceMock.Setup(h => h.NotifyGroupAsync(conversation.Id, mappedJoinMessage, "ReceiveNotification"))
+        _hubServiceMock.Setup(hub => hub.NotifyGroupAsync(conversation.Id, mappedJoinMessage, "ReceiveNotification"))
+            .Returns(Task.CompletedTask);
+        _hubServiceMock.Setup(hub => hub.NotifyUsersConnectionsAsync(It.IsAny<IEnumerable<UserConnection>>(), It.IsAny<MessageDto>(), "JoinNotification"))
             .Returns(Task.CompletedTask);
 
-        var joinMessageDto = new MessageDto { Text = $"You are joined to conversation {conversation.Group.Title}" };
-        _hubServiceMock.Setup(h => h.NotifyUsersConnectionsAsync(userConnections, joinMessageDto, "JoinNotification"))
-            .Returns(Task.CompletedTask);
+        var command = new AddParticipantToConversationCommand
+        {
+            ConversationId = conversationId,
+            UserIds = userIds
+        };
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        _unitOfWorkMock.Verify(u => u.Conversations.GetGroupConversationByIdAsync(command.ConversationId), Times.Once);
-
-    }
-
-    [Test]
-    public async Task Handle_ShouldRetrieveUsersByIds_WhenUserIdsAreValid()
-    {
-        // Arrange
-        var command = new AddParticipantToConversationCommand
-        {
-            ConversationId = Guid.NewGuid(),
-            UserIds = new[] { Guid.NewGuid(), Guid.NewGuid() }
-        };
-
-        var conversation = new Conversation
-        {
-            Id = command.ConversationId,
-            Group = new Group { Title = "Test Group" }
-        };
-
-        var users = new List<User>
-        {
-            new User { Id = command.UserIds[0], UserName = "User1" },
-            new User { Id = command.UserIds[1], UserName = "User2" }
-        };
-
-        var existingParticipants = new List<ParticipantInConversation>();
-
-        var participants = users.Select(u => new ParticipantInConversation { User = u }).ToList();
-
-        var userConnections = users.Select(u => new UserConnection { User = new User { Id = u.Id } }).ToList();
-
-        var joinMessage = new Message()
-        {
-            Id = Guid.NewGuid(),
-        };
-
-        _unitOfWorkMock.Setup(u => u.Conversations.GetGroupConversationByIdAsync(command.ConversationId))
-            .ReturnsAsync(conversation);
-
-        _unitOfWorkMock.Setup(u => u.Users.GetUsersByIdsAsync(command.UserIds))
-            .ReturnsAsync(users);
-
-        _unitOfWorkMock.Setup(u => u.Participants.GetParticipantsByConversationIdAsync(command.ConversationId))
-            .ReturnsAsync(existingParticipants);
-
-        _unitOfWorkMock.Setup(u => u.Participants.AddParticipantsToConversationAsync(users, conversation))
-            .ReturnsAsync(participants);
-
-        _unitOfWorkMock.Setup(u => u.Connections.GetUsersConnectionsAsync(command.UserIds))
-            .ReturnsAsync(userConnections);
-
-        _unitOfWorkMock.Setup(u => u.Messages.AddMessageToConversationAsync(It.IsAny<string>(), conversation, null, true))
-            .ReturnsAsync(joinMessage);
-
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync())
-            .ReturnsAsync(1);
-
-        var mappedJoinMessage = _mapper.Map<MessageWithSenderDto>(joinMessage);
-
-        _hubServiceMock.Setup(h => h.NotifyGroupAsync(conversation.Id, mappedJoinMessage, "ReceiveNotification"))
-            .Returns(Task.CompletedTask);
-
-        var joinMessageDto = new MessageDto { Text = $"You are joined to conversation {conversation.Group.Title}" };
-        _hubServiceMock.Setup(h => h.NotifyUsersConnectionsAsync(userConnections, joinMessageDto, "JoinNotification"))
-            .Returns(Task.CompletedTask);
-
-        // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
-
-        // Assert
-
-        _unitOfWorkMock.Verify(u => u.Users.GetUsersByIdsAsync(command.UserIds), Times.Once);
-
-    }
-    [Test]
-    public async Task Handle_ShouldRetrieveExistingParticipants_WhenConversationIsValid()
-    {
-        // Arrange
-        var command = new AddParticipantToConversationCommand
-        {
-            ConversationId = Guid.NewGuid(),
-            UserIds = new[] { Guid.NewGuid(), Guid.NewGuid() }
-        };
-
-        var conversation = new Conversation
-        {
-            Id = command.ConversationId,
-            Group = new Group { Title = "Test Group" }
-        };
-
-        var users = new List<User>
-        {
-            new User { Id = command.UserIds[0], UserName = "User1" },
-            new User { Id = command.UserIds[1], UserName = "User2" }
-        };
-
-        var existingParticipants = new List<ParticipantInConversation>();
-
-        var participants = users.Select(u => new ParticipantInConversation { User = u }).ToList();
-
-        var userConnections = users.Select(u => new UserConnection { User = new User { Id = u.Id } }).ToList();
-
-        var joinMessage = new Message()
-        {
-            Id = Guid.NewGuid(),
-        };
-
-        _unitOfWorkMock.Setup(u => u.Conversations.GetGroupConversationByIdAsync(command.ConversationId))
-            .ReturnsAsync(conversation);
-
-        _unitOfWorkMock.Setup(u => u.Users.GetUsersByIdsAsync(command.UserIds))
-            .ReturnsAsync(users);
-
-        _unitOfWorkMock.Setup(u => u.Participants.GetParticipantsByConversationIdAsync(command.ConversationId))
-            .ReturnsAsync(existingParticipants);
-
-        _unitOfWorkMock.Setup(u => u.Participants.AddParticipantsToConversationAsync(users, conversation))
-            .ReturnsAsync(participants);
-
-        _unitOfWorkMock.Setup(u => u.Connections.GetUsersConnectionsAsync(command.UserIds))
-            .ReturnsAsync(userConnections);
-
-        _unitOfWorkMock.Setup(u => u.Messages.AddMessageToConversationAsync(It.IsAny<string>(), conversation, null, true))
-            .ReturnsAsync(joinMessage);
-
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync())
-            .ReturnsAsync(1);
-
-        var mappedJoinMessage = _mapper.Map<MessageWithSenderDto>(joinMessage);
-
-        _hubServiceMock.Setup(h => h.NotifyGroupAsync(conversation.Id, mappedJoinMessage, "ReceiveNotification"))
-            .Returns(Task.CompletedTask);
-
-        var joinMessageDto = new MessageDto { Text = $"You are joined to conversation {conversation.Group.Title}" };
-        _hubServiceMock.Setup(h => h.NotifyUsersConnectionsAsync(userConnections, joinMessageDto, "JoinNotification"))
-            .Returns(Task.CompletedTask);
-
-        // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
-
-        // Assert
-
-        _unitOfWorkMock.Verify(u => u.Participants.GetParticipantsByConversationIdAsync(command.ConversationId), Times.Once);
-    }
-
-    [Test]
-    public async Task Handle_ShouldAddParticipantsToConversation_WhenParticipantsAreValid()
-    {
-        // Arrange
-        var command = new AddParticipantToConversationCommand
-        {
-            ConversationId = Guid.NewGuid(),
-            UserIds = new[] { Guid.NewGuid(), Guid.NewGuid() }
-        };
-
-        var conversation = new Conversation
-        {
-            Id = command.ConversationId,
-            Group = new Group { Title = "Test Group" }
-        };
-
-        var users = new List<User>
-        {
-            new User { Id = command.UserIds[0], UserName = "User1" },
-            new User { Id = command.UserIds[1], UserName = "User2" }
-        };
-
-        var existingParticipants = new List<ParticipantInConversation>();
-
-        var participants = users.Select(u => new ParticipantInConversation { User = u }).ToList();
-
-        var userConnections = users.Select(u => new UserConnection { User = new User { Id = u.Id } }).ToList();
-
-        var joinMessage = new Message()
-        {
-            Id = Guid.NewGuid(),
-        };
-
-        _unitOfWorkMock.Setup(u => u.Conversations.GetGroupConversationByIdAsync(command.ConversationId))
-            .ReturnsAsync(conversation);
-
-        _unitOfWorkMock.Setup(u => u.Users.GetUsersByIdsAsync(command.UserIds))
-            .ReturnsAsync(users);
-
-        _unitOfWorkMock.Setup(u => u.Participants.GetParticipantsByConversationIdAsync(command.ConversationId))
-            .ReturnsAsync(existingParticipants);
-
-        _unitOfWorkMock.Setup(u => u.Participants.AddParticipantsToConversationAsync(users, conversation))
-            .ReturnsAsync(participants);
-
-        _unitOfWorkMock.Setup(u => u.Connections.GetUsersConnectionsAsync(command.UserIds))
-            .ReturnsAsync(userConnections);
-
-        _unitOfWorkMock.Setup(u => u.Messages.AddMessageToConversationAsync(It.IsAny<string>(), conversation, null, true))
-            .ReturnsAsync(joinMessage);
-
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync())
-            .ReturnsAsync(1);
-
-        var mappedJoinMessage = _mapper.Map<MessageWithSenderDto>(joinMessage);
-
-        _hubServiceMock.Setup(h => h.NotifyGroupAsync(conversation.Id, mappedJoinMessage, "ReceiveNotification"))
-            .Returns(Task.CompletedTask);
-
-        var joinMessageDto = new MessageDto { Text = $"You are joined to conversation {conversation.Group.Title}" };
-        _hubServiceMock.Setup(h => h.NotifyUsersConnectionsAsync(userConnections, joinMessageDto, "JoinNotification"))
-            .Returns(Task.CompletedTask);
-
-        // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
-
-        // Assert
-
-        _unitOfWorkMock.Verify(u => u.Participants.AddParticipantsToConversationAsync(users, conversation), Times.Once);
-    }
-
-    [Test]
-    public async Task Handle_ShouldRetrieveUserConnections_WhenUserIdsAreValid()
-    {
-        // Arrange
-        var command = new AddParticipantToConversationCommand
-        {
-            ConversationId = Guid.NewGuid(),
-            UserIds = new[] { Guid.NewGuid(), Guid.NewGuid() }
-        };
-
-        var conversation = new Conversation
-        {
-            Id = command.ConversationId,
-            Group = new Group { Title = "Test Group" }
-        };
-
-        var users = new List<User>
-        {
-            new User { Id = command.UserIds[0], UserName = "User1" },
-            new User { Id = command.UserIds[1], UserName = "User2" }
-        };
-
-        var existingParticipants = new List<ParticipantInConversation>();
-
-        var participants = users.Select(u => new ParticipantInConversation { User = u }).ToList();
-
-        var userConnections = users.Select(u => new UserConnection { User = new User { Id = u.Id } }).ToList();
-
-        var joinMessage = new Message()
-        {
-            Id = Guid.NewGuid(),
-        };
-
-        _unitOfWorkMock.Setup(u => u.Conversations.GetGroupConversationByIdAsync(command.ConversationId))
-            .ReturnsAsync(conversation);
-
-        _unitOfWorkMock.Setup(u => u.Users.GetUsersByIdsAsync(command.UserIds))
-            .ReturnsAsync(users);
-
-        _unitOfWorkMock.Setup(u => u.Participants.GetParticipantsByConversationIdAsync(command.ConversationId))
-            .ReturnsAsync(existingParticipants);
-
-        _unitOfWorkMock.Setup(u => u.Participants.AddParticipantsToConversationAsync(users, conversation))
-            .ReturnsAsync(participants);
-
-        _unitOfWorkMock.Setup(u => u.Connections.GetUsersConnectionsAsync(command.UserIds))
-            .ReturnsAsync(userConnections);
-
-        _unitOfWorkMock.Setup(u => u.Messages.AddMessageToConversationAsync(It.IsAny<string>(), conversation, null, true))
-            .ReturnsAsync(joinMessage);
-
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync())
-            .ReturnsAsync(1);
-
-        var mappedJoinMessage = _mapper.Map<MessageWithSenderDto>(joinMessage);
-
-        _hubServiceMock.Setup(h => h.NotifyGroupAsync(conversation.Id, mappedJoinMessage, "ReceiveNotification"))
-            .Returns(Task.CompletedTask);
-
-        var joinMessageDto = new MessageDto { Text = $"You are joined to conversation {conversation.Group.Title}" };
-        _hubServiceMock.Setup(h => h.NotifyUsersConnectionsAsync(userConnections, joinMessageDto, "JoinNotification"))
-            .Returns(Task.CompletedTask);
-
-        // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
-
-        // Assert
-
-        _unitOfWorkMock.Verify(u => u.Connections.GetUsersConnectionsAsync(command.UserIds), Times.Once);
-    }
-
-    [Test]
-    public async Task Handle_ShouldAddMessageToConversation_WhenAddingParticipant()
-    {
-        var command = new AddParticipantToConversationCommand
-        {
-            ConversationId = Guid.NewGuid(),
-            UserIds = new[] { Guid.NewGuid(), Guid.NewGuid() }
-        };
-
-        var conversation = new Conversation
-        {
-            Id = command.ConversationId,
-            Group = new Group { Title = "Test Group" }
-        };
-
-        var users = new List<User>
-        {
-            new User { Id = command.UserIds[0], UserName = "User1" },
-            new User { Id = command.UserIds[1], UserName = "User2" }
-        };
-
-        var existingParticipants = new List<ParticipantInConversation>();
-
-        var participants = users.Select(u => new ParticipantInConversation { User = u }).ToList();
-
-        var userConnections = users.Select(u => new UserConnection { User = new User { Id = u.Id } }).ToList();
-
-        var joinMessage = new Message()
-        {
-            Id = Guid.NewGuid(),
-        };
-
-        _unitOfWorkMock.Setup(u => u.Conversations.GetGroupConversationByIdAsync(command.ConversationId))
-            .ReturnsAsync(conversation);
-
-        _unitOfWorkMock.Setup(u => u.Users.GetUsersByIdsAsync(command.UserIds))
-            .ReturnsAsync(users);
-
-        _unitOfWorkMock.Setup(u => u.Participants.GetParticipantsByConversationIdAsync(command.ConversationId))
-            .ReturnsAsync(existingParticipants);
-
-        _unitOfWorkMock.Setup(u => u.Participants.AddParticipantsToConversationAsync(users, conversation))
-            .ReturnsAsync(participants);
-
-        _unitOfWorkMock.Setup(u => u.Connections.GetUsersConnectionsAsync(command.UserIds))
-            .ReturnsAsync(userConnections);
-
-        _unitOfWorkMock.Setup(u => u.Messages.AddMessageToConversationAsync(It.IsAny<string>(), conversation, null, true))
-            .ReturnsAsync(joinMessage);
-
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync())
-            .ReturnsAsync(1);
-
-        var mappedJoinMessage = _mapper.Map<MessageWithSenderDto>(joinMessage);
-
-        _hubServiceMock.Setup(h => h.NotifyGroupAsync(conversation.Id, mappedJoinMessage, "ReceiveNotification"))
-            .Returns(Task.CompletedTask);
-
-        var joinMessageDto = new MessageDto { Text = $"You are joined to conversation {conversation.Group.Title}" };
-        _hubServiceMock.Setup(h => h.NotifyUsersConnectionsAsync(userConnections, joinMessageDto, "JoinNotification"))
-            .Returns(Task.CompletedTask);
-
-        // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
-        _unitOfWorkMock.Verify(u => u.Messages.AddMessageToConversationAsync(It.IsAny<string>(), conversation, null, true), Times.Once);
-
-    }
-
-    [Test]
-    public async Task Handle_ShouldSaveChanges_WhenParticipantsAreAdded()
-    {
-        var command = new AddParticipantToConversationCommand
-        {
-            ConversationId = Guid.NewGuid(),
-            UserIds = new[] { Guid.NewGuid(), Guid.NewGuid() }
-        };
-
-        var conversation = new Conversation
-        {
-            Id = command.ConversationId,
-            Group = new Group { Title = "Test Group" }
-        };
-
-        var users = new List<User>
-        {
-            new User { Id = command.UserIds[0], UserName = "User1" },
-            new User { Id = command.UserIds[1], UserName = "User2" }
-        };
-
-        var existingParticipants = new List<ParticipantInConversation>();
-
-        var participants = users.Select(u => new ParticipantInConversation { User = u }).ToList();
-
-        var userConnections = users.Select(u => new UserConnection { User = new User { Id = u.Id } }).ToList();
-
-        var joinMessage = new Message()
-        {
-            Id = Guid.NewGuid(),
-        };
-
-        _unitOfWorkMock.Setup(u => u.Conversations.GetGroupConversationByIdAsync(command.ConversationId))
-            .ReturnsAsync(conversation);
-
-        _unitOfWorkMock.Setup(u => u.Users.GetUsersByIdsAsync(command.UserIds))
-            .ReturnsAsync(users);
-
-        _unitOfWorkMock.Setup(u => u.Participants.GetParticipantsByConversationIdAsync(command.ConversationId))
-            .ReturnsAsync(existingParticipants);
-
-        _unitOfWorkMock.Setup(u => u.Participants.AddParticipantsToConversationAsync(users, conversation))
-            .ReturnsAsync(participants);
-
-        _unitOfWorkMock.Setup(u => u.Connections.GetUsersConnectionsAsync(command.UserIds))
-            .ReturnsAsync(userConnections);
-
-        _unitOfWorkMock.Setup(u => u.Messages.AddMessageToConversationAsync(It.IsAny<string>(), conversation, null, true))
-            .ReturnsAsync(joinMessage);
-
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync())
-            .ReturnsAsync(1);
-
-        var mappedJoinMessage = _mapper.Map<MessageWithSenderDto>(joinMessage);
-
-        _hubServiceMock.Setup(h => h.NotifyGroupAsync(conversation.Id, mappedJoinMessage, "ReceiveNotification"))
-            .Returns(Task.CompletedTask);
-
-        var joinMessageDto = new MessageDto { Text = $"You are joined to conversation {conversation.Group.Title}" };
-        _hubServiceMock.Setup(h => h.NotifyUsersConnectionsAsync(userConnections, joinMessageDto, "JoinNotification"))
-            .Returns(Task.CompletedTask);
-
-        // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
-        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(), Times.Once);
-
-    }
-    [Test]
-    public async Task Handle_ShouldNotifyGroup_WhenParticipantsAreAdded()
-    {
-        var command = new AddParticipantToConversationCommand
-        {
-            ConversationId = Guid.NewGuid(),
-            UserIds = new[] { Guid.NewGuid(), Guid.NewGuid() }
-        };
-
-        var conversation = new Conversation
-        {
-            Id = command.ConversationId,
-            Group = new Group { Title = "Test Group" }
-        };
-
-        var users = new List<User>
-        {
-            new User { Id = command.UserIds[0], UserName = "User1" },
-            new User { Id = command.UserIds[1], UserName = "User2" }
-        };
-
-        var existingParticipants = new List<ParticipantInConversation>();
-
-        var participants = users.Select(u => new ParticipantInConversation { User = u }).ToList();
-
-        var userConnections = users.Select(u => new UserConnection { User = new User { Id = u.Id } }).ToList();
-
-        var joinMessage = new Message()
-        {
-            Id = Guid.NewGuid(),
-        };
-
-        _unitOfWorkMock.Setup(u => u.Conversations.GetGroupConversationByIdAsync(command.ConversationId))
-            .ReturnsAsync(conversation);
-
-        _unitOfWorkMock.Setup(u => u.Users.GetUsersByIdsAsync(command.UserIds))
-            .ReturnsAsync(users);
-
-        _unitOfWorkMock.Setup(u => u.Participants.GetParticipantsByConversationIdAsync(command.ConversationId))
-            .ReturnsAsync(existingParticipants);
-
-        _unitOfWorkMock.Setup(u => u.Participants.AddParticipantsToConversationAsync(users, conversation))
-            .ReturnsAsync(participants);
-
-        _unitOfWorkMock.Setup(u => u.Connections.GetUsersConnectionsAsync(command.UserIds))
-            .ReturnsAsync(userConnections);
-
-        _unitOfWorkMock.Setup(u => u.Messages.AddMessageToConversationAsync(It.IsAny<string>(), conversation, null, true))
-            .ReturnsAsync(joinMessage);
-
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync())
-            .ReturnsAsync(1);
-
-        var mappedJoinMessage = _mapper.Map<MessageWithSenderDto>(joinMessage);
-
-        _hubServiceMock.Setup(h => h.NotifyGroupAsync(conversation.Id, mappedJoinMessage, "ReceiveNotification"))
-            .Returns(Task.CompletedTask);
-
-        var joinMessageDto = new MessageDto { Text = $"You are joined to conversation {conversation.Group.Title}" };
-        _hubServiceMock.Setup(h => h.NotifyUsersConnectionsAsync(userConnections, joinMessageDto, "JoinNotification"))
-            .Returns(Task.CompletedTask);
-
-        // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
-        _hubServiceMock.Verify(h => h.NotifyGroupAsync(
-            It.Is<Guid>(id => id == conversation.Id),
-            It.Is<MessageWithSenderDto>(msg => msg.Id == mappedJoinMessage.Id),
-            It.Is<string>(method => method == "ReceiveNotification")),
+        Assert.IsTrue(result.Success);
+        Assert.AreEqual(HttpStatusCode.OK, result.HttpStatusCode);
+        Assert.AreEqual(mappedParticipants.FirstOrDefault(x=>x.UserInfo.Id== userId1).UserInfo.Id, result.Payload.FirstOrDefault(x => x.UserInfo.Id == userId1).UserInfo.Id);
+        Assert.AreEqual(mappedParticipants.Count(), result.Payload.Count());
+
+        _hubServiceMock.Verify(hub => hub.NotifyGroupAsync(
+            It.IsAny<Guid>(),
+            It.Is<MessageWithSenderDto>(x => x.Text == mappedJoinMessage.Text),
+            "ReceiveNotification"),
             Times.Once);
+        _hubServiceMock.Verify(hub => hub.NotifyUsersConnectionsAsync(It.IsAny<IEnumerable<UserConnection>>(), It.IsAny<MessageDto>(), "JoinNotification"), Times.Once);
     }
-
-    [Test]
-    public async Task Handle_ShouldNotifyUsersConnections_WhenParticipantsAreAdded()
-    {
-        var command = new AddParticipantToConversationCommand
-        {
-            ConversationId = Guid.NewGuid(),
-            UserIds = new[] { Guid.NewGuid(), Guid.NewGuid() }
-        };
-
-        var conversation = new Conversation
-        {
-            Id = command.ConversationId,
-            Group = new Group { Title = "Test Group" }
-        };
-
-        var users = new List<User>
-        {
-            new User { Id = command.UserIds[0], UserName = "User1" },
-            new User { Id = command.UserIds[1], UserName = "User2" }
-        };
-
-        var existingParticipants = new List<ParticipantInConversation>();
-
-        var participants = users.Select(u => new ParticipantInConversation { User = u }).ToList();
-
-        var userConnections = users.Select(u => new UserConnection { User = new User { Id = u.Id } }).ToList();
-
-        var joinMessage = new Message()
-        {
-            Id = Guid.NewGuid(),
-        };
-
-        _unitOfWorkMock.Setup(u => u.Conversations.GetGroupConversationByIdAsync(command.ConversationId))
-            .ReturnsAsync(conversation);
-
-        _unitOfWorkMock.Setup(u => u.Users.GetUsersByIdsAsync(command.UserIds))
-            .ReturnsAsync(users);
-
-        _unitOfWorkMock.Setup(u => u.Participants.GetParticipantsByConversationIdAsync(command.ConversationId))
-            .ReturnsAsync(existingParticipants);
-
-        _unitOfWorkMock.Setup(u => u.Participants.AddParticipantsToConversationAsync(users, conversation))
-            .ReturnsAsync(participants);
-
-        _unitOfWorkMock.Setup(u => u.Connections.GetUsersConnectionsAsync(command.UserIds))
-            .ReturnsAsync(userConnections);
-
-        _unitOfWorkMock.Setup(u => u.Messages.AddMessageToConversationAsync(It.IsAny<string>(), conversation, null, true))
-            .ReturnsAsync(joinMessage);
-
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync())
-            .ReturnsAsync(1);
-
-        var mappedJoinMessage = _mapper.Map<MessageWithSenderDto>(joinMessage);
-
-        _hubServiceMock.Setup(h => h.NotifyGroupAsync(conversation.Id, mappedJoinMessage, "ReceiveNotification"))
-            .Returns(Task.CompletedTask);
-
-        var joinMessageDto = new MessageDto { Text = $"You are joined to conversation {conversation.Group.Title}" };
-        _hubServiceMock.Setup(h => h.NotifyUsersConnectionsAsync(userConnections, joinMessageDto, "JoinNotification"))
-            .Returns(Task.CompletedTask);
-
-        // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
-        _hubServiceMock.Verify(h => h.NotifyUsersConnectionsAsync(
-            It.Is<IEnumerable<UserConnection>>(connections =>
-                connections.Select(c => c.User.Id).SequenceEqual(userConnections.Select(uc => uc.User.Id))),
-            It.Is<MessageDto>(msgDto => msgDto.Text == joinMessageDto.Text),
-            It.Is<string>(method => method == "JoinNotification")),
-            Times.Once);
-    }
-
-
 }

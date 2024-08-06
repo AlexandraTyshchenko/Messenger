@@ -14,7 +14,15 @@ public class HubService : IHubService
     {
         _chatHub = chatHub;
     }
-    
+
+    public async Task JoinGroupAsync(IEnumerable<UserConnection> userConnections, Guid groupId)
+    {
+        foreach (UserConnection userConnection in userConnections)
+        {
+            await _chatHub.Groups.AddToGroupAsync(userConnection.ConnectionId, groupId.ToString().ToUpper());
+        }
+    }
+
     public async Task NotifyGroupAsync(Guid groupId, MessageWithSenderDto message, string method)
     {
         await _chatHub.Clients.Group(groupId.ToString().ToUpper()).SendAsync(method, message);

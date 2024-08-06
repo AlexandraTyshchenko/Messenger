@@ -41,7 +41,7 @@ public class ConnectionRepository : IConnectionRepository
         return conversations;
     }
 
-    public async Task<IEnumerable<UserConnection>> GetUserConnections(Guid userId)
+    public async Task<IEnumerable<UserConnection>> GetUserConnectionsAsync(Guid userId)
     {
         return await _applicationContext
             .UserConnections

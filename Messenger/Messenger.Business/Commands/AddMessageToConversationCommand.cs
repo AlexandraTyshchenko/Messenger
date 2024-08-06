@@ -56,6 +56,12 @@ public class AddMessageToConversationCommandHandler : IRequestHandler<AddMessage
     {
         User sender = await _unitOfWork.Users.GetUserByIdAsync(request.SenderId);
 
+        if (sender == null)
+        {
+            return ResultDto.FailureResult<MessageWithSenderDto>(HttpStatusCode.NotFound,
+                "No sender was found.");
+        }
+
         Conversation conversation = await _unitOfWork.Conversations.GetConversationByIdAsync(request.ConversationId);
 
         if (conversation == null)

@@ -19,15 +19,19 @@ public class DeleteParticipantFromConversationCommandTests
     private Mock<IHubService> _hubServiceMock;
     private DeleteParticipantFromConversationCommandHandler _handler;
 
-    [SetUp]
-    public void SetUp()
+    [OneTimeSetUp]
+    public void OneTimeSetUp()
     {
         var configuration = new MapperConfiguration(cfg =>
         {
             cfg.AddProfile<MappingProfile>();
         });
         _mapper = configuration.CreateMapper();
+    }
 
+    [SetUp]
+    public void SetUp()
+    {
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _hubServiceMock = new Mock<IHubService>();
         _handler = new DeleteParticipantFromConversationCommandHandler(
@@ -176,7 +180,7 @@ public class DeleteParticipantFromConversationCommandTests
         _unitOfWorkMock.Setup(u => u.Messages.AddMessageToConversationAsync(It.IsAny<string>(), conversation, null, true))
             .ReturnsAsync(new Message());
 
-        _unitOfWorkMock.Setup(u => u.Connections.GetUserConnections(It.IsAny<Guid>()))
+        _unitOfWorkMock.Setup(u => u.Connections.GetUserConnectionsAsync(It.IsAny<Guid>()))
             .ReturnsAsync(new List<UserConnection>());
 
         // Act
@@ -239,7 +243,7 @@ public class DeleteParticipantFromConversationCommandTests
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync())
             .ReturnsAsync(1);
 
-        _unitOfWorkMock.Setup(u => u.Connections.GetUserConnections(It.IsAny<Guid>()))
+        _unitOfWorkMock.Setup(u => u.Connections.GetUserConnectionsAsync(It.IsAny<Guid>()))
             .ReturnsAsync(new List<UserConnection>());
 
         _hubServiceMock.Setup(h => h.NotifyGroupAsync(conversation.Id, It.IsAny<MessageWithSenderDto>(), "ReceiveNotification"))
@@ -255,72 +259,5 @@ public class DeleteParticipantFromConversationCommandTests
         Assert.IsTrue(result.Success);
         Assert.AreEqual(HttpStatusCode.OK, result.HttpStatusCode);
         _unitOfWorkMock.Verify(u => u.Participants.DeleteParticipantFromGroupConversationAsync(command.UserId, command.ConversationId), Times.Once);
-    }
-
-    [Test]
-    public async Task Handle_ShouldReturnOkResult_WhenValidRequest()
-    {
-        // Arrange
-        var command = new DeleteParticipantFromConversationCommand
-        {
-            ConversationId = Guid.NewGuid(),
-            UserId = Guid.NewGuid()
-        };
-
-        var conversation = new Conversation
-        {
-            Id = command.ConversationId,
-            Group = new Group { Title = "Test Group" }
-        };
-
-        var participantInConversation = new ParticipantInConversation
-        {
-            Id = command.UserId,
-            Role = Role.Participant,
-            Conversation = conversation,
-            User = new User { UserName = "user" }
-        };
-
-        var remainingParticipants = new List<ParticipantInConversation>
-         {
-            participantInConversation,
-            new ParticipantInConversation()
-        };
-
-        var message = new Message
-        {
-            Id = Guid.NewGuid()
-        };
-
-        _unitOfWorkMock.Setup(u => u.Conversations.GetConversationByIdAsync(command.ConversationId))
-            .ReturnsAsync(conversation);
-
-        _unitOfWorkMock.Setup(u => u.Participants.GetParticipantsByConversationIdAsync(command.ConversationId))
-            .ReturnsAsync(remainingParticipants);
-
-        _unitOfWorkMock.Setup(u => u.Participants.DeleteParticipantFromGroupConversationAsync(command.UserId, command.ConversationId))
-            .ReturnsAsync(participantInConversation);
-
-        _unitOfWorkMock.Setup(u => u.Messages.AddMessageToConversationAsync(It.IsAny<string>(), conversation, null, true))
-            .ReturnsAsync(message);
-
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync())
-            .ReturnsAsync(1);
-
-        _unitOfWorkMock.Setup(u => u.Connections.GetUserConnections(It.IsAny<Guid>()))
-            .ReturnsAsync(new List<UserConnection>());
-
-        _hubServiceMock.Setup(h => h.NotifyGroupAsync(conversation.Id, It.IsAny<MessageWithSenderDto>(), "ReceiveNotification"))
-            .Returns(Task.CompletedTask);
-
-        _hubServiceMock.Setup(h => h.NotifyUsersConnectionsAsync(It.IsAny<IEnumerable<UserConnection>>(), It.IsAny<MessageDto>(), "LeaveConversationNotification"))
-            .Returns(Task.CompletedTask);
-
-        // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
-
-        // Assert
-        Assert.IsTrue(result.Success);
-        Assert.AreEqual(HttpStatusCode.OK, result.HttpStatusCode);
     }
 }

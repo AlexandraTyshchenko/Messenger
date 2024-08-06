@@ -6,16 +6,32 @@ using Messenger.Infrastructure.Entities;
 using Microsoft.AspNetCore.Identity;
 using System.Net;
 using Moq;
+using Microsoft.Extensions.Options;
 namespace Messenger.Business.Tests;
 
 [TestFixture]
 public class RefreshTokenCommandTests
 {
     private Mock<UserManager<User>> _userManagerMock;
-    private JwtSettings _jwtSettings;
     private Mock<IUnitOfWork> _unitOfWorkMock;
     private Mock<ITokenService> _tokenServiceMock;
     private RefreshTokenCommandHandler _handler;
+    private IOptions<JwtSettings> _options;
+
+    [OneTimeSetUp]
+    public void OneTimeSetUp()
+    {
+       var jwtSettings = new JwtSettings
+        {
+            Secret = "YourSecretKey",
+            ValidIssuer = "YourIssuer",
+            ValidAudience = "YourAudience",
+            RefreshExpirationTimeInMinutes = 60
+        };
+        _options = Microsoft.Extensions.Options.Options.Create(jwtSettings);
+
+    }
+
     [SetUp]
     public void SetUp()
     {
@@ -23,21 +39,12 @@ public class RefreshTokenCommandTests
             Mock.Of<IUserStore<User>>(),
             null, null, null, null, null, null, null, null
         );
-
-        _jwtSettings = new JwtSettings
-        {
-            Secret = "YourSecretKey",
-            ValidIssuer = "YourIssuer",
-            ValidAudience = "YourAudience",
-            RefreshExpirationTimeInMinutes = 60
-        };
-
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _tokenServiceMock = new Mock<ITokenService>();
 
         _handler = new RefreshTokenCommandHandler(
             _userManagerMock.Object,
-             Microsoft.Extensions.Options.Options.Create(_jwtSettings),
+            _options,
             _unitOfWorkMock.Object,
             _tokenServiceMock.Object
         );
