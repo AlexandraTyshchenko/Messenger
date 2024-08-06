@@ -70,12 +70,20 @@ public class AddMessageToConversationCommandHandler : IRequestHandler<AddMessage
                 "No conversation was found.");
         }
 
-        Message message = await _unitOfWork.Messages
-             .AddMessageToConversationAsync(request.Message.Text, conversation, sender);
+        var message = new Message
+        {
+            Conversation = conversation,
+            IsJoinMessage = false,
+            Sender = sender,
+            Text = request.Message.Text,
+            SentAt = DateTime.Now,
+        };
+
+        Message joinMessage = await _unitOfWork.Messages.AddMessageToConversationAsync(message);
 
         await _unitOfWork.SaveChangesAsync();
 
-        var mappedMessage = _mapper.Map<MessageWithSenderDto>(message);
+        var mappedMessage = _mapper.Map<MessageWithSenderDto>(joinMessage);
 
         await _hubService.NotifyGroupAsync(conversation.Id, mappedMessage, "ReceiveNotification");
 

@@ -177,7 +177,7 @@ public class DeleteParticipantFromConversationCommandTests
         _unitOfWorkMock.Setup(u => u.Participants.UpdateParticipantRoleAsync(newAdminParticipant.Id, Role.Admin))
             .Returns(Task.CompletedTask);
 
-        _unitOfWorkMock.Setup(u => u.Messages.AddMessageToConversationAsync(It.IsAny<string>(), conversation, null, true))
+        _unitOfWorkMock.Setup(u => u.Messages.AddMessageToConversationAsync(It.IsAny<Message>()))
             .ReturnsAsync(new Message());
 
         _unitOfWorkMock.Setup(u => u.Connections.GetUserConnectionsAsync(It.IsAny<Guid>()))
@@ -237,7 +237,7 @@ public class DeleteParticipantFromConversationCommandTests
         _unitOfWorkMock.Setup(u => u.Participants.DeleteParticipantFromGroupConversationAsync(command.UserId, command.ConversationId))
             .ReturnsAsync(participantInConversation);
 
-        _unitOfWorkMock.Setup(u => u.Messages.AddMessageToConversationAsync(It.IsAny<string>(), conversation, null, true))
+        _unitOfWorkMock.Setup(u => u.Messages.AddMessageToConversationAsync(It.IsAny<Message>()))
             .ReturnsAsync(message);
 
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync())
@@ -249,7 +249,7 @@ public class DeleteParticipantFromConversationCommandTests
         _hubServiceMock.Setup(h => h.NotifyGroupAsync(conversation.Id, It.IsAny<MessageWithSenderDto>(), "ReceiveNotification"))
             .Returns(Task.CompletedTask);
 
-        _hubServiceMock.Setup(h => h.NotifyUsersConnectionsAsync(It.IsAny<IEnumerable<UserConnection>>(), It.IsAny<MessageDto>(), "LeaveConversationNotification"))
+        _hubServiceMock.Setup(h => h.NotifyUsersConnectionsAsync(It.IsAny<IEnumerable<UserConnection>>(), It.IsAny<NotificationDto>(), "LeaveConversationNotification"))
             .Returns(Task.CompletedTask);
 
         // Act

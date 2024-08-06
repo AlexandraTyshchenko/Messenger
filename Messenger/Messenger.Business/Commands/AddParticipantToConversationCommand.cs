@@ -75,23 +75,32 @@ public class AddParticipantToConversationCommandHandler :
 
         var participants = await _unitOfWork.Participants.AddParticipantsToConversationAsync(users, conversation); 
 
-
         var userNames = string.Join(", ", participants.Select(x => x.User.UserName));
         var userConnections = await _unitOfWork.Connections.GetUsersConnectionsAsync(request.UserIds); ;
 
-        var message = userNames;
-        message += participants.Count() == 1 ?
+        var messageText = userNames;
+        messageText += participants.Count() == 1 ?
             $"  was added to сonversation '{conversation.Group.Title}'" : $" " +
             $" were added to сonversation '{conversation.Group.Title}'";
 
-        Message joinMessage = await _unitOfWork.Messages.AddMessageToConversationAsync(message, conversation, null, true); ;
+        var message = new Message
+        {
+            Conversation = conversation,
+            IsJoinMessage = true,
+            Sender = null,
+            Text = messageText,
+            SentAt = DateTime.Now,
+        };
+
+        Message joinMessage = await _unitOfWork.Messages.AddMessageToConversationAsync(message); 
 
         var mappedJoinMessage = _mapper.Map<MessageWithSenderDto>(joinMessage);
         await _unitOfWork.SaveChangesAsync();
 
+        await _hubService.JoinGroupAsync(userConnections, conversation.Id);
         await _hubService.NotifyGroupAsync(conversation.Id, mappedJoinMessage, "ReceiveNotification");
 
-        MessageDto joinMessageDto = new MessageDto { Text = $"You are joined to conversation {conversation.Group.Title}" };
+        NotificationDto joinMessageDto = new NotificationDto { Text = $"You are joined to conversation {conversation.Group.Title}" };
         await _hubService.NotifyUsersConnectionsAsync(userConnections, joinMessageDto, "JoinNotification");
 
         var mappedParticipants = _mapper.Map<IEnumerable<ParticipantsDto>>(participants);

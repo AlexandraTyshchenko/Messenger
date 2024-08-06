@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { SignalRService } from '../../core/services/signalr.service';
 
 @Component({
@@ -6,7 +6,7 @@ import { SignalRService } from '../../core/services/signalr.service';
   templateUrl: './home-page.component.html',
   styleUrl: './home-page.component.css'
 })
-export class HomePageComponent implements OnInit{
+export class HomePageComponent implements OnInit,OnDestroy  {
  
   constructor( private signalRService: SignalRService) {
     
@@ -14,5 +14,9 @@ export class HomePageComponent implements OnInit{
  
   ngOnInit(): void {
     this.signalRService.startConnection();
+  }
+
+  ngOnDestroy(): void {
+    this.signalRService.disconnect();
   }
 }

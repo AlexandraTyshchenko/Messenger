@@ -49,4 +49,17 @@ public class ConnectionRepository : IConnectionRepository
             .Where(x => x.User.Id == userId)
             .ToListAsync();
     }
+
+    public async Task<UserConnection> RemoveConnectionAsync(Guid connectionId)
+    {
+        var connection = await _applicationContext.UserConnections
+            .SingleOrDefaultAsync(c => c.Id == connectionId);
+
+        if (connection == null)
+        {
+            return null;
+        }
+
+        return _applicationContext.UserConnections.Remove(connection).Entity;
+    }
 }

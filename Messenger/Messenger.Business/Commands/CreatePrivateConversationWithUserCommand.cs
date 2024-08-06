@@ -83,9 +83,9 @@ public class CreatePrivateConversationWithUserCommandHandler : IRequestHandler<C
         await _hubService.JoinGroupAsync(userCreatorConnections, conversation.Id);
         await _hubService.JoinGroupAsync(userConnections, conversation.Id);
 
-        MessageDto joinMessageDto = new MessageDto { Text = $"You are joined to conversation with {creatorUser.UserName}" };
+        NotificationDto joinNotificationDto = new NotificationDto { Text = $"You are joined to conversation with {creatorUser.UserName}" };
 
-        await _hubService.NotifyUsersConnectionsAsync(userConnections, joinMessageDto, "JoinNotification");
+        await _hubService.NotifyUsersConnectionsAsync(userConnections, joinNotificationDto, "JoinNotification");
         var mappedConversation = _mapper.Map<ConversationDto>(conversation);
 
         return ResultDto.SuccessResult(mappedConversation, HttpStatusCode.Created);

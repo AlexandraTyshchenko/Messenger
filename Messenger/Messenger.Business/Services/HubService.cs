@@ -28,12 +28,12 @@ public class HubService : IHubService
         await _chatHub.Clients.Group(groupId.ToString().ToUpper()).SendAsync(method, message);
     }
 
-    public async Task NotifyUsersConnectionsAsync(IEnumerable<UserConnection> userConnections, MessageDto message, 
+    public async Task NotifyUsersConnectionsAsync(IEnumerable<UserConnection> userConnections, NotificationDto notification, 
         string method)
     {
         foreach (UserConnection userConnection in userConnections)
         {
-            await _chatHub.Clients.Client(userConnection.ConnectionId).SendAsync(method, message);
+            await _chatHub.Clients.Client(userConnection.ConnectionId).SendAsync(method, notification);
         }
     }
 }

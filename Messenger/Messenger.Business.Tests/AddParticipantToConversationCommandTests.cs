@@ -177,7 +177,7 @@ public class AddParticipantToConversationCommandTests
             .ReturnsAsync(new List<ParticipantInConversation>()); // No existing participants
         _unitOfWorkMock.Setup(uow => uow.Participants.AddParticipantsToConversationAsync(users, conversation))
             .ReturnsAsync(participants);
-        _unitOfWorkMock.Setup(uow => uow.Messages.AddMessageToConversationAsync(It.IsAny<string>(), conversation, null, true))
+        _unitOfWorkMock.Setup(uow => uow.Messages.AddMessageToConversationAsync(It.IsAny<Message>()))
             .ReturnsAsync(joinMessage);
 
         _unitOfWorkMock.Setup(uow => uow.Connections.GetUsersConnectionsAsync(userIds))
@@ -191,7 +191,7 @@ public class AddParticipantToConversationCommandTests
 
         _hubServiceMock.Setup(hub => hub.NotifyGroupAsync(conversation.Id, mappedJoinMessage, "ReceiveNotification"))
             .Returns(Task.CompletedTask);
-        _hubServiceMock.Setup(hub => hub.NotifyUsersConnectionsAsync(It.IsAny<IEnumerable<UserConnection>>(), It.IsAny<MessageDto>(), "JoinNotification"))
+        _hubServiceMock.Setup(hub => hub.NotifyUsersConnectionsAsync(It.IsAny<IEnumerable<UserConnection>>(), It.IsAny<NotificationDto>(), "JoinNotification"))
             .Returns(Task.CompletedTask);
 
         var command = new AddParticipantToConversationCommand
@@ -214,6 +214,6 @@ public class AddParticipantToConversationCommandTests
             It.Is<MessageWithSenderDto>(x => x.Text == mappedJoinMessage.Text),
             "ReceiveNotification"),
             Times.Once);
-        _hubServiceMock.Verify(hub => hub.NotifyUsersConnectionsAsync(It.IsAny<IEnumerable<UserConnection>>(), It.IsAny<MessageDto>(), "JoinNotification"), Times.Once);
+        _hubServiceMock.Verify(hub => hub.NotifyUsersConnectionsAsync(It.IsAny<IEnumerable<UserConnection>>(), It.IsAny<NotificationDto>(), "JoinNotification"), Times.Once);
     }
 }

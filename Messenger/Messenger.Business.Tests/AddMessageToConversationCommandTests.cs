@@ -127,13 +127,14 @@ public class AddMessageToConversationCommandHandlerTests
         _unitOfWorkMock.Setup(u => u.Users.GetUserByIdAsync(command.SenderId))
             .ReturnsAsync(sender);
 
-        _unitOfWorkMock.Setup(u => u.Messages.AddMessageToConversationAsync(command.Message.Text, conversation, sender, false))
-            .ReturnsAsync(message);
+        _unitOfWorkMock.Setup(u => u.Messages.AddMessageToConversationAsync(It.IsAny<Message>()))
+                .ReturnsAsync(message);
 
-        _hubServiceMock.Setup(h => h.NotifyGroupAsync(conversation.Id, It.IsAny<MessageWithSenderDto>(), "ReceiveNotification"))
-            .Returns(Task.CompletedTask);
 
         var mappedMessage = _mapper.Map<MessageWithSenderDto>(message);
+
+        _hubServiceMock.Setup(h => h.NotifyGroupAsync(conversation.Id, mappedMessage, "ReceiveNotification"))
+            .Returns(Task.CompletedTask);
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -142,8 +143,10 @@ public class AddMessageToConversationCommandHandlerTests
         Assert.IsTrue(result.Success);
         Assert.AreEqual(HttpStatusCode.Created, result.HttpStatusCode);
         Assert.AreEqual(mappedMessage.Id, result.Payload.Id);
+
         Assert.AreEqual(mappedMessage.SentAt, result.Payload.SentAt);
         Assert.AreEqual(mappedMessage.Sender.Id, result.Payload.Sender.Id);
+        Assert.AreEqual(mappedMessage.Text, result.Payload.Text);
     }
 
     [Test]
@@ -180,11 +183,8 @@ public class AddMessageToConversationCommandHandlerTests
         _unitOfWorkMock.Setup(u => u.Users.GetUserByIdAsync(command.SenderId))
             .ReturnsAsync(sender);
 
-        _unitOfWorkMock.Setup(u => u.Messages.AddMessageToConversationAsync(command.Message.Text, conversation, sender, false))
-            .ReturnsAsync(message);
-
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync())
-            .ReturnsAsync(1);
+        _unitOfWorkMock.Setup(u => u.Messages.AddMessageToConversationAsync(It.IsAny<Message>()))
+            .ReturnsAsync((Message msg) => msg);
 
         var mappedMessage = _mapper.Map<MessageWithSenderDto>(message);
 

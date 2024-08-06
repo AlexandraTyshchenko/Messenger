@@ -15,18 +15,8 @@ public class MessageRepository : IMessageRepository
         _applicationContext = applicationContext;
     }
 
-    public async Task<Message> AddMessageToConversationAsync(string text, Conversation conversation, 
-        User sender = null, bool isJoinMessage = false)//todo add dto
+    public async Task<Message> AddMessageToConversationAsync(Message message)//todo add dto
     {
-        var message = new Message
-        {
-            Text = text,
-            SentAt = DateTime.UtcNow,
-            Sender = sender,
-            Conversation = conversation,
-            IsJoinMessage = isJoinMessage
-        };
-
         await _applicationContext.Messages.AddAsync(message);
 
         return message;

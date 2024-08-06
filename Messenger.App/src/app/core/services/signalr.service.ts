@@ -46,6 +46,15 @@ export class SignalRService {
       .catch((err) => console.error('Error joining groups: ', err));
   }
 
+  public disconnect(): void {
+    this.hubConnection
+      .stop()
+      .then(() => console.log('SignalR connection stopped.'))
+      .catch((err) =>
+        console.error('Error while stopping SignalR connection: ' + err)
+      );
+  }
+  
   public onNotificationReceive(): void {
     this.hubConnection.on('ReceiveNotification', (message: Message) => {
       this.messageSubject.next(message);

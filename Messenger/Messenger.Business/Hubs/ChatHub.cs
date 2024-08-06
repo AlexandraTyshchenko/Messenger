@@ -36,6 +36,20 @@ public class ChatHub : Hub
         await _unitOfWork.SaveChangesAsync();
     }
 
+    public override async Task OnDisconnectedAsync(Exception exception)
+    {
+        var connectionId = Context.ConnectionId;
+        UserConnection connection = await _unitOfWork.Connections.RemoveConnectionAsync(new Guid(connectionId));
+
+        if (connection == null)
+        {
+            _logger.LogError($"Connection {connectionId} coudn`t be deleted");
+        }
+
+        await _unitOfWork.SaveChangesAsync();
+
+        await base.OnDisconnectedAsync(exception);
+    }
     public async Task JoinGroups()
     {
         var userId = Context.UserIdentifier;

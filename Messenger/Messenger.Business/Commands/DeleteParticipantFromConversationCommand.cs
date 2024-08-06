@@ -38,7 +38,7 @@ public class DeleteParticipantFromConversationCommandHandler
     private readonly IMapper _mapper;
 
 
-    public DeleteParticipantFromConversationCommandHandler(IUnitOfWork unitOfWork, IHubService hubService,IMapper mapper)
+    public DeleteParticipantFromConversationCommandHandler(IUnitOfWork unitOfWork, IHubService hubService, IMapper mapper)
     {
         _unitOfWork = unitOfWork;
         _hubService = hubService;
@@ -87,7 +87,16 @@ public class DeleteParticipantFromConversationCommandHandler
 
         var messageText = $"{participantInConversation.User.UserName} was deleted from сonversation '{conversation.Group.Title}'";
 
-        Message message = await _unitOfWork.Messages.AddMessageToConversationAsync(messageText, conversation, null, true);
+        var message = new Message
+        {
+            Conversation = conversation,
+            IsJoinMessage = true,
+            Sender = null,
+            Text = messageText,
+            SentAt = DateTime.Now,
+        };
+
+        Message joinMessage = await _unitOfWork.Messages.AddMessageToConversationAsync(message);
 
         var mappedMessage = _mapper.Map<MessageWithSenderDto>(message);
 
@@ -96,9 +105,13 @@ public class DeleteParticipantFromConversationCommandHandler
         IEnumerable<UserConnection> connections = await _unitOfWork.Connections.GetUserConnectionsAsync(request.UserId);
 
         await _hubService.NotifyGroupAsync(conversation.Id, mappedMessage, "ReceiveNotification");
-        MessageDto leaveConversationMessageDto = new MessageDto { Text = $"You are deleted from conversation {conversation.Group.Title}" };
 
-        await _hubService.NotifyUsersConnectionsAsync(connections, leaveConversationMessageDto, "LeaveConversationNotification");
+        NotificationDto leaveConversationNotificationDto = new NotificationDto
+        {
+            Text = $"You are deleted from conversation {conversation.Group.Title}"
+        };
+
+        await _hubService.NotifyUsersConnectionsAsync(connections, leaveConversationNotificationDto, "LeaveConversationNotification");
 
         return ResultDto.SuccessResult(HttpStatusCode.OK);
     }

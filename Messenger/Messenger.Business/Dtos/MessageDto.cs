@@ -1,6 +1,9 @@
-﻿namespace Messenger.Business.Dtos;
+﻿using Messenger.Infrastructure.Entities;
+
+namespace Messenger.Business.Dtos;
 
 public class MessageDto
 {
     public string Text { get; set; }
+    public bool IsJoinMessage { get; set; }
 }
