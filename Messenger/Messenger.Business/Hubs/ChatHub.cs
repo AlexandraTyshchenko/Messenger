@@ -3,64 +3,102 @@ using Messenger.Infrastructure.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
+using System;
 
 namespace Messenger.Api.Hubs;
 
 [Authorize]
+
 
 public class ChatHub : Hub
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<ChatHub> _logger;
 
-    public ChatHub(IUnitOfWork unitOfWork)
+    public ChatHub(IUnitOfWork unitOfWork, ILogger<ChatHub> logger)
     {
         _unitOfWork = unitOfWork;
+        _logger = logger;
     }
 
     public async override Task OnConnectedAsync()
     {
-        string userId = Context.UserIdentifier;
-        string connectionId = Context.ConnectionId;
-        User user = await _unitOfWork.Users.GetUserByIdAsync(Guid.Parse(userId));
-
-        if (user == null)
+        try
         {
-           await Clients.Caller.SendAsync("Error", "User not found.");
-           Context.Abort();
-           return;
+            string userId = Context.UserIdentifier;
+            string connectionId = Context.ConnectionId;
+            User user = await _unitOfWork.Users.GetUserByIdAsync(Guid.Parse(userId));
+
+            if (user == null)
+            {
+                await Clients.Caller.SendAsync("Error", "User not found.");
+                _logger.LogWarning($"User {userId} not found.");
+
+                Context.Abort();
+                return;
+            }
+
+            await _unitOfWork.Connections.AddConnectionAsync(user, connectionId);
+            await _unitOfWork.SaveChangesAsync();
         }
-
-        await _unitOfWork.Connections.AddConnectionAsync(user, connectionId);
-
-        await _unitOfWork.SaveChangesAsync();
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occurred during OnConnectedAsync.");
+            throw;
+        }
     }
 
-    public override async Task OnDisconnectedAsync(Exception exception)
+    public async override Task OnDisconnectedAsync(Exception exception)
     {
-        var connectionId = Context.ConnectionId;
-        UserConnection connection = await _unitOfWork.Connections.RemoveConnectionAsync(new Guid(connectionId));
-
-        if (connection == null)
-        {
-            _logger.LogError($"Connection {connectionId} coudn`t be deleted");
-        }
-
-        await _unitOfWork.SaveChangesAsync();
-
-        await base.OnDisconnectedAsync(exception);
+        await Disconnect(exception);
     }
+
+    private async Task Disconnect(Exception exception)
+    {
+        try
+        {
+            var connectionId = Context.ConnectionId;
+            UserConnection connection = await _unitOfWork.Connections.RemoveConnectionAsync(connectionId);
+
+            if (connection == null)
+            {
+                _logger.LogError($"Connection {connectionId} could not be deleted.");
+            }
+
+            await _unitOfWork.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occurred during OnDisconnectedAsync.");
+            throw;
+        }
+        finally
+        {
+            await base.OnDisconnectedAsync(exception);
+        }
+    }
+
     public async Task JoinGroups()
     {
-        var userId = Context.UserIdentifier;
-        IEnumerable<string> conversationsConnections = await _unitOfWork.Connections
-            .GetUserConversationConnections(new Guid(userId));
-
-        foreach (var conversationsConnection in conversationsConnections)
+        try
         {
-            await Groups.AddToGroupAsync(Context.ConnectionId, conversationsConnection);
-            await Clients.Group(conversationsConnection).SendAsync("JoinGroups", $"successfully joined" +
-                $" to {conversationsConnection}");
+            var userId = Context.UserIdentifier;
+            IEnumerable<string> conversationsConnections = await _unitOfWork.Connections
+                .GetUserConversationConnections(new Guid(userId));
+
+            foreach (var conversationsConnection in conversationsConnections)
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, conversationsConnection);
+                await Clients.Group(conversationsConnection).SendAsync("JoinGroups", $"successfully joined" +
+                    $" to {conversationsConnection}");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occurred during JoinGroups.");
+            throw;
         }
     }
+
 }
+

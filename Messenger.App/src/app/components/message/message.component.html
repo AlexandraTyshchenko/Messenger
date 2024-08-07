@@ -20,7 +20,7 @@
         <ng-template #otherMessage>
           <div class="clearfix">
             <div class="sender-info">
-              <img
+              <img *ngIf="message.sender?.imgUrl; else defaultImage"
                 [src]="message.sender?.imgUrl"
                 alt="Logo"
                 width="30"
@@ -29,6 +29,17 @@
                 role="img"
                 aria-label="logo"
               />
+              <ng-template #defaultImage>
+                <img
+                  [src]="defaultImageUrl"
+                  alt="Default Logo"
+                  width="40"
+                  height="40"
+                  class="bi me-3 rounded-image sender-image"
+                  role="img"
+                  aria-label="default logo"
+                />
+              </ng-template>
               {{ getSenderDisplayText() }}
             </div>
             <div class="message-other-wrapper">

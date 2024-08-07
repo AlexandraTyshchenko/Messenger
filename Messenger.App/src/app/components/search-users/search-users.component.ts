@@ -8,6 +8,7 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { ConversationsService } from '../../core/services/conversations.service';
 import { UserDto } from '../../core/classes/user-dto.model';
 import { Conversation } from '../../core/classes/conversation.model';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-search-users',
@@ -29,7 +30,8 @@ export class SearchUsersComponent {
     private fb: FormBuilder,
     private userService: UserService,
     public activeModal: NgbActiveModal,
-    private conversationsService:ConversationsService
+    private conversationsService:ConversationsService,
+    private router: Router,
   ) {
     this.searchForm = this.fb.group({
       searchQuery: [''],
@@ -76,13 +78,27 @@ export class SearchUsersComponent {
       });
   }
 
-  createPrivateConversation(id: string) {
+  createPrivateConversation(id: string): void {
     const userDto = new UserDto(id);
-
     this.conversationsService.createPrivateConversation(userDto).subscribe({
-      next: (response:Conversation) =>
-        this.activeModal.close(),
-      error: (err) => console.error('Error fetching additional users:', err),
+        next: (response: Conversation) => {
+            this.router.navigate([], {
+                queryParams: { conversationId: response.id },
+                queryParamsHandling: 'merge',
+            });
+            this.activeModal.close();
+        },
+        error: (err) => {
+            if (err.status === 409 && err.payload) {
+                this.router.navigate([], {
+                    queryParams: { conversationId: err.payload.id },
+                    queryParamsHandling: 'merge',
+                });
+            } else {
+                console.error('An unexpected error occurred:', err.message);
+            }
+            this.activeModal.close();
+        },
     });
 }
 

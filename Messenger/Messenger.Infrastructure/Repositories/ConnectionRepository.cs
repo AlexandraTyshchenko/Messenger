@@ -50,10 +50,10 @@ public class ConnectionRepository : IConnectionRepository
             .ToListAsync();
     }
 
-    public async Task<UserConnection> RemoveConnectionAsync(Guid connectionId)
+    public async Task<UserConnection> RemoveConnectionAsync(string connectionId)
     {
         var connection = await _applicationContext.UserConnections
-            .SingleOrDefaultAsync(c => c.Id == connectionId);
+            .SingleOrDefaultAsync(c => c.ConnectionId == connectionId);
 
         if (connection == null)
         {

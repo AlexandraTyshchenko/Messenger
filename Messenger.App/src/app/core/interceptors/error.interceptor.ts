@@ -46,7 +46,21 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         );
       }
 
-      return throwError(() => new Error(error.error));
+      // if (error.status === 0 && error.error instanceof ProgressEvent) {
+      //   
+      // }
+
+      if(error.error.payload){
+        const customError = {
+          status: error.status,
+          message: error.error.errorMessage || 'An error occurred',
+          payload: error.error.payload || null
+        };
+        console.log(customError.message)
+        return throwError(() => customError);
+      }
+      
+      return throwError(() => error);
     })
   );
 };

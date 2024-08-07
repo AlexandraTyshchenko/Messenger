@@ -36,4 +36,13 @@ public class HubService : IHubService
             await _chatHub.Clients.Client(userConnection.ConnectionId).SendAsync(method, notification);
         }
     }
+
+    public async Task DisconnectFromGroupAsync(IEnumerable<UserConnection> userConnections, Guid groupId)
+    {
+        foreach (UserConnection userConnection in userConnections)
+        {
+            await _chatHub.Groups.RemoveFromGroupAsync(userConnection.ConnectionId, groupId.ToString().ToUpper());
+        }
+    }
+
 }

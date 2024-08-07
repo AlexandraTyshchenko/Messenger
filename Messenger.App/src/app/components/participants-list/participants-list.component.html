@@ -9,20 +9,10 @@
       class="list-group-item d-flex align-items-center"
     >
       <!-- User Image -->
-      <div class="me-3">
-        <img
-          *ngIf="participant.userInfo.imgUrl !== null; else defaultImage"
-          [src]="participant.userInfo.imgUrl"
-          alt="Logo"
-          width="40"
-          height="40"
-          class="rounded-circle"
-          role="img"
-          aria-label="logo"
-        />
-        <ng-template #defaultImage>
+      <div class="me-3"> 
           <img
-            [src]="defaultImageUrl"
+            *ngIf="participant.userInfo.imgUrl; else defaultImage"
+            [src]="participant.userInfo.imgUrl"
             alt="Default Logo"
             width="40"
             height="40"
@@ -30,7 +20,17 @@
             role="img"
             aria-label="default logo"
           />
-        </ng-template>
+          <ng-template #defaultImage>
+            <img
+              [src]="defaultImageUrl"
+              alt="Default Logo"
+              width="40"
+              height="40"
+              class="bi me-3 rounded-image sender-image"
+              role="img"
+              aria-label="default logo"
+            />
+          </ng-template>
       </div>
 
       <!-- User Info and Role -->
@@ -40,7 +40,11 @@
       </div>
 
       <!-- Delete Icon (Trash) -->
-      <div *ngIf="isAdmin && userId !== participant.userInfo.id" class="ms-auto" (click)="deleteParticipant(participant)">
+      <div
+        *ngIf="isAdmin && userId !== participant.userInfo.id"
+        class="ms-auto"
+        (click)="deleteParticipant(participant)"
+      >
         <span class="trash">
           <svg
             xmlns="http://www.w3.org/2000/svg"

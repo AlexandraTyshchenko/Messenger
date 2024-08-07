@@ -51,8 +51,10 @@ public class CreatePrivateConversationWithUserCommandHandler : IRequestHandler<C
 
         if (existingConversation != null)
         {
-            return ResultDto.FailureResult<ConversationDto>(HttpStatusCode.Conflict,
-                "Conversation with this user already exists.");
+            var mappedExistingConversation = _mapper.Map<ConversationDto>(existingConversation);
+
+            return ResultDto.FailureResult(HttpStatusCode.Conflict,
+                "Conversation with this user already exists.", mappedExistingConversation);
         }
 
         User creatorUser = await _unitOfWork.Users.GetUserByIdAsync(request.CreatorUserId);

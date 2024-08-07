@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, OnChanges, OnInit, SimpleChanges, ViewChild } from '@angular/core';
 import { Conversation } from '../../core/classes/conversation.model';
 import { ConversationsService } from '../../core/services/conversations.service';
 import { PagedEntities } from '../../core/classes/pagination.model';
@@ -16,7 +16,7 @@ import { SearchUsersComponent } from '../../components/search-users/search-users
   templateUrl: './conversations.component.html',
   styleUrls: ['./conversations.component.css'],
 })
-export class ConversationsComponent implements OnInit, AfterViewInit {
+export class ConversationsComponent implements OnInit, AfterViewInit,OnChanges {
   conversations: Conversation[] = [];
   currentPage = 1;
   itemsPerPage = 10;
@@ -27,6 +27,8 @@ export class ConversationsComponent implements OnInit, AfterViewInit {
   toast!: ToastDirective;
   latestMessage: Message | null = null;
   notificationMessage: string | null = null;
+  messagesCount:null|number=null
+  isSidebarCollapsed = true;
 
   constructor(
     private conversationsService: ConversationsService,
@@ -46,6 +48,10 @@ export class ConversationsComponent implements OnInit, AfterViewInit {
     this.toast.hide();
   }
 
+  toggleSidebar() {
+    this.isSidebarCollapsed = !this.isSidebarCollapsed;
+  }
+
   ngAfterViewInit(): void {
     this.initializeSignalRSubscriptions();
     
@@ -55,6 +61,12 @@ export class ConversationsComponent implements OnInit, AfterViewInit {
     });
   }
   
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['conversation'] && !changes['conversation'].isFirstChange()) {
+      this.currentPage = 1;
+      this.loadData();
+    }
+  }
   
   private initializeSignalRSubscriptions(): void {
     this.signalRService.onNotificationReceive();
@@ -116,6 +128,7 @@ export class ConversationsComponent implements OnInit, AfterViewInit {
   }
 
   loadData() {
+    this.isSidebarCollapsed=false
     this.conversationsService
       .getConversations(this.currentPage, this.itemsPerPage)
       .subscribe({
@@ -130,10 +143,13 @@ export class ConversationsComponent implements OnInit, AfterViewInit {
   selectConversationFromRoute() {
     this.route.queryParams.subscribe((params) => {
       this.selectedConversationId = params['conversationId'];
+      this.isSidebarCollapsed=true
+      console.log(this.selectedConversationId)
       this.selectedConversation = this.conversations.find(
         (x) => x.id === this.selectedConversationId
       )!;
     });
+    console.log(this.selectedConversation)
   }
 
   appendData() {
@@ -157,5 +173,6 @@ export class ConversationsComponent implements OnInit, AfterViewInit {
       queryParams: { conversationId: this.selectedConversation.id },
       queryParamsHandling: 'merge',
     });
+    this.isSidebarCollapsed=true
   }
 }

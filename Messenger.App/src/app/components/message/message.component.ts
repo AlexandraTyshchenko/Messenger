@@ -11,6 +11,7 @@ export class MessageComponent implements OnInit {
   @Input() myMessage = false;
   @Input() message!: Message;
   sentAt!: string;
+  defaultImageUrl: string = '../../../assets/user_logo.png';
 
   constructor(private authService: AuthService) {}
 

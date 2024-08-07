@@ -1,17 +1,75 @@
+/* Ensures the dropdown menu is always on top */
+.dropdown-menu {
+  position: absolute; 
+  z-index: 1050; /* Bootstrap's default z-index for dropdowns */
+}
+
+/* Specific positioning for different states */
+@media (max-width: 768px) {
+  .sidebar {
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar.d-none {
+    transform: translateX(-100%);
+  }
+
+  .dropdown-menu {
+    top: 2.5rem; /* Adjust as needed to align properly */
+  }
+}
+
+@media (min-width: 769px) {
+  .sidebar.d-none {
+    display: block !important;
+    transform: none;
+  }
+
+  .dropdown-menu {
+    top: 2.5rem; /* Adjust as needed to align properly */
+  }
+}
+
+/* Ensure the sidebar transitions correctly */
+.sidebar {
+  transition: transform 0.3s ease;
+}
+
+.sidebar.collapsed {
+  transform: translateX(-100%);
+}
+
+/* Ensures toast and dropdown appear above other elements */
+.toast {
+  background-color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  z-index: 1050; /* Ensure it's above other elements */
+}
+
+.cross {
+  cursor: pointer;
+}
+
+.ngbDropdownItem {
+  cursor: pointer;
+}
+
 .list-group-item:hover {
   cursor: pointer;
 }
-.list-group-item{
-  padding: 15px
 
+.list-group-item {
+  padding: 15px;
 }
+
 .container {
   max-width: 600px;
   max-height: 600px;
   padding: 0;
   border-color: black;
   border-radius: 10px;
-  overflow-y: scroll
+  overflow-y: scroll;
 }
 
 .list-group-item.active {
@@ -19,14 +77,14 @@
   color: white;
 }
 
-.cross{
+.cross {
   float: right;
 }
 
 .toast {
-  background-color: rgba(255, 255, 255, 0.9); 
+  background-color: rgba(255, 255, 255, 0.9);
   border: 1px solid rgba(0, 0, 0, 0.1);
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); 
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
   z-index: 100000;
 }
 
@@ -44,3 +102,12 @@
 ul[ngbDropdownMenu] a[ngbDropdownItem] {
   cursor: pointer;
 }
+
+.sidebar {
+  transition: transform 0.3s ease;
+}
+
+.sidebar.collapsed {
+  transform: translateX(-100%);
+}
+

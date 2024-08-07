@@ -13,9 +13,20 @@ public static class ResultDtoExtensions
 
     public static IActionResult ToHttpResponse<T>(this ResultDto<T> response)
     {
-        return response.Success ? new OkObjectResult(response.Payload) : StatusCode((int)response.HttpStatusCode, response.ErrorMessage);
+        if (response.Success)
+        {
+            return new OkObjectResult(response.Payload);
+        }
+        else
+        {
+            var result = new
+            {
+                ErrorMessage = response.ErrorMessage,
+                Payload = response.Payload
+            };
+            return StatusCode((int)response.HttpStatusCode, result);
+        }
     }
-
     private static ObjectResult StatusCode([ActionResultStatusCode] int statusCode, [ActionResultObjectValue] object? value)
     {
         return new ObjectResult(value)

@@ -1,21 +1,20 @@
 <div class="modal-header">
-    <h5 class="modal-title" id="exampleModalLabel">Create Group Conversation</h5>
-    <button type="button" class="btn-close" data-bs-dismiss="modal" (click)="activeModal.close()" aria-label="Close"></button>
-  </div>
-  <div class="modal-body">
-    <form>
-      <div class="mb-3">
-        <label for="titleInput" class="form-label">Title</label>
-        <input type="text" class="form-control" id="titleInput" placeholder="Enter title" [(ngModel)]="title" name="title"/>
-      </div>
-      <div class="mb-3">
-        <label for="imageUpload" class="form-label">Upload Image</label>
-        <input class="form-control" type="file" id="imageUpload" (change)="onFileChange($event)"/>
-      </div>
-    </form>
-  </div>
-  <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" (click)="activeModal.close()" data-bs-dismiss="modal">Close</button>
-    <button type="button" class="btn btn-primary" (click)="createGroup()">Create Group</button>
-  </div>
-  
+  <h5 class="modal-title" id="exampleModalLabel">Create Group Conversation</h5>
+  <button type="button" class="btn-close" data-bs-dismiss="modal" (click)="activeModal.close()" aria-label="Close"></button>
+</div>
+<div class="modal-body">
+  <form (ngSubmit)="createGroup()" #groupForm="ngForm">
+    <div class="mb-3">
+      <label for="titleInput" class="form-label">Title</label>
+      <input type="text" class="form-control" id="titleInput" placeholder="Enter title" [(ngModel)]="title" name="title" required />
+    </div>
+    <div class="mb-3">
+      <label for="imageUpload" class="form-label">Upload Image</label>
+      <input class="form-control" type="file" id="imageUpload" (change)="onFileChange($event)" />
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="activeModal.close()" data-bs-dismiss="modal">Close</button>
+      <button type="submit" class="btn btn-primary">Create Group</button>
+    </div>
+  </form>
+</div>

@@ -8,5 +8,5 @@ public interface IConnectionRepository
     Task<IEnumerable<UserConnection>> GetUsersConnectionsAsync(Guid[] userIds);
     Task<IEnumerable<UserConnection>> GetUserConnectionsAsync(Guid userId);
     Task<IEnumerable<string>> GetUserConversationConnections(Guid userId);
-    Task<UserConnection> RemoveConnectionAsync(Guid connectionId);
+    Task<UserConnection> RemoveConnectionAsync(string connectionId);
 }

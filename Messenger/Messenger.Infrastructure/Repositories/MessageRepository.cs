@@ -15,7 +15,7 @@ public class MessageRepository : IMessageRepository
         _applicationContext = applicationContext;
     }
 
-    public async Task<Message> AddMessageToConversationAsync(Message message)//todo add dto
+    public async Task<Message> AddMessageToConversationAsync(Message message)
     {
         await _applicationContext.Messages.AddAsync(message);
 

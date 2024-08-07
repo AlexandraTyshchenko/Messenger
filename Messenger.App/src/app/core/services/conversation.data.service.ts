@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@angular/core';
 import { Conversation } from '../classes/conversation.model';
 import { AuthService } from './auth.service';
+import { UserInfo } from '../classes/user-info.model';
 
 @Injectable({
   providedIn: 'root',
@@ -24,12 +25,20 @@ export class ConversationDataService {
     return participant?.firstName + ' ' + participant?.lastName;
   }
 
-  private getParticipant(conversation: Conversation) {
-    const participant = conversation.privateConversationParticipants.find(
-      (participant) => participant.id !== this.userId
-    );
-    return participant;
+  private getParticipant(conversation: Conversation): UserInfo | null {
+    const currentUser = conversation.privateConversationParticipants.find(p => p.id === this.userId);
+  
+    if (currentUser) {
+      const otherParticipant = conversation.privateConversationParticipants.find(
+        (p) => p.id !== this.userId
+      );
+  
+      return otherParticipant || currentUser;
+    }
+  
+    return null;
   }
+  
 
   getConversationImage(conversation: Conversation) {
     if (conversation.group) {

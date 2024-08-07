@@ -111,6 +111,8 @@ public class DeleteParticipantFromConversationCommandHandler
             Text = $"You are deleted from conversation {conversation.Group.Title}"
         };
 
+        await _hubService.DisconnectFromGroupAsync(connections, conversation.Id);
+
         await _hubService.NotifyUsersConnectionsAsync(connections, leaveConversationNotificationDto, "LeaveConversationNotification");
 
         return ResultDto.SuccessResult(HttpStatusCode.OK);

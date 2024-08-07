@@ -25,18 +25,28 @@ export class GroupConversationFormComponent {
 
     this.conversationsService.createGroupConversation(groupDto).subscribe({
       next: (response) => {
-        console.log(groupDto)
+        console.log('Group created successfully', groupDto);
         this.activeModal.close(); 
       },
       error: (err) => {
-        console.log(groupDto)
-
         console.error('Error creating group:', err);
       }
     });
   }
 
   onFileChange(event: Event) {
-      this.imageFile = null;
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      const reader = new FileReader();
+
+      reader.onload = (e: ProgressEvent<FileReader>) => {
+        if (e.target) {
+          this.imageFile = e.target.result as string;
+        }
+      };
+
+      reader.readAsDataURL(file);
+    }
   }
 }
