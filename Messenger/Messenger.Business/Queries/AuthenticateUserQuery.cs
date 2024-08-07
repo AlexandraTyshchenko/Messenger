@@ -56,8 +56,7 @@ public class AuthenticateUserQueryHandler : IRequestHandler<AuthenticateUserQuer
 
         if (user == null)
         {
-            return ResultDto.FailureResult<AccessTokenDto>(
-                HttpStatusCode.Unauthorized, "Invalid credentials.");
+            return ResultDto.FailureResult<AccessTokenDto>(HttpStatusCode.BadRequest, "Invalid credentials.");
         }
 
         string token = await CreateTokenAsync(user);
@@ -84,7 +83,7 @@ public class AuthenticateUserQueryHandler : IRequestHandler<AuthenticateUserQuer
     }
 
     private JwtSecurityToken GenerateTokenOptions(SigningCredentials signingCredentials, List<Claim> claims)
-    {
+    {//todo check if token with user exists
         var tokenOptions = new JwtSecurityToken
         (
             issuer: _jwtSettings.ValidIssuer,

@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
+using FluentValidation;
 using MediatR;
+using Messenger.Business.Commands;
 using Messenger.Business.Profiles;
 using Messenger.Business.Queries;
 using Messenger.Business.ValidationPipelines;
@@ -19,6 +21,9 @@ public static class BusinessServiceExtensions
             cfg.RegisterServicesFromAssemblyContaining<GetConversationsByUserIdQueryHandler>();
             cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
         });
+
+        services.AddValidatorsFromAssemblyContaining(typeof(CreateGroupConversationCommandValidator),
+            includeInternalTypes: true);
 
         var mapperConfig = new MapperConfiguration(mc =>
         {

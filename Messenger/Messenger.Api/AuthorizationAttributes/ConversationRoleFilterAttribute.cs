@@ -1,7 +1,6 @@
 ﻿using Messenger.Infrastructure;
 using Messenger.Infrastructure.Entities;
 using Messenger.Infrastructure.Enums;
-using Messenger.Infrastructure.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.Security.Claims;
@@ -77,19 +76,6 @@ public class ConversationRoleFilterHandler : IAsyncAuthorizationFilter
             {
                 message = "Current user does not have " +
                 "administrative privileges in this conversation."
-            })
-            {
-                StatusCode = StatusCodes.Status403Forbidden
-            };
-            return;
-        }
-
-        if (_role == Role.Participant && participantInConversation.User.Id != userId)
-        {
-            context.Result = new ObjectResult(new
-            {
-                message = "Current user does not have " +
-                "privileges in this conversation."
             })
             {
                 StatusCode = StatusCodes.Status403Forbidden

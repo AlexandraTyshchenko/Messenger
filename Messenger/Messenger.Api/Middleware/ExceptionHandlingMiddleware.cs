@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using Microsoft.AspNetCore.Http;
 using System.Net;
 
 namespace Messenger.Api.Middleware;
@@ -20,17 +21,17 @@ public class ExceptionHandlingMiddleware
         }
         catch (ValidationException ex)
         {
-            await HandleExceptionAsync(context, ex, HttpStatusCode.BadRequest);
+            await HandleExceptionAsync(context, ex, StatusCodes.Status400BadRequest);
         }
         catch (Exception ex)
         {
-            await HandleExceptionAsync(context, ex, HttpStatusCode.InternalServerError);
+            await HandleExceptionAsync(context, ex, StatusCodes.Status500InternalServerError);
         }
     }
 
-    private async Task HandleExceptionAsync(HttpContext context, Exception exception, HttpStatusCode statusCode)
+    private async Task HandleExceptionAsync(HttpContext context, Exception exception, int statusCode)
     {
-        context.Response.StatusCode = (int)statusCode;
+        context.Response.StatusCode = statusCode;
         context.Response.ContentType = "text/plain";
         await context.Response.WriteAsync(exception.Message);
     }

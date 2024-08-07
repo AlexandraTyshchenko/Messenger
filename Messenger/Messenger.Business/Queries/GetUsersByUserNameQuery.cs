@@ -14,7 +14,7 @@ public class GetUsersByUserNameQuery : IRequest<ResultDto<IPagedEntities<UserBas
 {
     public string UserName { get; set; }
     public int Page { get; set; }
-    public int PageSize {  get; set; }
+    public int PageSize { get; set; }
 }
 
 public class GetUsersByUserNameQueryValidator : AbstractValidator<GetUsersByUserNameQuery>
@@ -25,10 +25,11 @@ public class GetUsersByUserNameQueryValidator : AbstractValidator<GetUsersByUser
             .NotEmpty().WithMessage("UserName is required");
 
         RuleFor(x => x.Page)
-                 .GreaterThan(0).WithMessage("Page must be a positive number");
+            .GreaterThan(0).WithMessage("Page must be a positive number") ;
 
         RuleFor(x => x.PageSize)
-            .GreaterThan(0).WithMessage("PageSize must be a positive number");
+            .GreaterThan(0).WithMessage("PageSize must be a positive number")
+            .LessThan(1000);
     }
 }
 

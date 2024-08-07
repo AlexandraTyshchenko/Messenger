@@ -1,4 +1,4 @@
-﻿using MediatR;
+﻿ using MediatR;
 using Messenger.Api.AuthorizationAttributes;
 using Messenger.Api.Extensions;
 using Messenger.Business.Commands;
