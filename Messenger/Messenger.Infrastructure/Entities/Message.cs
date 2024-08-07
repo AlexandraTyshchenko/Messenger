@@ -8,4 +8,5 @@ public class Message : BaseEntity
     public DateTime SentAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public bool IsSeen { get; set; }
+    public bool IsJoinMessage { get; set; } = false;
 }

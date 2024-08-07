@@ -2,13 +2,14 @@
 using FluentValidation;
 using MediatR;
 using Messenger.Business.Dtos;
+using Messenger.Business.Interfaces;
 using Messenger.Infrastructure;
 using Messenger.Infrastructure.Entities;
 using System.Net;
 
 namespace Messenger.Business.Commands;
 
-public class AddParticipantToConversationCommand : IRequest<ResultDto<ConversationWithParticipantsDto>>
+public class AddParticipantToConversationCommand : IRequest<ResultDto<IEnumerable<ParticipantsDto>>>
 {
     public Guid[] UserIds { get; set; }
     public Guid ConversationId { get; set; }
@@ -22,77 +23,100 @@ public class AddParticipantToConversationCommandValidator : AbstractValidator<Ad
            .NotEqual(Guid.Empty).WithMessage("ConversationId cannot be empty.");
 
         RuleFor(x => x.UserIds)
-            .NotNull().WithMessage("UserIds cannot be null.")
-            .NotEmpty().WithMessage("UserIds cannot be empty.");
+            .NotNull().WithMessage("At least one selected user is required")
+            .NotEmpty().WithMessage("At least one selected user is required");
 
         RuleForEach(x => x.UserIds)
-            .NotEqual(Guid.Empty).WithMessage("UserId cannot be empty.");
+            .NotEqual(Guid.Empty).WithMessage("At least one selected user is required");
     }
 }
 
 public class AddParticipantToConversationCommandHandler :
-    IRequestHandler<AddParticipantToConversationCommand, ResultDto<ConversationWithParticipantsDto>>
+    IRequestHandler<AddParticipantToConversationCommand, ResultDto<IEnumerable<ParticipantsDto>>>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly IHubService _hubService;
 
-    public AddParticipantToConversationCommandHandler(IUnitOfWork unitOfWork, IMapper mapper)
+    public AddParticipantToConversationCommandHandler(IUnitOfWork unitOfWork, IMapper mapper, IHubService hubService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _hubService = hubService;
     }
 
-    public async Task<ResultDto<ConversationWithParticipantsDto>> Handle(AddParticipantToConversationCommand request,
-        CancellationToken cancellationToken)
+    public async Task<ResultDto<IEnumerable<ParticipantsDto>>> Handle(AddParticipantToConversationCommand request, CancellationToken cancellationToken)
     {
-        Conversation conversation = await _unitOfWork.Conversations
-           .GetGroupConversationByIdAsync(request.ConversationId);
+        var conversation = await _unitOfWork.Conversations.GetGroupConversationByIdAsync(request.ConversationId) ;
 
         if (conversation == null)
         {
-            return ResultDto.FailureResult<ConversationWithParticipantsDto>(HttpStatusCode.NotFound,
-                "Group conversation was not found.");
+            return ResultDto.FailureResult<IEnumerable<ParticipantsDto>>
+                (HttpStatusCode.NotFound, "Group conversation was not found.");
         }
 
-        IEnumerable<User> users = await _unitOfWork.Users.GetUsersByIdsAsync(request.UserIds);
-
-        IEnumerable<Guid> missingUserIds = request.UserIds.Where(id => !users.Select(x => x.Id)
-            .Contains(id)).ToList();
+        var (users, missingUserIds) = await GetUsersAsync(request.UserIds);
 
         if (missingUserIds.Any())
         {
-            return ResultDto.FailureResult<ConversationWithParticipantsDto>(HttpStatusCode.NotFound,
-                $"Users with ids {string.Join(", ", missingUserIds)} were not found.");
+            return ResultDto.FailureResult<IEnumerable<ParticipantsDto>>
+                (HttpStatusCode.NotFound, $"Users with ids {string.Join(", ", missingUserIds)} were not found.");
         }
 
-        IEnumerable<ParticipantInConversation> existingParticipants = (await _unitOfWork.Participants
-            .GetParticipantsByConversationIdAsync(request.ConversationId))
-            .Where(x => users.Contains(x.User))
-            .ToList();
-
-        var participantsUserNames = string.Join(", ", existingParticipants.Select(x => x.User.UserName));
+        var existingParticipants = await GetExistingParticipantsAsync(request.ConversationId, users);
 
         if (existingParticipants.Any())
         {
-            return ResultDto.FailureResult<ConversationWithParticipantsDto>(HttpStatusCode.Conflict,
-                $"Users {participantsUserNames} already exist in conversation.");
+            return ResultDto.FailureResult<IEnumerable<ParticipantsDto>>
+                (HttpStatusCode.Conflict,
+                $"Users {string.Join(", ", existingParticipants.Select(x => x.User.UserName))}" +
+                $" already exist in groupConversation.");
         }
 
-        if (conversation.Group == null)
+        var participants = await _unitOfWork.Participants.AddParticipantsToConversationAsync(users, conversation); 
+
+        var userNames = string.Join(", ", participants.Select(x => x.User.UserName));
+        var userConnections = await _unitOfWork.Connections.GetUsersConnectionsAsync(request.UserIds); ;
+
+        var messageText = userNames;
+        messageText += participants.Count() == 1 ?
+            $"  was added to сonversation '{conversation.Group.Title}'" : $" " +
+            $" were added to сonversation '{conversation.Group.Title}'";
+
+        var message = new Message
         {
-            return ResultDto.FailureResult<ConversationWithParticipantsDto>(HttpStatusCode.NotFound,
-                $"Conversation with id {request.ConversationId} is not a group conversation.");
-        }
+            Conversation = conversation,
+            IsJoinMessage = true,
+            Sender = null,
+            Text = messageText,
+            SentAt = DateTime.Now,
+        };
 
-        IEnumerable<ParticipantInConversation> participants = await _unitOfWork.Participants
-            .AddParticipantsToConversationAsync(users, conversation);
+        Message joinMessage = await _unitOfWork.Messages.AddMessageToConversationAsync(message); 
 
-        var mappedParticipants = _mapper.Map<IEnumerable<UserBasicInfoDto>>(participants);
-
+        var mappedJoinMessage = _mapper.Map<MessageWithSenderDto>(joinMessage);
         await _unitOfWork.SaveChangesAsync();
 
-        var mappedConversationWithParticipants = _mapper.Map<ConversationWithParticipantsDto>(conversation);
+        await _hubService.JoinGroupAsync(userConnections, conversation.Id);
+        await _hubService.NotifyGroupAsync(conversation.Id, mappedJoinMessage, "ReceiveNotification");
 
-        return ResultDto.SuccessResult(mappedConversationWithParticipants, HttpStatusCode.OK);
+        NotificationDto joinMessageDto = new NotificationDto { Text = $"You are joined to conversation {conversation.Group.Title}" };
+        await _hubService.NotifyUsersConnectionsAsync(userConnections, joinMessageDto, "JoinNotification");
+
+        var mappedParticipants = _mapper.Map<IEnumerable<ParticipantsDto>>(participants);
+        return ResultDto.SuccessResult(mappedParticipants, HttpStatusCode.OK);
+    }
+
+    private async Task<(IEnumerable<User> Users, IEnumerable<Guid> MissingUserIds)> GetUsersAsync(Guid[] userIds)
+    {
+        var users = await _unitOfWork.Users.GetUsersByIdsAsync(userIds);
+        var missingUserIds = userIds.Where(id => !users.Select(x => x.Id).Contains(id)).ToList();
+        return (users, missingUserIds);
+    }
+
+    private async Task<IEnumerable<ParticipantInConversation>> GetExistingParticipantsAsync(Guid conversationId, IEnumerable<User> users)
+    {
+        var participants = await _unitOfWork.Participants.GetParticipantsByConversationIdAsync(conversationId);
+        return participants.Where(x => users.Contains(x.User)).ToList();
     }
 }

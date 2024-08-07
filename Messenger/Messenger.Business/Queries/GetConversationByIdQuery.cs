@@ -18,7 +18,7 @@ public class GetConversationByIdQueryValidator : AbstractValidator<GetConversati
     {
         RuleFor(x => x.ConversationId)
             .NotEqual(Guid.Empty)
-            .WithMessage("ConversationId cannot be an empty GUID."); ;
+            .WithMessage("ConversationId cannot be an empty GUID."); 
     }
 }
 

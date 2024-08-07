@@ -1,0 +1,41 @@
+<form [formGroup]="loginForm" (ngSubmit)="onLoginFormSubmitted()">
+  <!-- Error Message -->
+  <div *ngIf="errorMessage !== null" class="alert alert-danger" role="alert">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Username input -->
+  <div data-mdb-input-init class="form-outline mb-4">
+    <input
+      class="form-control form-control-lg"
+      type="username"
+      placeholder="Username"
+      formControlName="username"
+    />
+    <label class="form-label" for="form3Example3">Enter username</label>
+  </div>
+
+  <!-- Password input -->
+  <div data-mdb-input-init class="form-outline mb-3">
+    <input
+      type="password"
+      placeholder="Password"
+      formControlName="password"
+      class="form-control form-control-lg"
+    />
+    <label class="form-label" for="form3Example4">Enter password</label>
+  </div>
+
+  <div class="text-center text-lg-start mt-4 pt-2">
+    <button
+      type="submit"
+      [disabled]="loginForm.invalid"
+      data-mdb-button-init
+      data-mdb-ripple-init
+      class="btn btn-primary btn-lg"
+      style="padding-left: 2.5rem; padding-right: 2.5rem"
+    >
+      Login
+    </button>
+  </div>
+</form>

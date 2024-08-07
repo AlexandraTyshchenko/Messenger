@@ -1,0 +1,91 @@
+<header class="p-3 mb-3 border-bottom">
+  <div class="container">
+    <div
+      class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start"
+    >
+      <a
+        [routerLink]="['/home']"
+        class="d-flex align-items-center mb-2 mb-lg-0 text-dark text-decoration-none"
+      >
+        <img
+          src="assets/logo.png"
+          alt="Logo"
+          width="40"
+          height="32"
+          class="bi me-2"
+          role="img"
+          aria-label="logo"
+        />
+      </a>
+
+      <ul
+        class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0"
+      >
+        <li>
+          <a
+            href="#"
+            class="nav-link px-2 link-secondary"
+            [routerLink]="['/login']"
+            >Login</a
+          >
+        </li>
+        <li>
+          <a
+            href="#"
+            class="nav-link px-2 link-secondary"
+            [routerLink]="['/register']"
+            >Sign up</a
+          >
+        </li>
+      </ul>
+
+      <form
+        *ngIf="authService.isAuthenticated()"
+        class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3"
+      >
+        <input
+          type="search"
+          class="form-control"
+          placeholder="Search..."
+          aria-label="Search"
+        />
+      </form>
+
+      <div *ngIf="authService.isAuthenticated()" class="d-flex align-items-center">
+        <img
+          *ngIf="imgUrl; else defaultImage"
+          [src]="imgUrl"
+          alt="mdo"
+          width="32"
+          height="32"
+          class="rounded-circle me-2"
+        />
+        <ng-template #defaultImage>
+          <img
+            src="assets/user_logo.png"
+            alt="mdo"
+            width="32"
+            height="32"
+            class="rounded-circle me-2"
+          />
+        </ng-template>
+        <div ngbDropdown>
+          <button
+            ngbDropdownToggle
+            class="btn btn-light"
+            type="button"
+            id="dropdownMenuButton"
+            aria-expanded="false"
+          ></button>
+          <ul ngbDropdownMenu aria-labelledby="dropdownMenuButton">
+            <li><a ngbDropdownItem href="#">Profile</a></li>
+            <li><hr class="dropdown-divider" /></li>
+            <li>
+              <a class="dropdown-item" href="#" (click)="logout()">Sign out</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>

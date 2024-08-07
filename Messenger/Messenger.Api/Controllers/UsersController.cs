@@ -21,14 +21,15 @@ public class UsersController : BaseController
     }
 
     [HttpGet]
-    public async Task<IActionResult> SearchUsersByUserName([FromQuery] SearchUsersParams searchParams)
+    public async Task<IActionResult> SearchUsersByUserName([FromQuery] SearchUsersParams searchUserParams,
+        [FromQuery] PaginationParams paginationParams)
     {
-        ResultDto<IPagedEntities<UserBasicInfoDto>> response = await _mediatoR.Send(new GetUsersByUserNameQuery
-        {
-            UserName = searchParams.UserName,
-            Page = searchParams.Page,
-            PageSize = searchParams.PageSize
-        });
+        ResultDto<IPagedEntities<UserBasicInfoDto>> response = await _mediatoR
+            .Send(new GetUsersByUserNameQuery
+            {
+                UserName = searchUserParams.UserName,
+                PaginationParams = paginationParams
+            });
 
         return response.ToHttpResponse();
     }

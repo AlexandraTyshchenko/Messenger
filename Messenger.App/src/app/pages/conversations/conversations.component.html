@@ -1,0 +1,90 @@
+<div class="row">
+  <div  ngbDropdown>
+    <div
+      class="three-dots"
+      ngbDropdownToggle
+      id="dropdownMenuButton"
+    >  Actions
+
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        fill="currentColor"
+        class="bi bi-three-dots-vertical"
+        viewBox="0 0 16 16"
+      >
+        <path
+          d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0"
+        />
+      </svg>
+      <ul ngbDropdownMenu aria-labelledby="dropdownMenuButton">
+        <li><a (click)="createPrivateConersation()" ngbDropdownItem >Create private conversation</a></li>
+        <li><a (click)="createGroupConversation()" ngbDropdownItem >Create group conversation</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="col-md-5">
+    <div
+      class="container"
+      infiniteScroll
+      [scrollWindow]="false"
+      (scrolled)="onScroll()"
+    >
+      <div *ngIf="notificationMessage" class="alert alert-info alert-dismissible fade show">
+        {{notificationMessage}}
+                <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="alert"
+        ></button>
+      </div>
+      <div
+        *ngFor="let conversation of conversations; let i = index"
+        class="list-group-item d-flex justify-content-between align-items-start"
+        [class.active]="conversation.id === selectedConversationId"
+        (click)="setActive(i)"
+      >
+        <app-conversation-with-last-message
+          [conversation]="conversation"
+        ></app-conversation-with-last-message>
+        <span class="badge bg-primary rounded-pill ms-2">14</span>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <app-chat
+      *ngIf="selectedConversation"
+      [conversation]="selectedConversation"
+    ></app-chat>
+  </div>
+  <div
+    #toast
+    role="alert"
+    aria-live="assertive"
+    aria-atomic="true"
+    class="toast fade position-fixed bottom-0 end-0 m-3"
+  >
+    <div (click)="hideMessage()" class="cross position-relative">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        fill="currentColor"
+        class="bi bi-x"
+        viewBox="0 0 16 16"
+      >
+        <path
+          d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"
+        />
+      </svg>
+    </div>
+    
+    <app-conversation-with-last-message
+      *ngIf="conversationWithLatestMessage"
+      [conversation]="conversationWithLatestMessage"
+    >
+    </app-conversation-with-last-message>
+    
+  </div>
+</div>

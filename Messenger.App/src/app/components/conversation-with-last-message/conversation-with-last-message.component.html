@@ -1,0 +1,17 @@
+<div class="container">
+  <app-conversation-item [conversation]="conversation"></app-conversation-item>
+  <div class="sender-info">
+    <img
+      *ngIf="lastMessageSenderImgUrl"
+      [src]="lastMessageSenderImgUrl"
+      alt="Logo"
+      width="20"
+      height="16"
+      class="bi me-3 rounded-image sender-image"
+      role="img"
+      aria-label="logo"
+    />
+    <strong> {{ getSenderDisplayText() }}</strong>
+    {{ getSenderMessageText() }}
+  </div>
+</div>

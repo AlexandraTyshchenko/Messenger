@@ -2,6 +2,7 @@
 using FluentValidation;
 using MediatR;
 using Messenger.Business.Dtos;
+using Messenger.Business.Interfaces;
 using Messenger.Infrastructure;
 using Messenger.Infrastructure.Entities;
 using System.Net;
@@ -43,15 +44,23 @@ public class AddMessageToConversationCommandHandler : IRequestHandler<AddMessage
 {
     private readonly IMapper _mapper;
     private readonly IUnitOfWork _unitOfWork;
-
-    public AddMessageToConversationCommandHandler(IUnitOfWork unitOfWork, IMapper mapper)
+    private readonly IHubService _hubService;
+    public AddMessageToConversationCommandHandler(IUnitOfWork unitOfWork, IMapper mapper,
+        IHubService hubService)
     {
         _mapper = mapper;
         _unitOfWork = unitOfWork;
+        _hubService = hubService;
     }
     public async Task<ResultDto<MessageWithSenderDto>> Handle(AddMessageToConversationCommand request, CancellationToken cancellationToken)
     {
         User sender = await _unitOfWork.Users.GetUserByIdAsync(request.SenderId);
+
+        if (sender == null)
+        {
+            return ResultDto.FailureResult<MessageWithSenderDto>(HttpStatusCode.NotFound,
+                "No sender was found.");
+        }
 
         Conversation conversation = await _unitOfWork.Conversations.GetConversationByIdAsync(request.ConversationId);
 
@@ -61,12 +70,22 @@ public class AddMessageToConversationCommandHandler : IRequestHandler<AddMessage
                 "No conversation was found.");
         }
 
-        Message message = await _unitOfWork.Messages
-             .AddMessageToConversationAsync(request.Message.Text, conversation, sender);
+        var message = new Message
+        {
+            Conversation = conversation,
+            IsJoinMessage = false,
+            Sender = sender,
+            Text = request.Message.Text,
+            SentAt = DateTime.Now,
+        };
+
+        Message joinMessage = await _unitOfWork.Messages.AddMessageToConversationAsync(message);
 
         await _unitOfWork.SaveChangesAsync();
 
-        var mappedMessage = _mapper.Map<MessageWithSenderDto>(message);
+        var mappedMessage = _mapper.Map<MessageWithSenderDto>(joinMessage);
+
+        await _hubService.NotifyGroupAsync(conversation.Id, mappedMessage, "ReceiveNotification");
 
         return ResultDto.SuccessResult(mappedMessage, HttpStatusCode.Created);
     }

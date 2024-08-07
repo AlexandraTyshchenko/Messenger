@@ -13,21 +13,17 @@ public class MappingProfile : Profile
         CreateMap<Group, GroupDto>();
 
         CreateMap<Message, MessageWithSenderDto>()
-            .ForMember(dest => dest.SenderFirstName, opt => opt.MapFrom(src => src.Sender.FirstName))
-            .ForMember(dest => dest.SenderLastName, opt => opt.MapFrom(src => src.Sender.LastName))
-            .ForMember(dest => dest.ImgUrl, opt => opt.MapFrom(src => src.Sender.ImgUrl))
-            .ForMember(dest => dest.SenderUserName, opt => opt.MapFrom(src => src.Sender.UserName));
+            .ForMember(dest => dest.Sender, opt => opt.MapFrom(src => src.Sender))
+            .ForMember(dest=>dest.ConversationId,opt=>opt.MapFrom(src=>src.Conversation.Id));
 
         CreateMap<Conversation, ConversationDto>()
-            .ForMember(dest => dest.Group, opt => opt.MapFrom(src => src.Group))
-            .ForMember(dest => dest.LastMessage, opt => opt.MapFrom(src =>
-                src.Messages.OrderByDescending(m => m.SentAt).FirstOrDefault()
-            ));
+             .ForMember(dest => dest.Group, opt => opt.MapFrom(src => src.Group))
+             .ForMember(dest => dest.PrivateConversationParticipants, opt => opt
+                .MapFrom(src => src.Group == null ? src.ParticipantsInConversation.Select(x => x.User).ToList() : null))
+             .ForMember(dest => dest.ParticipantsCount, opt => opt.MapFrom(src => src.ParticipantsInConversation.Count()))
+             .ForMember(dest => dest.LastMessage, opt => opt.MapFrom(src =>
+                     src.Messages.OrderByDescending(m => m.SentAt).FirstOrDefault()));
 
-        CreateMap<Conversation, ConversationWithParticipantsDto>()
-            .ForMember(dest => dest.Group, opt => opt.MapFrom(src => src.Group))
-            .ForMember(dest => dest.Participants, opt => opt.MapFrom(src => src.ParticipantsInConversation.Select(x => x.User).ToList()))
-            .ForMember(dest => dest.ParticipantsCount, opt => opt.MapFrom(src => src.ParticipantsInConversation.Count()));
 
         CreateMap<ParticipantInConversation, UserBasicInfoDto>()
             .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.User.Id))
@@ -39,5 +35,15 @@ public class MappingProfile : Profile
 
         CreateMap<UserRegistrationDto, User>();
         CreateMap<UserLoginDto, User>();
+
+        CreateMap<ParticipantInConversation, ParticipantsDto>()
+            .ForMember(dest => dest.UserInfo, opt => opt.MapFrom(x => x.User))
+            .ForMember(dest => dest.Role, opt => opt.MapFrom(x => x.Role))
+            .ForMember(dest => dest.ConversationId, opt => opt.MapFrom(x => x.Conversation.Id));
+
+        CreateMap<Conversation, ParticipantsInConversationDto>()
+            .ForMember(dest=>dest.ConversationId,opt=>opt.MapFrom(x=>x.Id))
+            .ForMember(dest=>dest.Participants,opt=>opt.MapFrom(x=>x.ParticipantsInConversation));
+
     }
 }

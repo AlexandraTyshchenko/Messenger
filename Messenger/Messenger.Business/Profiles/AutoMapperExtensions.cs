@@ -10,6 +10,6 @@ public static class AutoMapperExtensions
     {
         var mappedItems = source.Entities.Select(item => mapper.Map<TDestination>(item)).ToList();
 
-        return new PagedEntities<TDestination>(source.TotalSize,source.Page,source.PageSize, mappedItems);
+        return new PagedEntities<TDestination>(source.Page,source.PageSize, source.TotalSize, mappedItems);
     }
 }

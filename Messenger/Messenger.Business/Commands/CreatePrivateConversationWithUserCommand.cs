@@ -2,13 +2,14 @@
 using FluentValidation;
 using MediatR;
 using Messenger.Business.Dtos;
+using Messenger.Business.Interfaces;
 using Messenger.Infrastructure;
 using Messenger.Infrastructure.Entities;
 using System.Net;
 
 namespace Messenger.Business.Commands;
 
-public class CreatePrivateConversationWithUserCommand : IRequest<ResultDto<ConversationWithParticipantsDto>>
+public class CreatePrivateConversationWithUserCommand : IRequest<ResultDto<ConversationDto>>
 {
     public Guid CreatorUserId { get; set; }
     public Guid UserId { get; set; } 
@@ -29,18 +30,20 @@ public class CreatePrivateConversationWithUserCommandValidator : AbstractValidat
 }
 
 public class CreatePrivateConversationWithUserCommandHandler : IRequestHandler<CreatePrivateConversationWithUserCommand,
-    ResultDto<ConversationWithParticipantsDto>>
+    ResultDto<ConversationDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly IHubService _hubService;
 
-    public CreatePrivateConversationWithUserCommandHandler(IUnitOfWork unitOfWork, IMapper mapper)
+    public CreatePrivateConversationWithUserCommandHandler(IUnitOfWork unitOfWork, IMapper mapper,IHubService hubService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _hubService = hubService;
     }
 
-    public async Task<ResultDto<ConversationWithParticipantsDto>> Handle(CreatePrivateConversationWithUserCommand request,
+    public async Task<ResultDto<ConversationDto>> Handle(CreatePrivateConversationWithUserCommand request,
         CancellationToken cancellationToken)
     {
         Conversation existingConversation = await _unitOfWork.Conversations
@@ -48,23 +51,42 @@ public class CreatePrivateConversationWithUserCommandHandler : IRequestHandler<C
 
         if (existingConversation != null)
         {
-            return ResultDto.FailureResult<ConversationWithParticipantsDto>(HttpStatusCode.Conflict,
+            return ResultDto.FailureResult<ConversationDto>(HttpStatusCode.Conflict,
                 "Conversation with this user already exists.");
         }
 
         User creatorUser = await _unitOfWork.Users.GetUserByIdAsync(request.CreatorUserId);
 
+
+        if (creatorUser == null)
+        {
+            return ResultDto.FailureResult<ConversationDto>(HttpStatusCode.NotFound, "Creator user was not found.");
+        }
+
         User user = await _unitOfWork.Users.GetUserByIdAsync(request.UserId);
 
         if (user == null)
         {
-            return ResultDto.FailureResult<ConversationWithParticipantsDto>(HttpStatusCode.NotFound, "User was not found.");
+            return ResultDto.FailureResult<ConversationDto>(HttpStatusCode.NotFound, "User was not found.");
         }
 
-        Conversation result = await _unitOfWork.Conversations.CreateConversationWithUserAsync(creatorUser, user);
+        Conversation conversation = await _unitOfWork.Conversations.CreateConversationWithUserAsync(creatorUser, user);
+
         await _unitOfWork.SaveChangesAsync();
 
-        var mappedConversation = _mapper.Map<ConversationWithParticipantsDto>(result);
+        IEnumerable<UserConnection> userCreatorConnections = await _unitOfWork.Connections
+            .GetUserConnectionsAsync(request.CreatorUserId);
+
+        IEnumerable<UserConnection> userConnections = await _unitOfWork.Connections
+            .GetUserConnectionsAsync(request.UserId);
+
+        await _hubService.JoinGroupAsync(userCreatorConnections, conversation.Id);
+        await _hubService.JoinGroupAsync(userConnections, conversation.Id);
+
+        NotificationDto joinNotificationDto = new NotificationDto { Text = $"You are joined to conversation with {creatorUser.UserName}" };
+
+        await _hubService.NotifyUsersConnectionsAsync(userConnections, joinNotificationDto, "JoinNotification");
+        var mappedConversation = _mapper.Map<ConversationDto>(conversation);
 
         return ResultDto.SuccessResult(mappedConversation, HttpStatusCode.Created);
     }

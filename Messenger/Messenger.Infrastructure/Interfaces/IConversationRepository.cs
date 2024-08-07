@@ -1,10 +1,11 @@
 ﻿using Messenger.Infrastructure.Entities;
+using Messenger.Infrastructure.Pagination;
 
 namespace Messenger.Infrastructure.Interfaces;
 
 public interface IConversationRepository
 {
-    Task<IEnumerable<Conversation>> GetConversationsByUserIdAsync(Guid userId);
+    Task<IPagedEntities<Conversation>> GetConversationsByUserIdAsync(Guid userId, int page, int pageSize);
     Task<Conversation> GetConversationByIdAsync(Guid conversationId);
     Task<Conversation> GetGroupConversationByIdAsync(Guid conversationId);
     Task<Conversation> CreateConversationWithUserAsync(User creatorUser, User user);

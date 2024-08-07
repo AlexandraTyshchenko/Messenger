@@ -5,6 +5,7 @@ using Messenger.Business.Commands;
 using Messenger.Business.Dtos;
 using Messenger.Business.Queries;
 using Messenger.Infrastructure.Enums;
+using Messenger.Infrastructure.Pagination;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,18 +23,22 @@ public class ConversationsController : BaseController
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetConversations()
+    public async Task<IActionResult> GetConversations([FromQuery] PaginationParams paginationParams)
     {
-        ResultDto<IEnumerable<ConversationDto>> response = await _mediatoR
-            .Send(new GetConversationsByUserIdQuery { UserId = UserId });
+        ResultDto<IPagedEntities<ConversationDto>> response = await _mediatoR
+            .Send(new GetConversationsByUserIdQuery
+            {
+                UserId = UserId,
+                PaginationParams = paginationParams
+            });
 
         return response.ToHttpResponse();
     }
 
     [HttpPost("private")]
-    public async Task<IActionResult> CreatePrivateConversation([FromBody] UserModelDto userModelDto)//todo from body add model
+    public async Task<IActionResult> CreatePrivateConversation([FromBody] UserModelDto userModelDto)
     {
-        ResultDto<ConversationWithParticipantsDto> response = await _mediatoR.Send(new CreatePrivateConversationWithUserCommand
+        ResultDto<ConversationDto> response = await _mediatoR.Send(new CreatePrivateConversationWithUserCommand
         {
             CreatorUserId = UserId,
             UserId = userModelDto.UserId,
@@ -45,7 +50,7 @@ public class ConversationsController : BaseController
     [HttpPost("group")]
     public async Task<IActionResult> CreateGroupConversation([FromBody] GroupModelDto groupModelDto)
     {
-        ResultDto<ConversationWithParticipantsDto> response = await _mediatoR.Send(new CreateGroupConversationCommand
+        ResultDto<ConversationDto> response = await _mediatoR.Send(new CreateGroupConversationCommand
         {
             CreatorUserId = UserId,
             Group = groupModelDto,
@@ -75,7 +80,7 @@ public class ConversationsController : BaseController
             ConversationId = conversationId
         });
 
-        return response.ToHttpResponse(); 
+        return response.ToHttpResponse();
     }
 }
 

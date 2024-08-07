@@ -1,0 +1,18 @@
+<div class="conversation-item">
+  <div class="d-flex align-items-center">
+    <div>
+      <img
+        [src]="getImage()"
+        alt="Logo"
+        width="55"
+        height="55"
+        class="me-3 conversation-image"
+        role="img"
+        aria-label="logo"
+      />
+    </div>
+    <div class="flex-grow-1 ms-4">
+      <div class="fw-bold mb-2 fs-5">{{ getTitle() }}</div>
+    </div>
+  </div>
+</div>

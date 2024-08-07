@@ -4,7 +4,7 @@ namespace Messenger.Infrastructure.Entities;
 
 public class User : IdentityUser<Guid>
 {
-    public string FirstName { get; set; } 
+    public string FirstName { get; set; } //todo for user configure set null property on deletion
     public string LastName { get; set; }
     public string PhoneNumber { get; set; } 
     public string ImgUrl { get; set; } = string.Empty;
@@ -12,5 +12,6 @@ public class User : IdentityUser<Guid>
     public bool IsActive { get; set; } = true;
     public ICollection<ParticipantInConversation> ParticipantsInConversation { get; set; } = new List<ParticipantInConversation>();
     public ICollection<Message> Messages { get; set; } = new List<Message>();
-
+    public ICollection<UserConnection> UserConnections { get; set; }
+    public ICollection<RefreshToken> RefreshTokens { get; set; }
 }

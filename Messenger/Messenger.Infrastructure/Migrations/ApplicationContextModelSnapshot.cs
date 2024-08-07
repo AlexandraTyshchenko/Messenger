@@ -47,11 +47,9 @@ namespace Messenger.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ImgUrl")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Title")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -68,17 +66,19 @@ namespace Messenger.Infrastructure.Migrations
                     b.Property<Guid>("ConversationId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<bool>("IsJoinMessage")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsSeen")
                         .HasColumnType("bit");
 
-                    b.Property<Guid>("SenderId")
+                    b.Property<Guid?>("SenderId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("SentAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Text")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -120,6 +120,28 @@ namespace Messenger.Infrastructure.Migrations
                     b.ToTable("ParticipantsInConversation");
                 });
 
+            modelBuilder.Entity("Messenger.Infrastructure.Entities.RefreshToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Token")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("RefreshTokens");
+                });
+
             modelBuilder.Entity("Messenger.Infrastructure.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -130,7 +152,6 @@ namespace Messenger.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Bio")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ConcurrencyStamp")
@@ -145,18 +166,15 @@ namespace Messenger.Infrastructure.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("FirstName")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ImgUrl")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
                     b.Property<string>("LastName")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("LockoutEnabled")
@@ -177,7 +195,6 @@ namespace Messenger.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PhoneNumber")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("PhoneNumberConfirmed")
@@ -212,10 +229,10 @@ namespace Messenger.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("41da35f0-ffe5-470b-be8a-1a9382445179"),
+                            Id = new Guid("8ddb7c0f-6044-4896-9ecb-ef1108c48141"),
                             AccessFailedCount = 0,
                             Bio = "Hello, I'm John.",
-                            ConcurrencyStamp = "4e63fefa-4041-4187-a49e-438a7c32b3aa",
+                            ConcurrencyStamp = "513f2014-da31-4b23-ac2d-7ddc6e1176c5",
                             Email = "john.doe@example.com",
                             EmailConfirmed = true,
                             FirstName = "John",
@@ -232,10 +249,10 @@ namespace Messenger.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("43fb3ecf-0599-4598-9325-f6448d092589"),
+                            Id = new Guid("e8f1f051-74ad-48eb-b72d-8d7bf1ec4e85"),
                             AccessFailedCount = 0,
                             Bio = "Hi, I'm Jane.",
-                            ConcurrencyStamp = "362d4aea-0965-491b-b52b-5bf71ace929d",
+                            ConcurrencyStamp = "559db8b3-b451-4577-a441-49cbb9248a44",
                             Email = "jane.smith@example.com",
                             EmailConfirmed = true,
                             FirstName = "Jane",
@@ -252,10 +269,10 @@ namespace Messenger.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("f36ef44e-c853-48e6-b66c-e2130081e94f"),
+                            Id = new Guid("2f7004e5-2fe7-47b6-8e34-cc20e139ab42"),
                             AccessFailedCount = 0,
                             Bio = "Hey, I'm Michael.",
-                            ConcurrencyStamp = "c0dfbb1b-259d-4360-b533-12f53bb1b051",
+                            ConcurrencyStamp = "16deaa1d-e229-44c8-8c0c-31ef3540de0f",
                             Email = "michael.johnson@example.com",
                             EmailConfirmed = true,
                             FirstName = "Michael",
@@ -270,6 +287,25 @@ namespace Messenger.Infrastructure.Migrations
                             TwoFactorEnabled = false,
                             UserName = "michael.johnson"
                         });
+                });
+
+            modelBuilder.Entity("Messenger.Infrastructure.Entities.UserConnection", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ConnectionId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserConnections");
                 });
 
             modelBuilder.Entity("Messenger.Infrastructure.Entities.UserRole", b =>
@@ -424,8 +460,7 @@ namespace Messenger.Infrastructure.Migrations
                     b.HasOne("Messenger.Infrastructure.Entities.User", "Sender")
                         .WithMany("Messages")
                         .HasForeignKey("SenderId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Conversation");
 
@@ -447,6 +482,26 @@ namespace Messenger.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Conversation");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Messenger.Infrastructure.Entities.RefreshToken", b =>
+                {
+                    b.HasOne("Messenger.Infrastructure.Entities.User", "User")
+                        .WithMany("RefreshTokens")
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Messenger.Infrastructure.Entities.UserConnection", b =>
+                {
+                    b.HasOne("Messenger.Infrastructure.Entities.User", "User")
+                        .WithMany("UserConnections")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });
@@ -511,8 +566,7 @@ namespace Messenger.Infrastructure.Migrations
 
             modelBuilder.Entity("Messenger.Infrastructure.Entities.Group", b =>
                 {
-                    b.Navigation("Conversation")
-                        .IsRequired();
+                    b.Navigation("Conversation");
                 });
 
             modelBuilder.Entity("Messenger.Infrastructure.Entities.User", b =>
@@ -520,6 +574,10 @@ namespace Messenger.Infrastructure.Migrations
                     b.Navigation("Messages");
 
                     b.Navigation("ParticipantsInConversation");
+
+                    b.Navigation("RefreshTokens");
+
+                    b.Navigation("UserConnections");
                 });
 #pragma warning restore 612, 618
         }

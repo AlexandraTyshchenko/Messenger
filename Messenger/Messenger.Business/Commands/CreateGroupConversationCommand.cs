@@ -8,7 +8,7 @@ using System.Net;
 
 namespace Messenger.Business.Commands;
 
-public class CreateGroupConversationCommand : IRequest<ResultDto<ConversationWithParticipantsDto>>
+public class CreateGroupConversationCommand : IRequest<ResultDto<ConversationDto>>
 {
     public GroupModelDto Group { get; set; }
     public Guid CreatorUserId { get; set; }
@@ -26,18 +26,12 @@ public class CreateGroupConversationCommandValidator : AbstractValidator<CreateG
             .NotNull()
             .WithMessage("Group title cannot be null.")
             .NotEmpty()
-            .WithMessage("Group title cannot be empty.");
-
-        RuleFor(x => x.Group.ImgUrl)
-            .NotNull()
-            .WithMessage("Group image URL cannot be null.")
-            .NotEmpty()
-            .WithMessage("Group image URL cannot be empty.");
+            .WithMessage("Group title cannot be empty.");     
     }
 }
 
 public class CreateGroupConversationCommandHandler : IRequestHandler<CreateGroupConversationCommand, 
-    ResultDto<ConversationWithParticipantsDto>>
+    ResultDto<ConversationDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
@@ -48,7 +42,7 @@ public class CreateGroupConversationCommandHandler : IRequestHandler<CreateGroup
         _mapper = mapper;
     }
 
-    public async Task<ResultDto<ConversationWithParticipantsDto>> Handle(CreateGroupConversationCommand request, 
+    public async Task<ResultDto<ConversationDto>> Handle(CreateGroupConversationCommand request, 
         CancellationToken cancellationToken)
     {
         Conversation conversation = await _unitOfWork.Conversations.CreateGroupConversationAsync(
@@ -58,7 +52,7 @@ public class CreateGroupConversationCommandHandler : IRequestHandler<CreateGroup
 
         await _unitOfWork.SaveChangesAsync();
 
-        var mappedConversation = _mapper.Map<ConversationWithParticipantsDto>(conversation);
+        var mappedConversation = _mapper.Map<ConversationDto>(conversation);
 
         return ResultDto.SuccessResult(mappedConversation, HttpStatusCode.OK);
     }
