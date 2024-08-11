@@ -9,7 +9,6 @@ namespace Messenger.Api.Hubs;
 
 [Authorize]
 
-
 public class ChatHub : Hub
 {
     private readonly IUnitOfWork _unitOfWork;

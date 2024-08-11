@@ -28,7 +28,7 @@ public class AddMessageToConversationCommandHandlerTests
         _mapper = configuration.CreateMapper();
     }
 
-    [SetUp]//todo read
+    [SetUp]
     public void SetUp()
     {
         _unitOfWorkMock = new Mock<IUnitOfWork>();

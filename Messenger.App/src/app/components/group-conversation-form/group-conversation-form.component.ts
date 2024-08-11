@@ -2,11 +2,12 @@ import { Component } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { ConversationsService } from '../../core/services/conversations.service';
 import { GroupDto } from '../../core/classes/group-dto.model';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-group-conversation-form',
   templateUrl: './group-conversation-form.component.html',
-  styleUrls: ['./group-conversation-form.component.css'] 
+  styleUrls: ['./group-conversation-form.component.css'],
 })
 export class GroupConversationFormComponent {
   title: string = '';
@@ -14,23 +15,29 @@ export class GroupConversationFormComponent {
 
   constructor(
     public activeModal: NgbActiveModal,
-    private conversationsService: ConversationsService
+    private conversationsService: ConversationsService,
+    private router: Router
   ) {}
 
   createGroup() {
     const groupDto: GroupDto = {
       title: this.title,
-      imgUrl: this.imageFile ? this.imageFile : null
+      imgUrl: this.imageFile ? this.imageFile : null,
     };
 
     this.conversationsService.createGroupConversation(groupDto).subscribe({
       next: (response) => {
         console.log('Group created successfully', groupDto);
-        this.activeModal.close(); 
+        this.router.navigate([], {
+          queryParams: { conversationId: response.id },
+          queryParamsHandling: 'merge',
+        });
+        this.activeModal.close();
+        this.activeModal.close();
       },
       error: (err) => {
         console.error('Error creating group:', err);
-      }
+      },
     });
   }
 
