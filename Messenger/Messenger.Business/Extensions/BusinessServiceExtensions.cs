@@ -1,21 +1,20 @@
 ﻿using AutoMapper;
 using FluentValidation;
 using MediatR;
+using Messanger.Image.Client.Extensions;
 using Messenger.Business.Commands;
 using Messenger.Business.Interfaces;
 using Messenger.Business.Profiles;
 using Messenger.Business.Queries;
 using Messenger.Business.Services;
 using Messenger.Business.ValidationPipelines;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System.Reflection;
 
 namespace Messenger.Business.Extensions;
 
 public static class BusinessServiceExtensions
 {
-    public static IServiceCollection AddBusinessServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddBusinessServices(this IServiceCollection services)
     {
         services.AddMediatR(cfg =>
         {
@@ -37,6 +36,8 @@ public static class BusinessServiceExtensions
         services.AddScoped<IUrlHelperService, UrlHelperService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IHubService, HubService>();
+
+        services.AddClientServices();
 
         return services;
     }

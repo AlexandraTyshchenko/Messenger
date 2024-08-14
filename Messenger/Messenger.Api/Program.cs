@@ -16,8 +16,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddControllers();
-builder.Services.AddBusinessServices(builder.Configuration);
+builder.Services.AddBusinessServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(opt =>
 {
@@ -47,11 +48,14 @@ builder.Services.AddSwaggerGen(opt =>
     });
 });
 
+builder.Services.AddHttpContextAccessor();
+
 var jwtSettings = builder.Configuration.GetSection("JwtConfig").Get<JwtSettings>();
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtConfig"));
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.Configure<EmailConfirmationSettings>(builder.Configuration.GetSection("EmailConfirmationSettings"));
+builder.Services.Configure<ImageServiceSettings>(builder.Configuration.GetSection("ImageServiceSettings"));
 
 builder.Services.AddIdentity<User, UserRole>(options =>
 {
@@ -90,10 +94,12 @@ builder.Services.AddAuthentication(opt =>
         }
     };
 });
+
 builder.Host.UseSerilog((context, configuration) =>
     configuration.ReadFrom.Configuration(context.Configuration));
 
 builder.Services.AddSignalR();
+builder.Services.AddHttpClient();
 
 var app = builder.Build();
 
