@@ -30,6 +30,7 @@ public class ConfirmEmailCommandValidator : AbstractValidator<ConfirmEmailComman
           .WithMessage("Email cannot be empty.");
     }
 }
+
 public class ConfirmEmailCommandHandler : IRequestHandler<ConfirmEmailCommand, ResultDto>
 {
     private readonly UserManager<User> _userManager;

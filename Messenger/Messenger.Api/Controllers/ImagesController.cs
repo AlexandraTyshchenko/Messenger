@@ -4,6 +4,7 @@ using Messenger.Api.Extensions;
 using Messenger.Business.Commands;
 using Messenger.Business.Dtos;
 using Messenger.Infrastructure.Enums;
+using Messenger.Shared.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,19 +24,20 @@ public class ImagesController : BaseController
     }
 
     [HttpPost]
-    public async Task<IActionResult> SendImageMessage([FromForm] IFormFile image, [FromRoute] Guid conversationId)
+    public async Task<IActionResult> SendImage([FromForm] ImageDto image, [FromRoute] Guid conversationId)
     {
-        ResultDto<ImageDto> response = await _mediatoR.Send(new SendImageCommand
+        ResultDto<ImageResultDto> response = await _mediatoR.Send(new SendImageCommand
         {
             Image = image,
-            ConversationId = conversationId
+            ConversationId = conversationId,
+            SenderId = UserId,
         });
 
         return response.ToHttpResponse();
     }
 
     [HttpDelete("{imageFileName}")]
-    public async Task<IActionResult> DeleteImageMessage([FromForm] IFormFile image, 
+    public async Task<IActionResult> DeleteImage([FromForm] IFormFile image, 
         [FromRoute] Guid conversationId, [FromRoute] string imageFileName)
     {
         ResultDto response = await _mediatoR.Send(new DeleteImageCommand

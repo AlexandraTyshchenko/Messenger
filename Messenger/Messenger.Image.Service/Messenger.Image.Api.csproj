@@ -16,4 +16,8 @@
     <Folder Include="wwwroot\conversations\5eb4cba3-1919-4202-b848-272f220a00cf\images\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Messenger.Shared\Messenger.Shared.csproj" />
+  </ItemGroup>
+
 </Project>

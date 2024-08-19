@@ -1,4 +1,5 @@
 ﻿using Messenger.Image.Api.Interfaces;
+using Messenger.Shared.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,22 +20,16 @@ public class ImagesController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> SendImageMessage([FromForm] IFormFile image, [FromRoute] Guid conversationId)
     {
-        string imageUrl = await _imageService.SaveImageAsync(image, conversationId);
+        ImageResultDto imageDto = await _imageService.SaveImageAsync(image, conversationId);
 
-        return Ok(imageUrl);
+        return Ok(imageDto);
     }
 
     [HttpDelete("{imageFileName}")]
     public async Task<IActionResult> DeleteImageMessage([FromRoute] Guid conversationId, [FromRoute] string imageFileName)
     {
-        var result = await _imageService.DeleteImageAsync(conversationId, imageFileName);
+        await _imageService.DeleteImageAsync(conversationId, imageFileName);
 
-        if (result)
-        {
-            return NoContent(); 
-        }
-
-        return NotFound(); 
+        return Ok();
     }
-
 }

@@ -1,4 +1,5 @@
 ﻿using Messenger.Image.Api.Interfaces;
+using Messenger.Shared.Dtos;
 
 namespace Messenger.Image.Api.Services;
 
@@ -11,24 +12,22 @@ public class ImageService : IImageService
         _environment = environment;
     }
 
-    public async Task<bool> DeleteImageAsync(Guid conversationId, string imageFileName)
+    public async Task DeleteImageAsync(Guid conversationId, string imageFileName)
     {
         var uploadPath = Path.Combine(_environment.WebRootPath, $"conversations/{conversationId}/images/{imageFileName}");
 
-        if (File.Exists(uploadPath))
+        if (!File.Exists(uploadPath))
         {
-            File.Delete(uploadPath);
-            return true;
+            throw new Exception("Couldn`t delete file, as path doesn`t exist");
         }
-
-        return false;
+        File.Delete(uploadPath);
     }
 
-    public async Task<string> SaveImageAsync(IFormFile image, Guid conversationId)
+    public async Task<ImageResultDto> SaveImageAsync(IFormFile image, Guid conversationId)
     {
         if (image == null || image.Length == 0)
         {
-            throw new ArgumentException("No file uploaded.");
+            throw new Exception("No file uploaded.");
         }
 
         var fileName = Guid.NewGuid().ToString() + Path.GetExtension(image.FileName);
@@ -48,9 +47,15 @@ public class ImageService : IImageService
         }
 
         var relativePath = Path.Combine("conversations",  conversationId.ToString(), "images", fileName).Replace("\\", "/");
-        return relativePath;
-    }
 
+        var imageDto = new ImageResultDto
+        {
+            RelativePath = relativePath,
+            FileName = fileName,
+        };
+
+        return imageDto;
+    }
 }
 
 

@@ -1,8 +1,8 @@
 using Messenger.Image.Api.Interfaces;
 using Messenger.Image.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
+using Messenger.Shared.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,6 +34,7 @@ builder.Services.AddAuthentication(opt =>
 });
 
 var app = builder.Build();
+app.UseExceptionHandlingMiddleware();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

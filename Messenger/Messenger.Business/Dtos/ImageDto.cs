@@ -1,6 +1,9 @@
-﻿namespace Messenger.Business.Dtos;
+﻿using Microsoft.AspNetCore.Http;
+
+namespace Messenger.Business.Dtos;
 
 public class ImageDto
 {
-    public string ImgUrl { get; set; }
+    public IFormFile File { get; set; }
+    public string Text { get; set; }
 }

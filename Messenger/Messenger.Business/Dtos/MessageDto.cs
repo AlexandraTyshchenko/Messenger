@@ -1,4 +1,5 @@
 ﻿using Messenger.Infrastructure.Entities;
+using Microsoft.AspNetCore.Http;
 
 namespace Messenger.Business.Dtos;
 

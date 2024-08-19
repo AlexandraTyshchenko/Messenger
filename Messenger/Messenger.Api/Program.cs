@@ -1,6 +1,5 @@
 ﻿using Messenger.Api.Hubs;
-using Messenger.Api.Middleware;
-using Messenger.Business.Extensions;
+using Messenger.Shared.Extensions;
 using Messenger.Business.Options;
 using Messenger.Infrastructure.Context;
 using Messenger.Infrastructure.Entities;
@@ -11,6 +10,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using System.Text;
+using Messenger.Api.Middleware;
+using Messenger.Business.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -112,7 +113,7 @@ app.UseCors(options =>
 
 
 // Configure the HTTP request pipeline
-app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseExceptionHandlingMiddleware();
 
 if (app.Environment.IsDevelopment())
 {
