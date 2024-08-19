@@ -3,6 +3,7 @@ using Messenger.Business.Dtos;
 using Messenger.Client.Interfaces;
 using Messenger.Shared.Dtos;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System.Net.Http.Headers;
 
@@ -12,10 +13,12 @@ public class ImageClient : IImageClient
 {
     private readonly HttpClient _httpClient;
     private const string resourse = "Images";
+    private readonly string _serviceUrl;
 
-    public ImageClient(HttpClient httpClient)
+    public ImageClient(HttpClient httpClient, IOptions<ImageServiceSettings>  options)
     {
         _httpClient = httpClient;
+        _serviceUrl = options.Value.Url;
     }
 
     public async Task<ResultDto<ImageResultDto>> UploadImageAsync(IFormFile image, string authToken, Guid conversationId)
@@ -35,7 +38,7 @@ public class ImageClient : IImageClient
 
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
 
-        HttpResponseMessage response = await _httpClient.PostAsync($"{ImageServiceSettings.Url}/api/Conversations" + $"/{conversationId}" + $"/{resourse}", content);
+        HttpResponseMessage response = await _httpClient.PostAsync($"{_serviceUrl}/api/Conversations" + $"/{conversationId}" + $"/{resourse}", content);
         var responseContent = await response.Content.ReadAsStringAsync();
 
         return await ProcessResponseAsync(response);
@@ -45,7 +48,7 @@ public class ImageClient : IImageClient
     {
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
 
-        var deleteUrl = $"{ImageServiceSettings.Url}/api/Conversations" + $"/{conversationId}" + $"/{resourse}/{imageFileName}";
+        var deleteUrl = $"{_serviceUrl}/api/Conversations" + $"/{conversationId}" + $"/{resourse}/{imageFileName}";
 
         HttpResponseMessage response = await _httpClient.DeleteAsync(deleteUrl);
 

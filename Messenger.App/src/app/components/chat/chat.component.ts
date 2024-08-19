@@ -46,7 +46,7 @@ export class ChatComponent implements OnInit, AfterViewInit, OnChanges {
     private modalService: NgbModal
   ) {
     this.messageForm = this.fb.group({
-      message: ['',],
+      message: ['', this.selectedFile ? [] : Validators.required], 
     });
   }
 
@@ -60,7 +60,7 @@ export class ChatComponent implements OnInit, AfterViewInit, OnChanges {
   ngAfterViewInit(): void {
     this.signalRService.message$.subscribe((message) => {
       if (message) {
-        console.log(message.imageUrl);
+        console.log(message)
         this.addMessage(message);
       }
     });
@@ -141,25 +141,25 @@ export class ChatComponent implements OnInit, AfterViewInit, OnChanges {
   }
 
   sendMessage() {
-    if (this.messageForm.valid) {
+    if (this.messageForm.valid ) {
       const message = this.messageForm.value.message;
-      if (!this.selectedFile) {
-        this.messagesService
-          .sendMessage(this.conversation.id, new MessageDto(message))
-          .subscribe({
-            next: (sentMessage: Message) => {
-              setTimeout(() => {
-                this.scrollToBottom();
-              }, 0);
-            },
-            error: (error) => {
-              console.error('Error loading messages:', error);
-            },
-          });
-      } else {
-        this.fileUploadComponent.uploadFile();
-      }
+      this.messagesService
+        .sendMessage(
+          this.conversation.id,
+          new MessageDto(message, this.selectedFile)
+        )
+        .subscribe({
+          next: (sentMessage: Message) => {
+            setTimeout(() => {
+              this.scrollToBottom();
+            }, 0);
+          },
+          error: (error) => {
+            console.error('Error loading messages:', error);
+          },
+        });
 
+      this.fileUploadComponent.clearFileInput();
       this.messageForm.reset();
     }
   }

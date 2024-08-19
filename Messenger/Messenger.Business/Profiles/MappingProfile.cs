@@ -14,7 +14,12 @@ public class MappingProfile : Profile
 
         CreateMap<Message, MessageWithSenderDto>()
             .ForMember(dest => dest.Sender, opt => opt.MapFrom(src => src.Sender))
-            .ForMember(dest=>dest.ConversationId,opt=>opt.MapFrom(src=>src.Conversation.Id));
+            .ForMember(dest=>dest.ConversationId,opt=>opt.MapFrom(src=>src.Conversation.Id))
+            .ForMember(dest=>dest.Image,opt=>opt.MapFrom(src=>src.Image));
+
+        CreateMap<Image, ImageInfoDto>()
+            .ForMember(dest => dest.FileName, opt => opt.MapFrom(src => src.FileName))
+            .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageUrl));
 
         CreateMap<Conversation, ConversationDto>()
              .ForMember(dest => dest.Group, opt => opt.MapFrom(src => src.Group))

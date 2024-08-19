@@ -3,7 +3,7 @@
 public class Message : BaseEntity
 {
     public string Text {  get; set; }
-    public string ImageUrl { get; set; } = null;
+    public Image Image { get; set; }
     public User Sender { get; set; }
     public Conversation Conversation { get; set; }
     public DateTime SentAt { get; set; }

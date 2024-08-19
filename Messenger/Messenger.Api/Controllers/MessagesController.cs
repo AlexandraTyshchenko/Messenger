@@ -39,14 +39,13 @@ public class MessagesController : BaseController
     }
 
     [HttpPost]
-    public async Task<IActionResult> AddMessageToConversation([FromBody] MessageDto message, [FromForm] IFormFile Image, [FromRoute] Guid conversationId)
+    public async Task<IActionResult> AddMessageToConversation([FromForm] MessageDto message, [FromRoute] Guid conversationId)
     {
         ResultDto<MessageWithSenderDto> response = await _mediator.Send(new AddMessageToConversationCommand
         {
             Message = message,
             ConversationId = conversationId,
             SenderId = UserId,
-            Image = Image,
         });
 
         return response.ToHttpResponse();

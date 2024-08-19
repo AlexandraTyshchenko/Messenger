@@ -20,6 +20,7 @@ public class ApplicationContext : IdentityDbContext<User, UserRole, Guid>
     public DbSet<UserRole> UserRoles { get; set; }
     public DbSet<UserConnection> UserConnections { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<Image> Images { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

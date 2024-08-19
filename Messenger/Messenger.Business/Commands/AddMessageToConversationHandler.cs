@@ -19,7 +19,6 @@ public class AddMessageToConversationCommand : IRequest<ResultDto<MessageWithSen
     public Guid SenderId { get; set; }
     public Guid ConversationId { get; set; }
     public MessageDto Message { get; set; }
-    public IFormFile Image { get; set; }
 }
 
 public class AddMessageToConversationCommandValidator : AbstractValidator<AddMessageToConversationCommand>
@@ -39,12 +38,13 @@ public class AddMessageToConversationCommandValidator : AbstractValidator<AddMes
             .WithMessage("Message cannot be null.");
 
         RuleFor(x => x.Message.Text)
-            .NotNull()
-            .WithMessage("Text cannot be null.")
             .NotEmpty()
-            .WithMessage("Text cannot be empty.");
+            .NotNull()
+            .When(x => x.Message.Image == null)
+            .WithMessage("Text is required.");
     }
 }
+
 
 public class AddMessageToConversationCommandHandler : IRequestHandler<AddMessageToConversationCommand, ResultDto<MessageWithSenderDto>>
 {
@@ -56,7 +56,7 @@ public class AddMessageToConversationCommandHandler : IRequestHandler<AddMessage
     private readonly List<string> _supportedFormats;
 
     public AddMessageToConversationCommandHandler(IUnitOfWork unitOfWork, IMapper mapper,
-        IHubService hubService, IImageClient imageClient, IHttpContextAccessor httpContextAccessor, IOptions<ImageServiceSettings> imageServiceSettings)
+        IHubService hubService, IImageClient imageClient, IHttpContextAccessor httpContextAccessor, IOptions<ImageFormatsSettings> imageServiceSettings)
     {
         _mapper = mapper;
         _unitOfWork = unitOfWork;
@@ -84,31 +84,39 @@ public class AddMessageToConversationCommandHandler : IRequestHandler<AddMessage
                 "No conversation was found.");
         }
 
-        ResultDto<ImageResultDto> response;
+        ResultDto<ImageResultDto> response = null;
+        Image image = null;
 
-        if (request.Image != null)
+        if (request.Message.Image != null)
         {
-            if (!IsValidFormat(request.Image))
+            if (!IsValidFormat(request.Message.Image))
             {
                 return ResultDto.FailureResult<MessageWithSenderDto>(HttpStatusCode.UnsupportedMediaType,
                     $"Unsupported image format. Supported formats are: {string.Join(", ", _supportedFormats)}.");
             }
 
-            var fileExtension = Path.GetExtension(request.Image.FileName).ToLowerInvariant();
+            var fileExtension = Path.GetExtension(request.Message.Image.FileName).ToLowerInvariant();
 
             string authToken = _httpContextAccessor.HttpContext.Request.Headers["Authorization"].ToString()
                 .Replace("Bearer ", "");
 
-            response = await _imageClient.UploadImageAsync(request.Image, authToken, request.ConversationId);
+            response = await _imageClient.UploadImageAsync(request.Message.Image, authToken, request.ConversationId);
 
             if (!response.Success)
             {
-                return ResultDto.FailureResult<MessageWithSenderDto>(HttpStatusCode.BadRequest, response.ErrorMessage);
+                return ResultDto.FailureResult<MessageWithSenderDto>(response.HttpStatusCode, response.ErrorMessage);
             }
+
+            image = new Image
+            {
+                ImageUrl = response.Payload.RelativePath,
+                FileName = response.Payload.FileName,
+            };
         }
 
         var message = new Message()
         {
+            Image = image,
             Conversation = conversation,
             IsJoinMessage = false,
             Sender = sender,
@@ -126,6 +134,7 @@ public class AddMessageToConversationCommandHandler : IRequestHandler<AddMessage
 
         return ResultDto.SuccessResult(mappedMessage, HttpStatusCode.Created);
     }
+
     private bool IsValidFormat(IFormFile image)
     {
         if (image == null) return false;

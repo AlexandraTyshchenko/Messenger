@@ -21,7 +21,7 @@ public class DeleteImageCommandHandler : IRequestHandler<DeleteImageCommand, Res
     private readonly IImageClient _imageClient;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public DeleteImageCommandHandler(IImageClient imageClient, IOptions<ImageServiceSettings> imageServiceSettings, IHttpContextAccessor httpContextAccessor)
+    public DeleteImageCommandHandler(IImageClient imageClient, IOptions<ImageFormatsSettings> imageServiceSettings, IHttpContextAccessor httpContextAccessor)
     {
         _imageClient = imageClient;
         _httpContextAccessor = httpContextAccessor;

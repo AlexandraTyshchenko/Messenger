@@ -2,5 +2,5 @@
 
 public class ImageServiceSettings
 {
-    public const string Url = "https://localhost:7289";
+    public string Url { get; set; }
 }

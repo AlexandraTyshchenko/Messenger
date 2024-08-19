@@ -10,8 +10,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using System.Text;
-using Messenger.Api.Middleware;
 using Messenger.Business.Extensions;
+using Messanger.Image.Client.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,7 +56,8 @@ var jwtSettings = builder.Configuration.GetSection("JwtConfig").Get<JwtSettings>
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtConfig"));
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.Configure<EmailConfirmationSettings>(builder.Configuration.GetSection("EmailConfirmationSettings"));
-builder.Services.Configure<ImageServiceSettings>(builder.Configuration.GetSection("ImageServiceSettings"));
+builder.Services.Configure<ImageFormatsSettings>(builder.Configuration.GetSection("ImageFormatsSettings"));
+builder.Services.AddClientServices(builder);
 
 builder.Services.AddIdentity<User, UserRole>(options =>
 {

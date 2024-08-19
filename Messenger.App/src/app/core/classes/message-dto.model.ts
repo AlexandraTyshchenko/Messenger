@@ -1,7 +1,8 @@
 export class MessageDto {
-    text: string;
-
-    constructor(text: string) {
-        this.text = text;
-    }
+  text: string;
+  image: File|null;
+  constructor(text: string, image: File|null) {
+    this.text = text;
+    this.image = image;
+  }
 }

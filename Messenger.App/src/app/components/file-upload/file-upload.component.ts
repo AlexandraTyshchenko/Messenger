@@ -1,7 +1,5 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { ImageService } from '../../core/services/image.service';
 import { Image } from '../../core/classes/image.model';
-import { ImageResult } from '../../core/classes/image.result.model';
 
 interface FileWithPreview extends File {
   preview?: string;
@@ -18,7 +16,7 @@ export class FileUploadComponent {
   @Input() conversationId: string | null = null;
   selectedFile: FileWithPreview | null = null;
 
-  constructor(private imageService: ImageService) {}
+  constructor() {}
 
   onFileSelected(event: any) {
     const file = event.target.files[0] as FileWithPreview;
@@ -37,23 +35,6 @@ export class FileUploadComponent {
     }
   }
 
-  uploadFile() {
-    if (this.selectedFile && this.conversationId) {
-      this.imageService.sendImage(
-        this.conversationId,
-        new Image(this.selectedFile, this.messageText || '')
-      ).subscribe({
-        next: (response: ImageResult) => {
-          console.log(response);
-          this.clearFileInput();
-        },
-        error: (err: any) => {
-          console.log(err);
-        }
-      });
-    }
-  }
-
   triggerFileUpload() {
     const fileInput = document.getElementById('fileInput') as HTMLInputElement;
     if (fileInput) {
@@ -61,7 +42,7 @@ export class FileUploadComponent {
     }
   }
 
-  private clearFileInput() {
+  public clearFileInput() {
     this.selectedFile = null;
     this.fileSelected.emit(null);
 

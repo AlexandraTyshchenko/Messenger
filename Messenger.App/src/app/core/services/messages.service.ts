@@ -31,6 +31,13 @@ export class MessagesService {
     messageDto: MessageDto
   ): Observable<Message> {
     const url = `${environment.apiUrl}api/Conversations/${conversationId}/Messages`;
-    return this.http.post<Message>(url, messageDto);
+
+    const formData = new FormData();
+    formData.append('text', messageDto.text);
+    if (messageDto.image) {
+      formData.append('image', messageDto.image);
+    }
+
+    return this.http.post<Message>(url, formData);
   }
 }

@@ -1,3 +1,4 @@
+import { ImageInfo } from './image-info.model';
 import { UserInfo } from './user-info.model';
 
 export class Message {
@@ -8,7 +9,7 @@ export class Message {
   public updatedAt: Date;
   public conversationId:string;
   public isJoinMessage:boolean;
-  public imageUrl:string|null;
+  public image:ImageInfo|null;
   constructor(
     id: string,
     sender: UserInfo,
@@ -17,7 +18,7 @@ export class Message {
     updatedAt: Date,
     conversationId:string,
     isJoinMessage:boolean,
-    imageUrl:string|null
+    image:ImageInfo|null
   ) {
     this.id = id;
     this.sender = sender;
@@ -26,6 +27,6 @@ export class Message {
     this.updatedAt = updatedAt;
     this.conversationId = conversationId;
     this.isJoinMessage = isJoinMessage;
-    this.imageUrl = imageUrl
+    this.image = image
   }
 }

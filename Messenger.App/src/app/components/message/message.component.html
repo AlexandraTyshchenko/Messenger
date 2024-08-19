@@ -16,8 +16,8 @@
           >
             <div class="message my-message">
               <img
-                *ngIf="message.imageUrl"
-                [src]="url + message.imageUrl"
+                *ngIf="message.image"
+                [src]="url + message.image.imageUrl"
                 alt="Default image"
                 class="responsive-image"
                 role="img"
@@ -60,8 +60,8 @@
             <div class="message-other-wrapper">
               <div class="message other-message">
                 <img
-                  *ngIf="message.imageUrl"
-                  [src]="url + message.imageUrl"
+                  *ngIf="message.image"
+                  [src]="url + message.image.imageUrl"
                   alt="Default image"
                   class="responsive-image"
                   role="img"
