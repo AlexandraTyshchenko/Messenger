@@ -32,6 +32,8 @@ import { ParticipantsListComponent } from './components/participants-list/partic
 import { DeleteParticipantConfirmationModalComponent } from './components/delete-participant-confirmation-modal/delete-participant-confirmation-modal.component';
 import { LeaveConversationConfirmationModalComponent } from './components/leave-conversation-confirmation-modal/leave-conversation-confirmation-modal.component';
 import { GroupConversationFormComponent } from './components/group-conversation-form/group-conversation-form.component';
+import { FileUploadComponent } from './components/file-upload/file-upload.component';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 
 const JWT_Module_Options: JwtModuleOptions = {
@@ -61,6 +63,8 @@ const JWT_Module_Options: JwtModuleOptions = {
         DeleteParticipantConfirmationModalComponent,
         LeaveConversationConfirmationModalComponent,
         GroupConversationFormComponent,
+        FileUploadComponent,
+        
     ],
     bootstrap: [AppComponent], imports: [BrowserModule,
         AppRoutingModule,
@@ -70,6 +74,7 @@ const JWT_Module_Options: JwtModuleOptions = {
         InfiniteScrollModule,
         NgbModule,
         FormsModule,
+        FontAwesomeModule,
         JwtModule.forRoot(JWT_Module_Options)], providers: [
         provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])),
         {

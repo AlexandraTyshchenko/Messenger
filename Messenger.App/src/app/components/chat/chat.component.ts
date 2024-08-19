@@ -21,6 +21,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { AddParticipantsComponent } from '../add-participants/add-participants.component';
 import { ParticipantsListComponent } from '../participants-list/participants-list.component';
 import { LeaveConversationConfirmationModalComponent } from '../leave-conversation-confirmation-modal/leave-conversation-confirmation-modal.component';
+import { FileUploadComponent } from '../file-upload/file-upload.component';
 
 @Component({
   selector: 'app-chat',
@@ -35,7 +36,8 @@ export class ChatComponent implements OnInit, AfterViewInit, OnChanges {
   itemsPerPage = 10;
   @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
   messageForm: FormGroup;
-
+  @ViewChild(FileUploadComponent) fileUploadComponent!: FileUploadComponent;
+  selectedFile: File | null = null;
   constructor(
     private messagesService: MessagesService,
     private fb: FormBuilder,
@@ -44,7 +46,7 @@ export class ChatComponent implements OnInit, AfterViewInit, OnChanges {
     private modalService: NgbModal
   ) {
     this.messageForm = this.fb.group({
-      message: ['', Validators.required],
+      message: ['',],
     });
   }
 
@@ -58,7 +60,7 @@ export class ChatComponent implements OnInit, AfterViewInit, OnChanges {
   ngAfterViewInit(): void {
     this.signalRService.message$.subscribe((message) => {
       if (message) {
-        console.log(message)
+        console.log(message.imageUrl);
         this.addMessage(message);
       }
     });
@@ -100,7 +102,7 @@ export class ChatComponent implements OnInit, AfterViewInit, OnChanges {
     }).componentInstance.conversationId = this.conversation.id;
   }
 
-  showParticipants(){
+  showParticipants() {
     this.modalService.open(ParticipantsListComponent, {
       size: 'lg',
     }).componentInstance.conversationId = this.conversation.id;
@@ -141,20 +143,29 @@ export class ChatComponent implements OnInit, AfterViewInit, OnChanges {
   sendMessage() {
     if (this.messageForm.valid) {
       const message = this.messageForm.value.message;
-      this.messagesService
-        .sendMessage(this.conversation.id, new MessageDto(message))
-        .subscribe({
-          next: (sentMessage: Message) => {
-            setTimeout(() => {
-              this.scrollToBottom();
-            }, 0);
-          },
-          error: (error) => {
-            console.error('Error loading messages:', error);
-          },
-        });
+      if (!this.selectedFile) {
+        this.messagesService
+          .sendMessage(this.conversation.id, new MessageDto(message))
+          .subscribe({
+            next: (sentMessage: Message) => {
+              setTimeout(() => {
+                this.scrollToBottom();
+              }, 0);
+            },
+            error: (error) => {
+              console.error('Error loading messages:', error);
+            },
+          });
+      } else {
+        this.fileUploadComponent.uploadFile();
+      }
+
       this.messageForm.reset();
     }
+  }
+
+  onFileSelected(file: File | null) {
+    this.selectedFile = file;
   }
 
   private addMessage(message: Message) {
@@ -165,11 +176,14 @@ export class ChatComponent implements OnInit, AfterViewInit, OnChanges {
     this.currentPage = 1;
   }
 
-  leaveConversation(){
-    const modalRef = this.modalService.open(LeaveConversationConfirmationModalComponent, {
-      size: 'lg',
-    });
-  
+  leaveConversation() {
+    const modalRef = this.modalService.open(
+      LeaveConversationConfirmationModalComponent,
+      {
+        size: 'lg',
+      }
+    );
+
     modalRef.componentInstance.conversationId = this.conversation.id;
   }
 }

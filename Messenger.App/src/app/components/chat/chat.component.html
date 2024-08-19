@@ -34,9 +34,21 @@
                       />
                     </svg>
                     <ul ngbDropdownMenu aria-labelledby="dropdownMenuButton">
-                      <li><a (click)="showParticipants()" ngbDropdownItem >Show all participants</a></li>
-                      <li><a (click)="addParticipants()" ngbDropdownItem >Add participants</a></li>
-                      <li><a (click)="leaveConversation()" ngbDropdownItem >Leave Conversation</a></li>
+                      <li>
+                        <a (click)="showParticipants()" ngbDropdownItem
+                          >Show all participants</a
+                        >
+                      </li>
+                      <li>
+                        <a (click)="addParticipants()" ngbDropdownItem
+                          >Add participants</a
+                        >
+                      </li>
+                      <li>
+                        <a (click)="leaveConversation()" ngbDropdownItem
+                          >Leave Conversation</a
+                        >
+                      </li>
                     </ul>
                   </div>
                 </div>
@@ -51,15 +63,22 @@
             [message]="message"
           ></app-message>
         </div>
+        <app-file-upload
+          (fileSelected)="onFileSelected($event)"
+          [messageText]="this.messageForm.value.message"
+          [conversationId] ="conversation.id"
+        ></app-file-upload>
+
         <div class="chat-message clearfix">
           <form [formGroup]="messageForm" (ngSubmit)="sendMessage()">
-            <div class="input-group mb-0">
+            <div class="input-group mb-0 input-group-with-icon">
               <input
                 type="text"
                 class="form-control"
                 placeholder="Enter text here..."
                 formControlName="message"
               />
+              <!-- Hidden File Input -->
               <button
                 type="submit"
                 class="btn"

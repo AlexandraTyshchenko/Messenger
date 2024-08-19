@@ -12,7 +12,7 @@ export class MessageComponent implements OnInit {
   @Input() message!: Message;
   sentAt!: string;
   defaultImageUrl: string = '../../../assets/user_logo.png';
-
+  url = "https://localhost:7289/";
   constructor(private authService: AuthService) {}
 
   ngOnInit(): void {
@@ -36,7 +36,6 @@ export class MessageComponent implements OnInit {
 
   getSenderDisplayText(): string {
     const userId = this.authService.user()?.nameidentifier;
-
     if (this.message !== null) {
       if (this.message.sender?.id === userId) {
         return '';

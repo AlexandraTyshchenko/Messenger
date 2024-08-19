@@ -8,6 +8,7 @@ export class Message {
   public updatedAt: Date;
   public conversationId:string;
   public isJoinMessage:boolean;
+  public imageUrl:string|null;
   constructor(
     id: string,
     sender: UserInfo,
@@ -15,14 +16,16 @@ export class Message {
     sentAt: Date,
     updatedAt: Date,
     conversationId:string,
-    isJoinMessage:boolean
+    isJoinMessage:boolean,
+    imageUrl:string|null
   ) {
     this.id = id;
     this.sender = sender;
     this.text = text;
     this.sentAt = sentAt;
     this.updatedAt = updatedAt;
-    this.conversationId = conversationId
-    this.isJoinMessage = isJoinMessage
+    this.conversationId = conversationId;
+    this.isJoinMessage = isJoinMessage;
+    this.imageUrl = imageUrl
   }
 }
