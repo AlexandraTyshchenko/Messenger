@@ -23,18 +23,6 @@ public class ImagesController : BaseController
         _mediatoR = mediator;
     }
 
-    [HttpPost]
-    public async Task<IActionResult> SendImage([FromForm] ImageDto image, [FromRoute] Guid conversationId)
-    {
-        ResultDto<ImageResultDto> response = await _mediatoR.Send(new SendImageCommand
-        {
-            Image = image,
-            ConversationId = conversationId,
-            SenderId = UserId,
-        });
-
-        return response.ToHttpResponse();
-    }
 
     [HttpDelete("{imageFileName}")]
     public async Task<IActionResult> DeleteImage([FromForm] IFormFile image, 
