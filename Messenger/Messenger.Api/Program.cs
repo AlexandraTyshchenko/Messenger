@@ -12,11 +12,21 @@ using Serilog;
 using System.Text;
 using Messenger.Business.Extensions;
 using Messanger.Image.Client.Extensions;
+using Messenger.Api.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddControllers();
+
+var environment = builder.Environment.EnvironmentName;
+builder.Configuration
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{environment}.json", optional: true, reloadOnChange: true) 
+    .AddEnvironmentVariables();
+
+// Adding services
 builder.Services.AddBusinessServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
@@ -50,6 +60,11 @@ builder.Services.AddSwaggerGen(opt =>
 });
 
 builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddStackExchangeRedisCache(option =>
+{
+    option.Configuration = builder.Configuration.GetConnectionString("redis");
+});
 
 var jwtSettings = builder.Configuration.GetSection("JwtConfig").Get<JwtSettings>();
 
@@ -105,13 +120,16 @@ builder.Services.AddHttpClient();
 
 var app = builder.Build();
 
-app.UseCors(options =>
-  options.WithOrigins("http://localhost:4200")
-    .AllowAnyMethod()
-    .AllowAnyHeader()
-    .AllowCredentials() 
-);
+// Apply migrations
+app.ApplyMigrations();
 
+// Configure CORS
+app.UseCors(options =>
+    options.WithOrigins("http://localhost:4200", "http://localhost:80", "http://localhost")
+           .AllowAnyMethod()
+           .AllowAnyHeader()
+           .AllowCredentials()
+);
 
 // Configure the HTTP request pipeline
 app.UseExceptionHandlingMiddleware();
@@ -120,13 +138,15 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseHttpsRedirection();
 }
 
 app.UseSerilogRequestLogging();
 
-app.UseHttpsRedirection();
 app.UseRouting();
+app.UseAuthentication(); 
 app.UseAuthorization();
+
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllers();

@@ -8,7 +8,7 @@ import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
-import { environment } from '../../../environments/environment.development';
+import { environment } from '../../../environments/environment';
 import { Login } from '../auth/login/interfaces';
 import { LoginResponse } from '../auth/login/types/login-response.type';
 import { LoginSuccess } from '../auth/login/interfaces';

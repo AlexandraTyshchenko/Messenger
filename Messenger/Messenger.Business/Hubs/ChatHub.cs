@@ -85,12 +85,18 @@ public class ChatHub : Hub
             IEnumerable<string> conversationsConnections = await _unitOfWork.Connections
                 .GetUserConversationConnections(new Guid(userId));
 
+            List<Task> joinGroups = new List<Task>();
+            List<Task> sendMessages = new List<Task>();
+
             foreach (var conversationsConnection in conversationsConnections)
             {
-                await Groups.AddToGroupAsync(Context.ConnectionId, conversationsConnection);
-                await Clients.Group(conversationsConnection).SendAsync("JoinGroups", $"successfully joined" +
-                    $" to {conversationsConnection}");
+                joinGroups.Add(Groups.AddToGroupAsync(Context.ConnectionId, conversationsConnection));
+                sendMessages.Add(Clients.Group(conversationsConnection).SendAsync("JoinGroups", $"successfully joined" +
+                    $" to {conversationsConnection}"));
             }
+
+            await Task.WhenAll(joinGroups);
+            await Task.WhenAll(sendMessages);
         }
         catch (Exception ex)
         {

@@ -1,0 +1,45 @@
+version: '3.4'
+
+services:
+  messenger.api:
+    image: ${DOCKER_REGISTRY-}messengerapi
+    build:
+      context: .
+      dockerfile: Messenger.Api/Dockerfile
+
+  messenger.image.api:
+    image: ${DOCKER_REGISTRY-}messengerimageapi
+    build:
+      context: .
+      dockerfile: Messenger.Image.Service/Dockerfile
+
+  redis:
+    image: "redis:latest"
+    container_name: redis-cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+  
+  sqlserver:
+    image: "mcr.microsoft.com/mssql/server:2022-latest"
+    container_name: sql-server
+    environment:
+      SA_PASSWORD: "YourStrong!Passw0rd"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql
+  # app:
+  #   build:
+  #     context: ../Messenger.App
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - 80:80
+    # volumes:
+    #   - ../Messenger.App:/home/node/app
+    #   - ../Messenger.App/node_modules:/home/node/app/node_modules
+volumes:
+  redis_data:
+  sql_data:

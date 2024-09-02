@@ -2,10 +2,10 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, Subject, tap } from 'rxjs';
 import { Conversation } from '../classes/conversation.model';
-import { environment } from '../../../environments/environment.development';
 import { PagedEntities } from '../classes/pagination.model';
 import { GroupDto } from '../classes/group-dto.model';
 import { UserDto } from '../classes/user-dto.model';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',

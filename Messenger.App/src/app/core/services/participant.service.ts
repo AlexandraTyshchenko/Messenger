@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, Subject, tap } from 'rxjs';
-import { environment } from '../../../environments/environment.development';
+import { environment } from '../../../environments/environment';
 import { ParticipantsInConversationDto } from '../classes/participants-in-conversation.model';
 import { Participant } from '../classes/participant.model';
 

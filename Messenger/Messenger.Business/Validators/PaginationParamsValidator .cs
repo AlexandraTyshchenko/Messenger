@@ -7,6 +7,9 @@ public class PaginationParamsValidator : AbstractValidator<PaginationParams>
 {
     public PaginationParamsValidator()
     {
+        RuleFor(x=>x)
+            .NotNull();
+
         RuleFor(x => x.Page)
             .GreaterThan(0)
             .WithMessage("Page must be greater than 0.");

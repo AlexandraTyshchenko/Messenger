@@ -17,6 +17,7 @@ public class MessageRepository : IMessageRepository
 
     public async Task<Message> AddMessageToConversationAsync(Message message)
     {
+        message.Sender = await _applicationContext.Users.FirstOrDefaultAsync(x => x.Id == message.Sender.Id);
         await _applicationContext.Messages.AddAsync(message);
 
         return message;
@@ -50,9 +51,11 @@ public class MessageRepository : IMessageRepository
         int page, int pageSize)
     {
         IQueryable<Message> messages = _applicationContext.Messages
-                                    .Where(m => m.Conversation.Id == conversationId)
-                                    .Include(x => x.Sender)
-                                    .OrderByDescending(x => x.SentAt);
+            .Include(x => x.Image)
+            .Where(m => m.Conversation.Id == conversationId)
+            .Include(x => x.Sender)
+            .OrderByDescending(x => x.SentAt);
+
         IPagedEntities<Message> pagedMessages = await messages.WithPagingAsync(page, pageSize);
 
         return pagedMessages;

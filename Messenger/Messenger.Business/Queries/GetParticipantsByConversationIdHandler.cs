@@ -8,7 +8,7 @@ using System.Net;
 
 namespace Messenger.Business.Queries;
 
-public class GetParticipantsByConversationIdQuery :IRequest<ResultDto<IEnumerable<ParticipantsDto>>>
+public class GetParticipantsByConversationIdQuery :IRequest<ResultDto<IEnumerable<ParticipantDto>>>
 {
     public Guid ConversationId { get; set; }
 }
@@ -23,7 +23,7 @@ public class GetParticipantsByConversationIdQueryValidator : AbstractValidator<G
 }
 
 public class GetParticipantsByConversationIdHandler : IRequestHandler<GetParticipantsByConversationIdQuery,
-    ResultDto<IEnumerable<ParticipantsDto>>>
+    ResultDto<IEnumerable<ParticipantDto>>>
 {
     private readonly IMapper _mapper;
     private readonly IUnitOfWork _unitOfWork;
@@ -34,13 +34,13 @@ public class GetParticipantsByConversationIdHandler : IRequestHandler<GetPartici
         _mapper = mapper;
     }
 
-    public async Task<ResultDto<IEnumerable<ParticipantsDto>>> Handle(GetParticipantsByConversationIdQuery request,
+    public async Task<ResultDto<IEnumerable<ParticipantDto>>> Handle(GetParticipantsByConversationIdQuery request,
         CancellationToken cancellationToken)
     {
         IEnumerable<ParticipantInConversation> usersInConversation = await _unitOfWork.Participants
             .GetParticipantsByConversationIdAsync(request.ConversationId);
 
-        var mappedParticipants = _mapper.Map<IEnumerable<ParticipantsDto>>(usersInConversation);
+        var mappedParticipants = _mapper.Map<IEnumerable<ParticipantDto>>(usersInConversation);
 
         return ResultDto.SuccessResult(mappedParticipants, HttpStatusCode.OK);
     }

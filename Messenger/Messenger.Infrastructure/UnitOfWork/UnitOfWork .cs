@@ -14,7 +14,7 @@ public class UnitOfWork : IUnitOfWork
     public IRefreshTokenRepository RefreshTokens { get; }
 
     public UnitOfWork(ApplicationContext applicationContext, IConversationRepository conversationRepository,
-        IMessageRepository messageRepository, IParticipantRepository participantRepository, 
+        IMessageRepository messageRepository, IParticipantRepository participantRepository,
         IUserRepository userRepository, IConnectionRepository connections,
         IRefreshTokenRepository refreshTokenRepository)
     {

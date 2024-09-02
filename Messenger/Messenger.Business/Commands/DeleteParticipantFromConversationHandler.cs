@@ -81,7 +81,7 @@ public class DeleteParticipantFromConversationCommandHandler
 
             if (newAdminParticipant != null)
             {
-                await _unitOfWork.Participants.UpdateParticipantRoleAsync(newAdminParticipant.Id, Role.Admin);
+                newAdminParticipant.Role = Role.Admin;
             }
         }
 

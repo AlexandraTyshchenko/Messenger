@@ -64,16 +64,8 @@ public class ParticipantRepository : IParticipantRepository
         return participant;
     }
 
-    public async Task UpdateParticipantRoleAsync(Guid participantId, Role role)
-    {
-        ParticipantInConversation participant = await _applicationContext.ParticipantsInConversation.FindAsync(participantId);
-
-        participant.Role = role;
-    }
-
     public async Task<ParticipantInConversation> GetParticipantFromGroupConversationAsync(Guid userId, Guid conversationId)
     {
-
         ParticipantInConversation participant = await _applicationContext.ParticipantsInConversation
             .Include(x => x.Conversation)
                 .ThenInclude(x => x.Group)

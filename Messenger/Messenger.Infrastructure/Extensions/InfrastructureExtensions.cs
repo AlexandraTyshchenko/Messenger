@@ -1,5 +1,8 @@
-﻿using Messenger.Infrastructure.Context;
+﻿using Messenger.Infrastructure.Cache;
+using Messenger.Infrastructure.CachedRepositories;
+using Messenger.Infrastructure.Context;
 using Messenger.Infrastructure.Interfaces;
+using Messenger.Infrastructure.KeyBuilder;
 using Messenger.Infrastructure.Repositories;
 using Messenger.Infrastructure.Repositories.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -20,10 +23,18 @@ public static class InfrastructureExtensions
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IConversationRepository, ConversationRepository>();
         services.AddScoped<IMessageRepository, MessageRepository>();
-        services.AddScoped<IParticipantRepository, ParticipantRepository>();
-        services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IConnectionRepository, ConnectionRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+         // 
+        services.AddScoped<ICacheService, CacheService>();
+        services.AddScoped<ICacheKeyBuilderFactory, CacheKeyBuilderFactory>();
+
+        services.AddScoped<IParticipantRepository, ParticipantRepository>();
+        services.Decorate<IParticipantRepository, CachedParticipantRepository>();
+
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.Decorate<IUserRepository, CachedUserRepository>();
+
         return services;
     }
 }

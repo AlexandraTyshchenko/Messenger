@@ -186,7 +186,7 @@ public class AddParticipantToConversationCommandTests
         _unitOfWorkMock.Setup(uow => uow.SaveChangesAsync())
             .ReturnsAsync(1);
 
-        var mappedParticipants = _mapper.Map<IEnumerable<ParticipantsDto>>(participants);
+        var mappedParticipants = _mapper.Map<IEnumerable<ParticipantDto>>(participants);
         var mappedJoinMessage = _mapper.Map<MessageWithSenderDto>(joinMessage);
 
         _hubServiceMock.Setup(hub => hub.NotifyGroupAsync(conversation.Id, mappedJoinMessage, "ReceiveNotification"))

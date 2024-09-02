@@ -2,10 +2,8 @@
 using MediatR;
 using Messenger.Business.Dtos;
 using Messenger.Business.Interfaces;
-using Messenger.Business.Options;
 using Messenger.Infrastructure.Entities;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
 using System.Net;
 
 namespace Messenger.Business.Commands;

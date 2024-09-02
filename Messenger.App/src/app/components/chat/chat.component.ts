@@ -46,7 +46,7 @@ export class ChatComponent implements OnInit, AfterViewInit, OnChanges {
     private modalService: NgbModal
   ) {
     this.messageForm = this.fb.group({
-      message: ['', this.selectedFile ? [] : Validators.required], 
+      message: [''], 
     });
   }
 
