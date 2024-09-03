@@ -36,6 +36,12 @@ builder.Services.AddAuthentication(opt =>
 var app = builder.Build();
 app.UseExceptionHandlingMiddleware();
 
+app.UseCors(options =>
+    options.WithOrigins("http://localhost:8080")
+           .AllowAnyMethod()
+           .AllowAnyHeader()
+           .AllowCredentials()
+);
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -43,8 +49,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
     app.UseHttpsRedirection();
 }
-app.UseSwagger();
-app.UseSwaggerUI();
 app.UseStaticFiles();
 app.UseAuthorization();
 

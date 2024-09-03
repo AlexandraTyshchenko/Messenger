@@ -17,12 +17,11 @@ public class ConversationRepository : IConversationRepository
         _applicationContext = applicationContext;
     }
 
-    public async Task<Conversation> CreateGroupConversationAsync(string title, string imgUrl, Guid creatorId)
+    public async Task<Conversation> CreateGroupConversationAsync(string title,  Guid creatorId)
     {
         var group = new Group
         {
             Title = title,
-            ImgUrl = imgUrl
         };
 
         await _applicationContext.Groups.AddAsync(group);

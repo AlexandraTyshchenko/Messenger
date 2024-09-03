@@ -12,6 +12,11 @@ public class ImageService : IImageService
         _environment = environment;
     }
 
+    public async Task<ImageResultDto> AddConversationImage(IFormFile image, Guid conversationId)
+    {
+        return await SaveImageToFolderAsync(image, conversationId, "conversationImage");
+    }
+
     public async Task DeleteImageAsync(Guid conversationId, string imageFileName)
     {
         var uploadPath = Path.Combine(_environment.WebRootPath, $"conversations/{conversationId}/images/{imageFileName}");
@@ -25,14 +30,18 @@ public class ImageService : IImageService
 
     public async Task<ImageResultDto> SaveImageAsync(IFormFile image, Guid conversationId)
     {
+        return await SaveImageToFolderAsync(image, conversationId, "images");
+    }
+
+    private async Task<ImageResultDto> SaveImageToFolderAsync(IFormFile image, Guid conversationId, string folderName)
+    {
         if (image == null || image.Length == 0)
         {
-            throw new Exception("No file uploaded.");
+            throw new ArgumentException("No file uploaded.");
         }
 
         var fileName = Guid.NewGuid().ToString() + Path.GetExtension(image.FileName);
-
-        var uploadPath = Path.Combine(_environment.WebRootPath, "conversations",  conversationId.ToString(), "images");
+        var uploadPath = Path.Combine(_environment.WebRootPath, "conversations", conversationId.ToString(), folderName);
 
         if (!Directory.Exists(uploadPath))
         {
@@ -46,16 +55,15 @@ public class ImageService : IImageService
             await image.CopyToAsync(stream);
         }
 
-        var relativePath = Path.Combine("conversations",  conversationId.ToString(), "images", fileName).Replace("\\", "/");
+        var relativePath = Path.Combine("conversations", conversationId.ToString(), folderName, fileName).Replace("\\", "/");
 
-        var imageDto = new ImageResultDto
+        return new ImageResultDto
         {
             RelativePath = relativePath,
             FileName = fileName,
         };
-
-        return imageDto;
     }
+
 }
 
 

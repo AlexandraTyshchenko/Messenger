@@ -36,7 +36,7 @@ public static class BusinessServiceExtensions
         services.AddScoped<IUrlHelperService, UrlHelperService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IHubService, HubService>();
-
+        services.AddScoped<IAuthHeaderService, AuthHeaderService>();
 
         return services;
     }

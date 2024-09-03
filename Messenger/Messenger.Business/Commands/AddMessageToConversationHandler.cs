@@ -4,6 +4,8 @@ using MediatR;
 using Messenger.Business.Dtos;
 using Messenger.Business.Interfaces;
 using Messenger.Business.Options;
+using Messenger.Business.Services;
+using Messenger.Business.Validators;
 using Messenger.Client.Interfaces;
 using Messenger.Infrastructure;
 using Messenger.Infrastructure.Entities;
@@ -23,7 +25,7 @@ public class AddMessageToConversationCommand : IRequest<ResultDto<MessageWithSen
 
 public class AddMessageToConversationCommandValidator : AbstractValidator<AddMessageToConversationCommand>
 {
-    public AddMessageToConversationCommandValidator()
+    public AddMessageToConversationCommandValidator(IOptions<ImageFormatsSettings> imageServiceSettings)
     {
         RuleFor(x => x.ConversationId)
             .NotEqual(Guid.Empty)
@@ -42,6 +44,11 @@ public class AddMessageToConversationCommandValidator : AbstractValidator<AddMes
             .NotNull()
             .When(x => x.Message.Image == null)
             .WithMessage("Text is required.");
+
+        When(x => x.Message.Image != null, () =>
+        {
+            RuleFor(x => x.Message.Image).SetValidator(new ImageValidator(imageServiceSettings));
+        });
     }
 }
 
@@ -52,18 +59,16 @@ public class AddMessageToConversationCommandHandler : IRequestHandler<AddMessage
     private readonly IUnitOfWork _unitOfWork;
     private readonly IHubService _hubService;
     private readonly IImageClient _imageClient;
-    private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly List<string> _supportedFormats;
+    private readonly IAuthHeaderService _authHeaderService;
 
     public AddMessageToConversationCommandHandler(IUnitOfWork unitOfWork, IMapper mapper,
-        IHubService hubService, IImageClient imageClient, IHttpContextAccessor httpContextAccessor, IOptions<ImageFormatsSettings> imageServiceSettings)
+        IHubService hubService, IImageClient imageClient, IAuthHeaderService authHeaderService)
     {
         _mapper = mapper;
         _unitOfWork = unitOfWork;
         _hubService = hubService;
         _imageClient = imageClient;
-        _httpContextAccessor = httpContextAccessor;
-        _supportedFormats = imageServiceSettings.Value.SupportedImageFormats;
+        _authHeaderService = authHeaderService;
     }
 
     public async Task<ResultDto<MessageWithSenderDto>> Handle(AddMessageToConversationCommand request, CancellationToken cancellationToken)
@@ -84,23 +89,17 @@ public class AddMessageToConversationCommandHandler : IRequestHandler<AddMessage
                 "No conversation was found.");
         }
 
-        ResultDto<ImageResultDto> response = null;
         Image image = null;
 
         if (request.Message.Image != null)
         {
-            if (!IsValidFormat(request.Message.Image))
-            {
-                return ResultDto.FailureResult<MessageWithSenderDto>(HttpStatusCode.UnsupportedMediaType,
-                    $"Unsupported image format. Supported formats are: {string.Join(", ", _supportedFormats)}.");
-            }
 
             var fileExtension = Path.GetExtension(request.Message.Image.FileName).ToLowerInvariant();
 
-            string authToken = _httpContextAccessor.HttpContext.Request.Headers["Authorization"].ToString()
-                .Replace("Bearer ", "");
+            string authToken = _authHeaderService.GetAuthToken();
 
-            response = await _imageClient.UploadImageAsync(request.Message.Image, authToken, request.ConversationId);
+
+            ResultDto<ImageResultDto> response = await _imageClient.UploadImageAsync(request.Message.Image, authToken, request.ConversationId);
 
             if (!response.Success)
             {
@@ -133,13 +132,6 @@ public class AddMessageToConversationCommandHandler : IRequestHandler<AddMessage
         await _hubService.NotifyGroupAsync(conversation.Id, mappedMessage, "ReceiveNotification");
 
         return ResultDto.SuccessResult(mappedMessage, HttpStatusCode.Created);
-    }
-
-    private bool IsValidFormat(IFormFile image)
-    {
-        if (image == null) return false;
-        var fileExtension = Path.GetExtension(image.FileName).ToLowerInvariant();
-        return _supportedFormats.Contains(fileExtension);
     }
 }
 

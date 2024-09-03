@@ -1,10 +1,12 @@
-FROM node:latest as node
+FROM node as build
 WORKDIR /app
 COPY . .
 RUN npm install
-RUN npm run build --prod
-COPY nginx.conf /etc/nginx/nginx.conf
-
+COPY . /apps
+RUN npm run build -- --configuration=production
 FROM nginx:alpine
-RUN rm -rf /usr/share/nginx/html/
-COPY --from=node /app/dist/messenger.app/browser  /usr/share/nginx/html
+COPY nginx-custom.conf /etc/nginx/conf.d/
+COPY nginx-custom.conf /etc/nginx/conf.d/default.conf
+
+RUN rm -rf /usr/share/nginx/html/*
+COPY --from=build /app/dist/messenger.app/browser /usr/share/nginx/html

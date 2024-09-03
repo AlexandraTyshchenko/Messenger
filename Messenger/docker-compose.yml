@@ -31,15 +31,13 @@ services:
       - "1433:1433"
     volumes:
       - sql_data:/var/opt/mssql
-  # app:
-  #   build:
-  #     context: ../Messenger.App
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - 80:80
-    # volumes:
-    #   - ../Messenger.App:/home/node/app
-    #   - ../Messenger.App/node_modules:/home/node/app/node_modules
+
+  app:
+    build:
+      context: ../Messenger.App
+      dockerfile: Dockerfile
+    ports:
+      - 80:80
 volumes:
   redis_data:
   sql_data:

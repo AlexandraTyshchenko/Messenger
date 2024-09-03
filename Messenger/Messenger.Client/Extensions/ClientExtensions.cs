@@ -1,4 +1,5 @@
-﻿using Messanger.Image.Client.Options;
+﻿using Messanger.Image.Client.Interfaces;
+using Messanger.Image.Client.Options;
 using Messanger.Image.Client.Services;
 using Messenger.Client.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +13,7 @@ public static class ClientExtensions
     {
         services.AddScoped<IImageClient, ImageClient>();
         services.Configure<ImageServiceSettings>(builder.Configuration.GetSection("ImageServiceSettings"));
+        services.AddScoped<IImageContentService, ImageContentService>();
         return services;
     }
 }

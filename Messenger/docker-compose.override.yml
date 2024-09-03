@@ -4,10 +4,9 @@ services:
   messenger.api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ASPNETCORE_HTTP_PORTS=8080
       # - ASPNETCORE_HTTPS_PORTS=8081
     ports:
-      - "5000:8080"
+      - "8080:8080"
       # - "5001:8081"
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
@@ -16,9 +15,9 @@ services:
   messenger.image.api:
    environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ASPNETCORE_HTTP_PORTS=8090
+      # - ASPNETCORE_URLS=http://+:8080
    ports:
-       - "5010:8090"
+       - "8090:8090"
    volumes:
        - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
        - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro

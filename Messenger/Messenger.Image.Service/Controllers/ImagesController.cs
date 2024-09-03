@@ -23,6 +23,14 @@ namespace Messenger.Image.Api.Controllers
             return Ok(imageDto);
         }
 
+        [HttpPost("conversationImage")]
+        public async Task<IActionResult> AddConversationImage([FromForm] IFormFile image, [FromRoute] Guid conversationId)
+        {
+            ImageResultDto imageDto = await _imageService.AddConversationImage(image, conversationId);
+
+            return Ok(imageDto);
+        }
+
         [HttpDelete("{imageFileName}")]
         public async Task<IActionResult> DeleteImageMessage([FromRoute] Guid conversationId, [FromRoute] string imageFileName)
         {

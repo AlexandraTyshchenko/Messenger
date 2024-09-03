@@ -50,8 +50,10 @@ export class ConversationDataService {
   }
 
   private getGroupImageSource(conversation: Conversation): string {
-    return conversation.group?.imgUrl || this.defaultGroupImage;
-  }
+    return conversation.group?.imgUrl 
+        ? `https://localhost:7289/${conversation.group.imgUrl}` 
+        : this.defaultGroupImage;
+}
 
   private getUserImageSource(conversation: Conversation): string {
     const userId = this.authService.user()?.nameidentifier;

@@ -11,7 +11,8 @@ import { Router } from '@angular/router';
 })
 export class GroupConversationFormComponent {
   title: string = '';
-  imageFile: string | null = null;
+  imageFile: File | null = null;
+  imageDataUrl: string | null = null; 
 
   constructor(
     public activeModal: NgbActiveModal,
@@ -22,7 +23,7 @@ export class GroupConversationFormComponent {
   createGroup() {
     const groupDto: GroupDto = {
       title: this.title,
-      imgUrl: this.imageFile ? this.imageFile : null,
+      img: this.imageFile,  
     };
 
     this.conversationsService.createGroupConversation(groupDto).subscribe({
@@ -32,7 +33,6 @@ export class GroupConversationFormComponent {
           queryParams: { conversationId: response.id },
           queryParamsHandling: 'merge',
         });
-        this.activeModal.close();
         this.activeModal.close();
       },
       error: (err) => {
@@ -44,16 +44,16 @@ export class GroupConversationFormComponent {
   onFileChange(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
-      const file = input.files[0];
+      this.imageFile = input.files[0];
       const reader = new FileReader();
 
       reader.onload = (e: ProgressEvent<FileReader>) => {
         if (e.target) {
-          this.imageFile = e.target.result as string;
+          this.imageDataUrl = e.target.result as string;  // Store the base64 string
         }
       };
 
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(this.imageFile);
     }
   }
 }

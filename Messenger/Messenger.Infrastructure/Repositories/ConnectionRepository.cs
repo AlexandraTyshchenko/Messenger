@@ -16,10 +16,12 @@ public class ConnectionRepository : IConnectionRepository
 
     public async Task AddConnectionAsync(User user, string connectionId)
     {
+        var searchedUser = await _applicationContext.FindAsync<User>(user.Id);
+
         var connection = new UserConnection
         {
             ConnectionId = connectionId,
-            User = user
+            User = searchedUser
         };
 
         await _applicationContext.UserConnections.AddAsync(connection);

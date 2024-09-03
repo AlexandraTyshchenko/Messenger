@@ -26,14 +26,21 @@ export class ConversationsService {
     return this.http.get<PagedEntities<Conversation>>(url, { params });
   }
   
-  createGroupConversation(groupDto: GroupDto) :Observable<Conversation>{
+createGroupConversation(groupDto: GroupDto): Observable<Conversation> {
     const url = `${environment.apiUrl}api/Conversations/group`;
-    
-    return this.http.post<Conversation>(url, groupDto).pipe(
-      tap(conversation => {
-        this.conversationSubject.next(conversation);
-      })
-    );}
+    const formData = new FormData();
+    formData.append('title', groupDto.title);
+
+    if (groupDto.img) {
+        formData.append('Image', groupDto.img);
+    }
+
+    return this.http.post<Conversation>(url, formData).pipe(
+        tap(conversation => {
+            this.conversationSubject.next(conversation);
+        })
+    );
+}
 
     createPrivateConversation(groupDto: UserDto) :Observable<Conversation>{
       const url = `${environment.apiUrl}api/Conversations/private`;
