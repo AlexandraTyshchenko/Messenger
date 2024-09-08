@@ -12,8 +12,7 @@ To start the project via Docker, follow these steps:
 
 1. Navigate to the project folder:
    cd messenger/Messenger
-Build the Docker containers:
+2. Build the Docker containers:
 docker-compose build
-
-Run the Docker containers:
+3. Run the Docker containers:
 docker-compose up
