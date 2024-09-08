@@ -52,6 +52,16 @@ public class ConversationRepository : IConversationRepository
 
         await _applicationContext.Conversations.AddAsync(conversation);
 
+        if (_applicationContext.Entry(creatorUser).State == EntityState.Detached)
+        {
+            _applicationContext.Attach(creatorUser);
+        }
+
+        if (_applicationContext.Entry(user).State == EntityState.Detached)
+        {
+            _applicationContext.Attach(user);
+        }
+
         var participantCreatorUser = new ParticipantInConversation
         {
             JoinedAt = DateTime.UtcNow,

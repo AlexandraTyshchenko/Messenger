@@ -73,15 +73,15 @@ public class AddParticipantToConversationCommandHandler :
                 $" already exist in groupConversation.");
         }
 
-        var participants = await _unitOfWork.Participants.AddParticipantsToConversationAsync(users, conversation); 
+        var participants = await _unitOfWork.Participants.AddParticipantsToConversationAsync(users, conversation); //todo solve 
 
         var userNames = string.Join(", ", participants.Select(x => x.User.UserName));
-        var userConnections = await _unitOfWork.Connections.GetUsersConnectionsAsync(request.UserIds); ;
+        var userConnections = await _unitOfWork.Connections.GetUsersConnectionsAsync(request.UserIds); 
 
         var messageText = userNames;
-        messageText += participants.Count() == 1 ?
-            $"  was added to сonversation '{conversation.Group.Title}'" : $" " +
-            $" were added to сonversation '{conversation.Group.Title}'";
+        messageText += (participants.Count() == 1
+            ? " was"
+            : " were") + $" added to conversation '{conversation.Group.Title}'";
 
         var message = new Message
         {
@@ -117,6 +117,7 @@ public class AddParticipantToConversationCommandHandler :
     private async Task<IEnumerable<ParticipantInConversation>> GetExistingParticipantsAsync(Guid conversationId, IEnumerable<User> users)
     {
         var participants = await _unitOfWork.Participants.GetParticipantsByConversationIdAsync(conversationId);
+
         return participants.Where(x => users.Contains(x.User)).ToList();
     }
 }

@@ -17,7 +17,7 @@ public class ImageService : IImageService
         return await SaveImageToFolderAsync(image, conversationId, "conversationImage");
     }
 
-    public async Task DeleteImageAsync(Guid conversationId, string imageFileName)
+    public void  DeleteImage(Guid conversationId, string imageFileName)
     {
         var uploadPath = Path.Combine(_environment.WebRootPath, $"conversations/{conversationId}/images/{imageFileName}");
 

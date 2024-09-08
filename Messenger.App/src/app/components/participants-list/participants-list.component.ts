@@ -1,7 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ParticipantService } from '../../core/services/participant.service';
-import { UserInfo } from '../../core/classes/user-info.model';
 import { AuthService } from '../../core/services/auth.service';
 import { Participant, Role } from '../../core/classes/participant.model';
 import { DeleteParticipantConfirmationModalComponent } from '../delete-participant-confirmation-modal/delete-participant-confirmation-modal.component';
@@ -57,7 +56,6 @@ export class ParticipantsListComponent implements OnInit {
     const participant = this.participants.find((x) => x.userInfo.id == this.userId);
     if (participant?.role === Role.Admin) {
       this.isAdmin = true;
-      console.log(this.participants);
     }
   }
   close(): void {

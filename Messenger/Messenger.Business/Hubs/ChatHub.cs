@@ -3,7 +3,6 @@ using Messenger.Infrastructure.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using System;
 
 namespace Messenger.Api.Hubs;
 

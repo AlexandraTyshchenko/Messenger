@@ -2,8 +2,8 @@ FROM node as build
 WORKDIR /app
 COPY . .
 RUN npm install
-COPY . /apps
-RUN npm run build -- --configuration=production
+COPY . /app
+RUN npm run build  --configuration=production
 FROM nginx:alpine
 COPY nginx-custom.conf /etc/nginx/conf.d/
 COPY nginx-custom.conf /etc/nginx/conf.d/default.conf

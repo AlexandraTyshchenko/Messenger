@@ -35,7 +35,6 @@ export class LoginPageComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef),
         catchError(error => {
           this.errorMessage = error.errorMessage;
-          ;
           console.error('Login error', this.errorMessage);
           return of(null);
         }),

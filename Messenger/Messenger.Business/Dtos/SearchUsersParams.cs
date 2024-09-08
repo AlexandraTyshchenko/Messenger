@@ -1,7 +1,6 @@
-﻿namespace Messenger.Business.Dtos
+﻿namespace Messenger.Business.Dtos;
+
+public class SearchUsersParams
 {
-    public class SearchUsersParams
-    {
-        public string UserName { get; set; } = string.Empty;
-    }
+    public string UserName { get; set; } = string.Empty;
 }

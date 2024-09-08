@@ -46,10 +46,6 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         );
       }
 
-      // if (error.status === 0 && error.error instanceof ProgressEvent) {
-      //   
-      // }
-
       if(error.error.payload){
         const customError = {
           status: error.status,

@@ -2,10 +2,12 @@
 
 public class CacheKeyBuilder : ICacheKeyBuilder
 {
-    private readonly List<string> _parameters;
+    private  List<string> _parameters;
+    private readonly Type _itemType;
 
     public CacheKeyBuilder(Type itemType)
     {
+        _itemType = itemType;
         _parameters = new List<string>() { itemType.Name };
     }
 
@@ -30,6 +32,8 @@ public class CacheKeyBuilder : ICacheKeyBuilder
 
     public string Build()
     {
-        return string.Join('_', _parameters);
+        string key = string.Join('_', _parameters);
+        _parameters = new List<string>() { _itemType.Name };
+        return key;
     }
 }

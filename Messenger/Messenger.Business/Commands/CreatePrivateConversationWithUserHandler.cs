@@ -59,7 +59,6 @@ public class CreatePrivateConversationWithUserCommandHandler : IRequestHandler<C
 
         User creatorUser = await _unitOfWork.Users.GetUserByIdAsync(request.CreatorUserId);
 
-
         if (creatorUser == null)
         {
             return ResultDto.FailureResult<ConversationDto>(HttpStatusCode.NotFound, "Creator user was not found.");

@@ -101,8 +101,6 @@ export class ConversationsComponent implements OnInit, AfterViewInit,OnChanges {
     });
   }
   private handleNotification(message: any): void {
-    console.log(message)
-    console.log(this.notificationMessage)
     if (message) {
       this.loadData();
       this.notificationMessage = message.text;
@@ -144,12 +142,10 @@ export class ConversationsComponent implements OnInit, AfterViewInit,OnChanges {
     this.route.queryParams.subscribe((params) => {
       this.selectedConversationId = params['conversationId'];
       this.isSidebarCollapsed=true
-      console.log(this.selectedConversationId)
       this.selectedConversation = this.conversations.find(
         (x) => x.id === this.selectedConversationId
       )!;
     });
-    console.log(this.selectedConversation)
   }
 
   appendData() {

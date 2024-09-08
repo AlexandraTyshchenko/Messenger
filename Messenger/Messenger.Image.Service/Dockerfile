@@ -3,9 +3,11 @@
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 USER app
 WORKDIR /app
-EXPOSE 8090
-EXPOSE 8091
-EXPOSE 8080
+EXPOSE 8000
+EXPOSE 8001
+
+RUN mkdir -p /app/wwwroot/conversations && \
+    chmod -R 777 /app/wwwroot
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
@@ -14,6 +16,7 @@ COPY ["Messenger.Image.Service/Messenger.Image.Api.csproj", "Messenger.Image.Ser
 COPY ["Messenger.Shared/Messenger.Shared.csproj", "Messenger.Shared/"]
 RUN dotnet restore "./Messenger.Image.Service/Messenger.Image.Api.csproj"
 COPY . .
+USER root
 WORKDIR "/src/Messenger.Image.Service"
 RUN dotnet build "./Messenger.Image.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build
 

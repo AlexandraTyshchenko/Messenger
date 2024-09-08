@@ -48,14 +48,12 @@ public class CreateGroupConversationCommandHandler : IRequestHandler<CreateGroup
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly IImageClient _imageClient;
-    private readonly IAuthHeaderService _authHeaderService;
 
     public CreateGroupConversationCommandHandler(IUnitOfWork unitOfWork, IMapper mapper, 
-        IImageClient imageClient, IAuthHeaderService authHeaderService)
+        IImageClient imageClient)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
-        _authHeaderService = authHeaderService;
         _imageClient = imageClient;
     }
 
@@ -71,9 +69,7 @@ public class CreateGroupConversationCommandHandler : IRequestHandler<CreateGroup
         {
             var fileExtension = Path.GetExtension(request.Group.Image.FileName).ToLowerInvariant();
 
-            string authToken = _authHeaderService.GetAuthToken();
-
-            ResultDto<ImageResultDto> response = await _imageClient.AddConversationImageAsync(request.Group.Image, authToken, conversation.Id);
+            ResultDto<ImageResultDto> response = await _imageClient.AddConversationImageAsync(request.Group.Image, conversation.Id);
 
             if (!response.Success)
             {

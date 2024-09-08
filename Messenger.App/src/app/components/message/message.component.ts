@@ -1,6 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { Message } from '../../core/classes/message.model';
 import { AuthService } from '../../core/services/auth.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-message',
@@ -12,7 +13,7 @@ export class MessageComponent implements OnInit {
   @Input() message!: Message;
   sentAt!: string;
   defaultImageUrl: string = '../../../assets/user_logo.png';
-  url = "https://localhost:7289/";
+  url = environment.baseImageUrl;
   constructor(private authService: AuthService) {}
 
   ngOnInit(): void {

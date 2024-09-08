@@ -3,6 +3,7 @@ using Messenger.Business.Commands;
 using Messenger.Business.Dtos;
 using Messenger.Business.Interfaces;
 using Messenger.Business.Profiles;
+using Messenger.Client.Interfaces;
 using Messenger.Infrastructure;
 using Messenger.Infrastructure.Entities;
 using Moq;
@@ -16,6 +17,8 @@ public class AddMessageToConversationCommandHandlerTests
     private IMapper _mapper;
     private Mock<IUnitOfWork> _unitOfWorkMock;
     private Mock<IHubService> _hubServiceMock;
+    private Mock<IImageClient> _imageClient;
+
     private AddMessageToConversationCommandHandler _handler;
 
     [OneTimeSetUp]
@@ -33,10 +36,13 @@ public class AddMessageToConversationCommandHandlerTests
     {
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _hubServiceMock = new Mock<IHubService>();
+        _imageClient = new Mock<IImageClient>();
+
         _handler = new AddMessageToConversationCommandHandler(
             _unitOfWorkMock.Object,
             _mapper,
-            _hubServiceMock.Object
+            _hubServiceMock.Object,
+            _imageClient.Object
         );
     }
 

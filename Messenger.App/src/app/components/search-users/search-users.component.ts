@@ -60,7 +60,8 @@ export class SearchUsersComponent {
   searchUsers() {
     this.userService.getUsers(this.query, this.currentPage, this.itemsPerPage).subscribe({
       next: (response: PagedEntities<UserInfo>) => {
-        this.users = response.entities;        
+        this.users = response.entities;   
+        console.log(this.users)     
       },
       error: (err) => {
         console.error('Error fetching users:', err);

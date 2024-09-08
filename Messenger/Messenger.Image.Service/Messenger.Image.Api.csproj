@@ -9,17 +9,24 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="wwwroot\conversations\**" />
+    <Content Remove="wwwroot\conversations\**" />
+    <EmbeddedResource Remove="wwwroot\conversations\**" />
+    <None Remove="wwwroot\conversations\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.7" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.20.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\conversations\" />
+    <ProjectReference Include="..\Messenger.Shared\Messenger.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Messenger.Shared\Messenger.Shared.csproj" />
+    <Folder Include="wwwroot\" />
   </ItemGroup>
 
 </Project>

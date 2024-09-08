@@ -4,13 +4,11 @@ using MediatR;
 using Messenger.Business.Dtos;
 using Messenger.Business.Interfaces;
 using Messenger.Business.Options;
-using Messenger.Business.Services;
 using Messenger.Business.Validators;
 using Messenger.Client.Interfaces;
 using Messenger.Infrastructure;
 using Messenger.Infrastructure.Entities;
 using Messenger.Shared.Dtos;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using System.Net;
 
@@ -59,16 +57,13 @@ public class AddMessageToConversationCommandHandler : IRequestHandler<AddMessage
     private readonly IUnitOfWork _unitOfWork;
     private readonly IHubService _hubService;
     private readonly IImageClient _imageClient;
-    private readonly IAuthHeaderService _authHeaderService;
-
     public AddMessageToConversationCommandHandler(IUnitOfWork unitOfWork, IMapper mapper,
-        IHubService hubService, IImageClient imageClient, IAuthHeaderService authHeaderService)
+        IHubService hubService, IImageClient imageClient)
     {
         _mapper = mapper;
         _unitOfWork = unitOfWork;
         _hubService = hubService;
         _imageClient = imageClient;
-        _authHeaderService = authHeaderService;
     }
 
     public async Task<ResultDto<MessageWithSenderDto>> Handle(AddMessageToConversationCommand request, CancellationToken cancellationToken)
@@ -96,10 +91,7 @@ public class AddMessageToConversationCommandHandler : IRequestHandler<AddMessage
 
             var fileExtension = Path.GetExtension(request.Message.Image.FileName).ToLowerInvariant();
 
-            string authToken = _authHeaderService.GetAuthToken();
-
-
-            ResultDto<ImageResultDto> response = await _imageClient.UploadImageAsync(request.Message.Image, authToken, request.ConversationId);
+            ResultDto<ImageResultDto> response = await _imageClient.UploadImageAsync(request.Message.Image, request.ConversationId);
 
             if (!response.Success)
             {

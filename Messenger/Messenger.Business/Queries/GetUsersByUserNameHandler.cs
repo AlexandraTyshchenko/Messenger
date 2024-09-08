@@ -23,6 +23,10 @@ public class GetUsersByUserNameQueryValidator : AbstractValidator<GetUsersByUser
     {
         RuleFor(x => x.PaginationParams)
            .SetValidator(new PaginationParamsValidator());
+
+        RuleFor(x => x.UserName)
+            .Must(userName => userName != null) 
+            .WithMessage("UserName cannot be null.");
     }
 }
 

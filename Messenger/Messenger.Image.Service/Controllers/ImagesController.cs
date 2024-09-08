@@ -34,7 +34,7 @@ namespace Messenger.Image.Api.Controllers
         [HttpDelete("{imageFileName}")]
         public async Task<IActionResult> DeleteImageMessage([FromRoute] Guid conversationId, [FromRoute] string imageFileName)
         {
-            await _imageService.DeleteImageAsync(conversationId, imageFileName);
+            _imageService.DeleteImage(conversationId, imageFileName);
 
             return Ok();
         }

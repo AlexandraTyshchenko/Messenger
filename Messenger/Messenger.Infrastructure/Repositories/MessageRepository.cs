@@ -14,14 +14,28 @@ public class MessageRepository : IMessageRepository
     {
         _applicationContext = applicationContext;
     }
-
     public async Task<Message> AddMessageToConversationAsync(Message message)
     {
-        message.Sender = await _applicationContext.Users.FirstOrDefaultAsync(x => x.Id == message.Sender.Id);
-        await _applicationContext.Messages.AddAsync(message);
+        if (message.Sender != null)
+        {
+            var trackedUser = _applicationContext.Users.Local
+               .FirstOrDefault(u => u.Id == message.Sender.Id);
 
+            if (trackedUser != null)
+            {
+                message.Sender = trackedUser;
+            }
+            else
+            {
+                _applicationContext.Attach(message.Sender);
+            }
+        }      
+
+        await _applicationContext.Messages.AddAsync(message);
         return message;
     }
+
+
 
     public async Task<Message> DeleteMessageAsync(Guid messageId)
     {

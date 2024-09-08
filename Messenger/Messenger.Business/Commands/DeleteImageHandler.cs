@@ -2,10 +2,8 @@
 using Messenger.Business.Dtos;
 using Messenger.Business.Options;
 using Messenger.Client.Interfaces;
-using Messenger.Shared.Dtos;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
-using System.Net;
 
 namespace Messenger.Business.Commands;
 
@@ -29,8 +27,6 @@ public class DeleteImageCommandHandler : IRequestHandler<DeleteImageCommand, Res
 
     public async Task<ResultDto> Handle(DeleteImageCommand request, CancellationToken cancellationToken)
     {
-        string authToken = _httpContextAccessor.HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-
-        return await _imageClient.DeleteImageAsync(request.ImageFileName, authToken, request.ConversationId);
+        return await _imageClient.DeleteImageAsync(request.ImageFileName, request.ConversationId);
     }
 }

@@ -6,11 +6,11 @@
   <form (ngSubmit)="createGroup()" #groupForm="ngForm">
     <div class="mb-3">
       <label lass="form-label">Title</label>
-      <input formControlName= "title" type="text" class="form-control" id="titleInput" placeholder="Enter title" [(ngModel)]="title" name="title"  />
+      <input  type="text" class="form-control" id="titleInput" placeholder="Enter title" [(ngModel)]="title" name="title"  />
     </div>
     <div class="mb-3">
       <label for="imageUpload" class="form-label">Upload Image</label>
-      <input formControlName= "imageFile" class="form-control" type="file" id="imageUpload" (change)="onFileChange($event)" />
+      <input  class="form-control" type="file" id="imageUpload" (change)="onFileChange($event)" />
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-secondary" (click)="activeModal.close()" data-bs-dismiss="modal">Close</button>

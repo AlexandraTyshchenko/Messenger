@@ -13,7 +13,7 @@
           <img
             *ngIf="participant.userInfo.imgUrl; else defaultImage"
             [src]="participant.userInfo.imgUrl"
-            alt="Default Logo"
+            alt=""
             width="40"
             height="40"
             class="rounded-circle"
@@ -23,7 +23,7 @@
           <ng-template #defaultImage>
             <img
               [src]="defaultImageUrl"
-              alt="Default Logo"
+              alt=""
               width="40"
               height="40"
               class="bi me-3 rounded-image sender-image"

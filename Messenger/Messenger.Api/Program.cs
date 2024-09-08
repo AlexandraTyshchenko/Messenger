@@ -131,7 +131,6 @@ app.UseCors(options =>
            .AllowCredentials()
 );
 
-// Configure the HTTP request pipeline
 app.UseExceptionHandlingMiddleware();
 
 if (app.Environment.IsDevelopment())

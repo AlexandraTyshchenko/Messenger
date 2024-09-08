@@ -1,5 +1,5 @@
 export class MessageDto {
-  text: string;
+  text: string|null;
   image: File|null;
   constructor(text: string, image: File|null) {
     this.text = text;

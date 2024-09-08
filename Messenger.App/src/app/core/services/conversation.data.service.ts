@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@angular/core';
 import { Conversation } from '../classes/conversation.model';
 import { AuthService } from './auth.service';
 import { UserInfo } from '../classes/user-info.model';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
@@ -10,9 +11,9 @@ export class ConversationDataService {
   private userId!: string;
   private readonly defaultGroupImage = 'assets/logo.png';
   private readonly defaultUserImage = 'assets/user_logo.png';
+  private readonly baseImageUrl = environment.baseImageUrl;
 
-  constructor( private authService: AuthService
-) {
+  constructor(private authService: AuthService) {
     this.userId = authService.user()?.nameidentifier!;
   }
 
@@ -38,22 +39,20 @@ export class ConversationDataService {
   
     return null;
   }
-  
 
-  getConversationImage(conversation: Conversation) {
+  getConversationImage(conversation: Conversation): string {
     if (conversation.group) {
       return this.getGroupImageSource(conversation);
-    } 
-    else {
+    } else {
       return this.getUserImageSource(conversation);
     }
   }
 
   private getGroupImageSource(conversation: Conversation): string {
     return conversation.group?.imgUrl 
-        ? `https://localhost:7289/${conversation.group.imgUrl}` 
+        ? `${this.baseImageUrl}${conversation.group.imgUrl}` 
         : this.defaultGroupImage;
-}
+  }
 
   private getUserImageSource(conversation: Conversation): string {
     const userId = this.authService.user()?.nameidentifier;

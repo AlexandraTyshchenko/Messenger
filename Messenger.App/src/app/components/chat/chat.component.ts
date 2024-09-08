@@ -46,7 +46,7 @@ export class ChatComponent implements OnInit, AfterViewInit, OnChanges {
     private modalService: NgbModal
   ) {
     this.messageForm = this.fb.group({
-      message: [''], 
+      message: ['', Validators.required],
     });
   }
 
@@ -60,7 +60,6 @@ export class ChatComponent implements OnInit, AfterViewInit, OnChanges {
   ngAfterViewInit(): void {
     this.signalRService.message$.subscribe((message) => {
       if (message) {
-        console.log(message)
         this.addMessage(message);
       }
     });
@@ -93,7 +92,6 @@ export class ChatComponent implements OnInit, AfterViewInit, OnChanges {
     setTimeout(() => {
       this.scrollToCenter();
     }, 0);
-    console.log('onscroll is invoked');
   }
 
   addParticipants() {
@@ -141,7 +139,7 @@ export class ChatComponent implements OnInit, AfterViewInit, OnChanges {
   }
 
   sendMessage() {
-    if (this.messageForm.valid ) {
+    if (this.messageForm.valid || this.selectedFile) {
       const message = this.messageForm.value.message;
       this.messagesService
         .sendMessage(

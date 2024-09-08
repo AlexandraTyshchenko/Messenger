@@ -1,8 +1,10 @@
 ﻿using Messenger.Infrastructure.Cache;
+using Messenger.Infrastructure.Context;
 using Messenger.Infrastructure.Entities;
 using Messenger.Infrastructure.Interfaces;
 using Messenger.Infrastructure.KeyBuilder;
 using Messenger.Infrastructure.Pagination;
+using Microsoft.EntityFrameworkCore;
 
 namespace Messenger.Infrastructure.CachedRepositories;
 
@@ -11,13 +13,19 @@ public class CachedUserRepository : IUserRepository
     private readonly IUserRepository _innerRepository;
     private readonly ICacheService _cacheService;
     private readonly ICacheKeyBuilder _cacheKeyBuilder;
+    private readonly ApplicationContext _applicationContext;
 
-    public CachedUserRepository(IUserRepository innerRepository, ICacheService cacheService, ICacheKeyBuilderFactory cacheKeyBuilderFactory)
+    public CachedUserRepository(IUserRepository innerRepository,
+                                ICacheService cacheService,
+                                ICacheKeyBuilderFactory cacheKeyBuilderFactory,
+                                ApplicationContext applicationContext)
     {
         _innerRepository = innerRepository;
         _cacheService = cacheService;
         _cacheKeyBuilder = cacheKeyBuilderFactory.Create(typeof(User));
+        _applicationContext = applicationContext;
     }
+
 
     public async Task<User> GetUserByIdAsync(Guid userId)
     {

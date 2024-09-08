@@ -33,7 +33,9 @@ export class MessagesService {
     const url = `${environment.apiUrl}api/Conversations/${conversationId}/Messages`;
 
     const formData = new FormData();
-    formData.append('text', messageDto.text);
+    if( messageDto.text){
+      formData.append('text', messageDto.text);
+    }
     if (messageDto.image) {
       formData.append('image', messageDto.image);
     }

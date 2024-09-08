@@ -6,47 +6,40 @@ using Messenger.Shared.Dtos;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using System;
-using System.Net.Http.Headers;
 
 namespace Messanger.Image.Client.Services;
 
 public class ImageClient : IImageClient
 {
     private readonly HttpClient _httpClient;
-    private const string resourse = "Images";
-    private readonly string _serviceUrl;
+    private const string Resourse = "Images";
+    private readonly string _baseServiceUrl;
     private readonly IImageContentService _imageContentService;
+    private const string ConversationRelativePath = "api/Conversations/";
 
-    public ImageClient(HttpClient httpClient, IOptions<ImageServiceSettings>  options,IImageContentService imageContentService)
+    public ImageClient(HttpClient httpClient, IOptions<ImageServiceSettings> options, IImageContentService imageContentService)
     {
         _httpClient = httpClient;
-        _serviceUrl = options.Value.Url;
+        _baseServiceUrl = options.Value.Url;
         _imageContentService = imageContentService;
     }
 
-    public async Task<ResultDto<ImageResultDto>> UploadImageAsync(IFormFile image, string authToken, Guid conversationId)
+    public async Task<ResultDto<ImageResultDto>> UploadImageAsync(IFormFile image, Guid conversationId)
     {
         MultipartFormDataContent content = await _imageContentService.CreateMultipartContentAsync(image);
 
-        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
-
-        string url = $"{_serviceUrl}/api/Conversations" + $"/{conversationId}" + $"/{resourse}";
+        string url = $"{_baseServiceUrl}{ConversationRelativePath}" + $"{conversationId}" + $"/{Resourse}";
         HttpResponseMessage response = await _httpClient.PostAsync(url, content);
-        var responseContent = await response.Content.ReadAsStringAsync();
 
         return await ProcessResponseAsync(response);
     }
 
-    public async Task<ResultDto<ImageResultDto>> DeleteImageAsync(string imageFileName, string authToken, Guid conversationId)
+    public async Task<ResultDto<ImageResultDto>> DeleteImageAsync(string imageFileName, Guid conversationId)
     {
-        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
-
-        var deleteUrl = $"{_serviceUrl}/api/Conversations" + $"/{conversationId}" + $"/{resourse}/{imageFileName}";
+        var deleteUrl = $"{_baseServiceUrl}{ConversationRelativePath}" + $"{conversationId}" + $"/{Resourse}/{imageFileName}";
 
         HttpResponseMessage response = await _httpClient.DeleteAsync(deleteUrl);
 
-        var responseContent = await response.Content.ReadAsStringAsync();
 
         return await ProcessResponseAsync(response);
     }
@@ -65,14 +58,12 @@ public class ImageClient : IImageClient
         }
     }
 
-    public async Task<ResultDto<ImageResultDto>> AddConversationImageAsync(IFormFile image, string authToken, Guid conversationId)
+    public async Task<ResultDto<ImageResultDto>> AddConversationImageAsync(IFormFile image, Guid conversationId)
     {
         MultipartFormDataContent content = await _imageContentService.CreateMultipartContentAsync(image);
 
-        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
-        string url = $"{_serviceUrl}/api/Conversations" + $"/{conversationId}" + $"/{resourse}/conversationImage";
+        string url = $"{_baseServiceUrl}{ConversationRelativePath}" + $"{conversationId}" + $"/{Resourse}/conversationImage";
         HttpResponseMessage response = await _httpClient.PostAsync(url, content);
-        var responseContent = await response.Content.ReadAsStringAsync();
 
         return await ProcessResponseAsync(response);
     }

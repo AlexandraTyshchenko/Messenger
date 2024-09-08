@@ -1,7 +1,9 @@
 ﻿using Messenger.Infrastructure.Cache;
+using Messenger.Infrastructure.Context;
 using Messenger.Infrastructure.Entities;
 using Messenger.Infrastructure.Interfaces;
 using Messenger.Infrastructure.KeyBuilder;
+using Microsoft.EntityFrameworkCore;
 
 namespace Messenger.Infrastructure.CachedRepositories;
 
@@ -10,37 +12,44 @@ public class CachedParticipantRepository : IParticipantRepository
     private readonly IParticipantRepository _innerRepository;
     private readonly ICacheService _cacheService;
     private readonly ICacheKeyBuilder _cacheKeyBuilder;
-    public CachedParticipantRepository(IParticipantRepository innerRepository, ICacheService cacheService, ICacheKeyBuilderFactory cacheKeyBuilderFactory)
+    private readonly ApplicationContext _applicationContext;
+
+    public CachedParticipantRepository(IParticipantRepository innerRepository,
+                                       ICacheService cacheService,
+                                       ICacheKeyBuilderFactory cacheKeyBuilderFactory,
+                                       ApplicationContext applicationContext)
     {
         _innerRepository = innerRepository;
         _cacheService = cacheService;
         _cacheKeyBuilder = cacheKeyBuilderFactory.Create(typeof(ParticipantInConversation));
+        _applicationContext = applicationContext;
     }
 
     public async Task<IEnumerable<ParticipantInConversation>> AddParticipantsToConversationAsync(IEnumerable<User> users,
         Conversation conversation)
     {
-        string participantListKey = _cacheKeyBuilder.AppendParameter(conversation.Id)
-            .Build();
-
         IEnumerable<ParticipantInConversation> result = await _innerRepository
             .AddParticipantsToConversationAsync(users, conversation);
 
+        string participantListKey = _cacheKeyBuilder.AppendParameter(conversation.Id)
+            .Build();
+
         await _cacheService.RemoveAsync(participantListKey);
+
         return result;
     }
 
     public async Task<ParticipantInConversation> DeleteParticipantFromGroupConversationAsync(Guid userId, Guid conversationId)
     {
+        ParticipantInConversation result = await _innerRepository
+            .DeleteParticipantFromGroupConversationAsync(userId, conversationId);
+
         string participantListKey = _cacheKeyBuilder.AppendParameter(conversationId)
             .Build();
 
         string participantKey = _cacheKeyBuilder.AppendParameter(userId)
             .AppendParameter(conversationId)
             .Build();
-
-        ParticipantInConversation result = await _innerRepository
-            .DeleteParticipantFromGroupConversationAsync(userId, conversationId);
 
         await _cacheService.RemoveAsync(participantListKey);
         await _cacheService.RemoveAsync(participantKey);
@@ -93,7 +102,8 @@ public class CachedParticipantRepository : IParticipantRepository
         string participantListKey = _cacheKeyBuilder.AppendParameter(conversationId)
             .Build();
 
-        IEnumerable<ParticipantInConversation> cachedParticipants = await _cacheService.GetAsync<IEnumerable<ParticipantInConversation>>(participantListKey);
+        IEnumerable<ParticipantInConversation> cachedParticipants = await _cacheService
+            .GetAsync<IEnumerable<ParticipantInConversation>>(participantListKey);
 
         if (cachedParticipants != null)
         {
@@ -107,4 +117,5 @@ public class CachedParticipantRepository : IParticipantRepository
 
         return result;
     }
+
 }

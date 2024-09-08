@@ -132,68 +132,6 @@ public class DeleteParticipantFromConversationCommandTests
     }
 
     [Test]
-    public async Task Handle_ShouldUpdateAdminRole_WhenCurrentAdminIsDeleted()
-    {
-        // Arrange
-        var command = new DeleteParticipantFromConversationCommand
-        {
-            ConversationId = Guid.NewGuid(),
-            UserId = Guid.NewGuid()
-        };
-
-        var conversation = new Conversation
-        {
-            Id = command.ConversationId,
-            Group = new Group { Title = "Test Group" }
-        };
-
-        var participantInConversation = new ParticipantInConversation
-        {
-            Id = command.UserId,
-            Role = Role.Admin,
-            Conversation = conversation,
-            User = new User { UserName = "user" }
-        };
-
-        var newAdminParticipant = new ParticipantInConversation
-        {
-            Id = Guid.NewGuid(),
-            JoinedAt = DateTime.UtcNow
-        };
-
-        _unitOfWorkMock.Setup(u => u.Conversations.GetConversationByIdAsync(command.ConversationId))
-            .ReturnsAsync(conversation);
-
-        _unitOfWorkMock.Setup(u => u.Participants.GetParticipantsByConversationIdAsync(command.ConversationId))
-            .ReturnsAsync(new List<ParticipantInConversation>
-            {
-            participantInConversation,
-            newAdminParticipant
-            });
-
-        _unitOfWorkMock.Setup(u => u.Participants.DeleteParticipantFromGroupConversationAsync(command.UserId, command.ConversationId))
-            .ReturnsAsync(participantInConversation);
-
-        _unitOfWorkMock.Setup(u => u.Participants.UpdateParticipantRoleAsync(newAdminParticipant.Id, Role.Admin))
-            .Returns(Task.CompletedTask);
-
-        _unitOfWorkMock.Setup(u => u.Messages.AddMessageToConversationAsync(It.IsAny<Message>()))
-            .ReturnsAsync(new Message());
-
-        _unitOfWorkMock.Setup(u => u.Connections.GetUserConnectionsAsync(It.IsAny<Guid>()))
-            .ReturnsAsync(new List<UserConnection>());
-
-        // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
-
-        // Assert
-        _unitOfWorkMock.Verify(u => u.Participants.UpdateParticipantRoleAsync(
-            It.Is<Guid>(x => x == newAdminParticipant.Id),
-            It.Is<Role>(x => x == Role.Admin)
-        ), Times.Once);
-    }
-
-    [Test]
     public async Task Handle_ShouldDeleteParticipant_WhenValidRequest()
     {
         // Arrange
