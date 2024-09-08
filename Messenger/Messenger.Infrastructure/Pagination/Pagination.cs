@@ -8,7 +8,7 @@ public static class Pagination
     {
         var totalEntities = await query.CountAsync();
 
-        IEnumerable<T> entities = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(); 
+        List<T> entities = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(); 
 
         return new PagedEntities<T>(page, pageSize, totalEntities, entities);
     }

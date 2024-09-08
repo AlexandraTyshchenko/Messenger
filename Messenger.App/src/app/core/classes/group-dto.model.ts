@@ -1,10 +1,10 @@
 export class GroupDto {
     title: string = '';
-    imgUrl: string | null;
+    img: File | null;
   
-    constructor(title: string, imgUrl: string | null) {//todo change to IFile type
+    constructor(title: string, img: File | null) {
       this.title = title;
-      this.imgUrl = imgUrl;
+      this.img = img;
     }
   }
   

@@ -21,5 +21,14 @@ public class MessageConfiguration : IEntityTypeConfiguration<Message>
             .WithMany(c => c.Messages)
             .HasForeignKey("ConversationId")
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Property<Guid?>("ImageId");
+
+        builder.HasOne(m => m.Image)
+           .WithOne(c => c.Message)
+           .HasForeignKey<Message>("ImageId")
+           .OnDelete(DeleteBehavior.SetNull)
+           .IsRequired(false);
+        
     }
 }

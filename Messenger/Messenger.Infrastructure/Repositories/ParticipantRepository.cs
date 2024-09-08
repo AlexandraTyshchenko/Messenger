@@ -17,17 +17,27 @@ public class ParticipantRepository : IParticipantRepository
 
     public async Task<IEnumerable<ParticipantInConversation>> AddParticipantsToConversationAsync(IEnumerable<User> users, Conversation conversation)
     {
-        IEnumerable<ParticipantInConversation> participants = users.Select(x => new ParticipantInConversation
+        foreach (var user in users)
+        {
+            if (_applicationContext.Entry(user).State == EntityState.Detached)
+            {
+                _applicationContext.Attach(user);
+            }
+        }
+
+        var participants = users.Select(x => new ParticipantInConversation
         {
             User = x,
             JoinedAt = DateTime.UtcNow,
             Conversation = conversation,
             Role = Role.Participant,
-        });
+        }).ToList();
 
-        await _applicationContext.AddRangeAsync(participants);
+        await _applicationContext.ParticipantsInConversation.AddRangeAsync(participants);
+
         return participants;
     }
+
 
     public async Task<ParticipantInConversation> DeleteParticipantFromGroupConversationAsync(Guid userId, Guid conversationId)
     {
@@ -64,16 +74,8 @@ public class ParticipantRepository : IParticipantRepository
         return participant;
     }
 
-    public async Task UpdateParticipantRoleAsync(Guid participantId, Role role)
-    {
-        ParticipantInConversation participant = await _applicationContext.ParticipantsInConversation.FindAsync(participantId);
-
-        participant.Role = role;
-    }
-
     public async Task<ParticipantInConversation> GetParticipantFromGroupConversationAsync(Guid userId, Guid conversationId)
     {
-
         ParticipantInConversation participant = await _applicationContext.ParticipantsInConversation
             .Include(x => x.Conversation)
                 .ThenInclude(x => x.Group)

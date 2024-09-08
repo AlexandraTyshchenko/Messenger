@@ -1,10 +1,8 @@
 ﻿namespace Messenger.Infrastructure.Pagination;
-
-public interface IPagedEntities<out T>
+public interface IPagedEntities<T>
 {
     public int Page { get; set; }
     public int PageSize { get; set; }
     public int TotalSize { get; set; }
-    public IEnumerable<T> Entities { get; }
+    public List<T> Entities { get; }
 }
-

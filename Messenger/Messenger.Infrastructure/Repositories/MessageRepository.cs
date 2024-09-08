@@ -14,13 +14,28 @@ public class MessageRepository : IMessageRepository
     {
         _applicationContext = applicationContext;
     }
-
-    public async Task<Message> AddMessageToConversationAsync(Message message)//todo add dto
+    public async Task<Message> AddMessageToConversationAsync(Message message)
     {
-        await _applicationContext.Messages.AddAsync(message);
+        if (message.Sender != null)
+        {
+            var trackedUser = _applicationContext.Users.Local
+               .FirstOrDefault(u => u.Id == message.Sender.Id);
 
+            if (trackedUser != null)
+            {
+                message.Sender = trackedUser;
+            }
+            else
+            {
+                _applicationContext.Attach(message.Sender);
+            }
+        }      
+
+        await _applicationContext.Messages.AddAsync(message);
         return message;
     }
+
+
 
     public async Task<Message> DeleteMessageAsync(Guid messageId)
     {
@@ -50,9 +65,11 @@ public class MessageRepository : IMessageRepository
         int page, int pageSize)
     {
         IQueryable<Message> messages = _applicationContext.Messages
-                                    .Where(m => m.Conversation.Id == conversationId)
-                                    .Include(x => x.Sender)
-                                    .OrderByDescending(x => x.SentAt);
+            .Include(x => x.Image)
+            .Where(m => m.Conversation.Id == conversationId)
+            .Include(x => x.Sender)
+            .OrderByDescending(x => x.SentAt);
+
         IPagedEntities<Message> pagedMessages = await messages.WithPagingAsync(page, pageSize);
 
         return pagedMessages;

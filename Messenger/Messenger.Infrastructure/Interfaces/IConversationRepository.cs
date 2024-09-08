@@ -10,6 +10,6 @@ public interface IConversationRepository
     Task<Conversation> GetGroupConversationByIdAsync(Guid conversationId);
     Task<Conversation> CreateConversationWithUserAsync(User creatorUser, User user);
     Task<Conversation> GetPrivateConversationWithUserAsync(Guid creatorUserId, Guid userId);
-    Task<Conversation> CreateGroupConversationAsync(string title, string imgUrl, Guid creatorId);
+    Task<Conversation> CreateGroupConversationAsync(string title, Guid creatorId);
     Task<Conversation> DeleteConversationAsync(Guid conversationId);
 }

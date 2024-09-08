@@ -1,6 +1,8 @@
 import { Inject, Injectable } from '@angular/core';
 import { Conversation } from '../classes/conversation.model';
 import { AuthService } from './auth.service';
+import { UserInfo } from '../classes/user-info.model';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
@@ -9,9 +11,9 @@ export class ConversationDataService {
   private userId!: string;
   private readonly defaultGroupImage = 'assets/logo.png';
   private readonly defaultUserImage = 'assets/user_logo.png';
+  private readonly baseImageUrl = environment.baseImageUrl;
 
-  constructor( private authService: AuthService
-) {
+  constructor(private authService: AuthService) {
     this.userId = authService.user()?.nameidentifier!;
   }
 
@@ -24,24 +26,32 @@ export class ConversationDataService {
     return participant?.firstName + ' ' + participant?.lastName;
   }
 
-  private getParticipant(conversation: Conversation) {
-    const participant = conversation.privateConversationParticipants.find(
-      (participant) => participant.id !== this.userId
-    );
-    return participant;
+  private getParticipant(conversation: Conversation): UserInfo | null {
+    const currentUser = conversation.privateConversationParticipants.find(p => p.id === this.userId);
+  
+    if (currentUser) {
+      const otherParticipant = conversation.privateConversationParticipants.find(
+        (p) => p.id !== this.userId
+      );
+  
+      return otherParticipant || currentUser;
+    }
+  
+    return null;
   }
 
-  getConversationImage(conversation: Conversation) {
+  getConversationImage(conversation: Conversation): string {
     if (conversation.group) {
       return this.getGroupImageSource(conversation);
-    } 
-    else {
+    } else {
       return this.getUserImageSource(conversation);
     }
   }
 
   private getGroupImageSource(conversation: Conversation): string {
-    return conversation.group?.imgUrl || this.defaultGroupImage;
+    return conversation.group?.imgUrl 
+        ? `${this.baseImageUrl}${conversation.group.imgUrl}` 
+        : this.defaultGroupImage;
   }
 
   private getUserImageSource(conversation: Conversation): string {

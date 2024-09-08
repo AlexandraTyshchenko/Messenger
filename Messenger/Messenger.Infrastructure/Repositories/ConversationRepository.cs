@@ -17,12 +17,11 @@ public class ConversationRepository : IConversationRepository
         _applicationContext = applicationContext;
     }
 
-    public async Task<Conversation> CreateGroupConversationAsync(string title, string imgUrl, Guid creatorId)
+    public async Task<Conversation> CreateGroupConversationAsync(string title,  Guid creatorId)
     {
         var group = new Group
         {
             Title = title,
-            ImgUrl = imgUrl
         };
 
         await _applicationContext.Groups.AddAsync(group);
@@ -52,6 +51,16 @@ public class ConversationRepository : IConversationRepository
         var conversation = new Conversation();
 
         await _applicationContext.Conversations.AddAsync(conversation);
+
+        if (_applicationContext.Entry(creatorUser).State == EntityState.Detached)
+        {
+            _applicationContext.Attach(creatorUser);
+        }
+
+        if (_applicationContext.Entry(user).State == EntityState.Detached)
+        {
+            _applicationContext.Attach(user);
+        }
 
         var participantCreatorUser = new ParticipantInConversation
         {

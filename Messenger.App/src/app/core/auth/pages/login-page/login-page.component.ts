@@ -34,7 +34,7 @@ export class LoginPageComponent implements OnInit {
       this.authSvc.login(this.loginForm.value as Login).pipe(
         takeUntilDestroyed(this.destroyRef),
         catchError(error => {
-          this.errorMessage = error;
+          this.errorMessage = error.errorMessage;
           console.error('Login error', this.errorMessage);
           return of(null);
         }),

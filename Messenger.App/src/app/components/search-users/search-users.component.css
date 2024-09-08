@@ -1,4 +1,7 @@
 .pen-icon:hover {
-    cursor: pointer;
-  }
-  
+  cursor: pointer;
+}
+.container {
+  overflow-y: scroll;
+  max-height: 400px;
+}

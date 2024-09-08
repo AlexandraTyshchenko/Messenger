@@ -10,7 +10,7 @@ export class HeaderComponent implements OnInit, AfterViewInit{
   constructor(public authService: AuthService
 ) {}
   imgUrl: string | null = null;
-  title = 'Messenger.App';
+  userName:string|null=null
 
   ngOnInit(): void {
   }
@@ -18,6 +18,7 @@ export class HeaderComponent implements OnInit, AfterViewInit{
   ngAfterViewInit(): void {
     if(this.authService.isAuthenticated()){
       this.imgUrl = this.authService.user()!.imgUrl;
+      this.userName = this.authService.user()!.name
     }
   }
 

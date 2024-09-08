@@ -1,10 +1,12 @@
-﻿using Azure;
-
-namespace Messenger.Infrastructure.Pagination;
+﻿namespace Messenger.Infrastructure.Pagination;
 
 public class PagedEntities<T> : IPagedEntities<T>
 {
-    public PagedEntities(int page, int pageSize, int totalSize, IEnumerable<T> entities)
+    public PagedEntities()
+    {
+        
+    }
+    public PagedEntities(int page, int pageSize, int totalSize, List<T> entities)
     {
         Page = page;
         PageSize = pageSize;
@@ -14,5 +16,5 @@ public class PagedEntities<T> : IPagedEntities<T>
     public int Page { get; set; }
     public int PageSize { get; set; }
     public int TotalSize { get; set; }
-    public IEnumerable<T> Entities { get; set; }
+    public List<T> Entities { get; set; }
 }

@@ -16,10 +16,12 @@ public class ConnectionRepository : IConnectionRepository
 
     public async Task AddConnectionAsync(User user, string connectionId)
     {
+        var searchedUser = await _applicationContext.FindAsync<User>(user.Id);
+
         var connection = new UserConnection
         {
             ConnectionId = connectionId,
-            User = user
+            User = searchedUser
         };
 
         await _applicationContext.UserConnections.AddAsync(connection);
@@ -50,10 +52,10 @@ public class ConnectionRepository : IConnectionRepository
             .ToListAsync();
     }
 
-    public async Task<UserConnection> RemoveConnectionAsync(Guid connectionId)
+    public async Task<UserConnection> RemoveConnectionAsync(string connectionId)
     {
         var connection = await _applicationContext.UserConnections
-            .SingleOrDefaultAsync(c => c.Id == connectionId);
+            .SingleOrDefaultAsync(c => c.ConnectionId == connectionId);
 
         if (connection == null)
         {

@@ -2,41 +2,58 @@ import { Component } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { ConversationsService } from '../../core/services/conversations.service';
 import { GroupDto } from '../../core/classes/group-dto.model';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-group-conversation-form',
   templateUrl: './group-conversation-form.component.html',
-  styleUrls: ['./group-conversation-form.component.css'] 
+  styleUrls: ['./group-conversation-form.component.css'],
 })
 export class GroupConversationFormComponent {
   title: string = '';
-  imageFile: string | null = null;
+  imageFile: File | null = null;
+  imageDataUrl: string | null = null; 
 
   constructor(
     public activeModal: NgbActiveModal,
-    private conversationsService: ConversationsService
+    private conversationsService: ConversationsService,
+    private router: Router
   ) {}
 
   createGroup() {
     const groupDto: GroupDto = {
       title: this.title,
-      imgUrl: this.imageFile ? this.imageFile : null
+      img: this.imageFile,  
     };
 
     this.conversationsService.createGroupConversation(groupDto).subscribe({
       next: (response) => {
-        console.log(groupDto)
-        this.activeModal.close(); 
+        console.log('Group created successfully', groupDto);
+        this.router.navigate([], {
+          queryParams: { conversationId: response.id },
+          queryParamsHandling: 'merge',
+        });
+        this.activeModal.close();
       },
       error: (err) => {
-        console.log(groupDto)
-
         console.error('Error creating group:', err);
-      }
+      },
     });
   }
 
   onFileChange(event: Event) {
-      this.imageFile = null;
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.imageFile = input.files[0];
+      const reader = new FileReader();
+
+      reader.onload = (e: ProgressEvent<FileReader>) => {
+        if (e.target) {
+          this.imageDataUrl = e.target.result as string;  // Store the base64 string
+        }
+      };
+
+      reader.readAsDataURL(this.imageFile);
+    }
   }
 }

@@ -38,7 +38,7 @@ public class UserRepository : IUserRepository
     public async Task<IEnumerable<User>> GetUsersByIdsAsync(Guid[] userIds)
     {
         return await _applicationContext.Users
-                                 .Where(user => userIds.Contains(user.Id))
-                                 .ToListAsync();
+            .Where(user => userIds.Contains(user.Id))
+            .ToListAsync();
     }
 }

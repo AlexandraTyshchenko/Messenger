@@ -57,6 +57,23 @@ namespace Messenger.Infrastructure.Migrations
                     b.ToTable("Groups");
                 });
 
+            modelBuilder.Entity("Messenger.Infrastructure.Entities.Image", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("FileName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Images");
+                });
+
             modelBuilder.Entity("Messenger.Infrastructure.Entities.Message", b =>
                 {
                     b.Property<Guid>("Id")
@@ -64,6 +81,9 @@ namespace Messenger.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ImageId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("IsJoinMessage")
@@ -87,6 +107,10 @@ namespace Messenger.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ConversationId");
+
+                    b.HasIndex("ImageId")
+                        .IsUnique()
+                        .HasFilter("[ImageId] IS NOT NULL");
 
                     b.HasIndex("SenderId");
 
@@ -229,14 +253,14 @@ namespace Messenger.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("8ddb7c0f-6044-4896-9ecb-ef1108c48141"),
+                            Id = new Guid("0ebecf23-4506-4dbb-adc8-833c9578f65c"),
                             AccessFailedCount = 0,
                             Bio = "Hello, I'm John.",
-                            ConcurrencyStamp = "513f2014-da31-4b23-ac2d-7ddc6e1176c5",
+                            ConcurrencyStamp = "c4f8bd4a-77b6-469d-ace2-e66ff1eff5e9",
                             Email = "john.doe@example.com",
                             EmailConfirmed = true,
                             FirstName = "John",
-                            ImgUrl = "https://example.com/images/john.jpg",
+                            ImgUrl = "https://images.vexels.com/media/users/3/145908/raw/52eabf633ca6414e60a7677b0b917d92-male-avatar-maker.jpg",
                             IsActive = true,
                             LastName = "Doe",
                             LockoutEnabled = false,
@@ -249,14 +273,14 @@ namespace Messenger.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("e8f1f051-74ad-48eb-b72d-8d7bf1ec4e85"),
+                            Id = new Guid("7c4f45be-6269-4717-b218-005d565f9d16"),
                             AccessFailedCount = 0,
                             Bio = "Hi, I'm Jane.",
-                            ConcurrencyStamp = "559db8b3-b451-4577-a441-49cbb9248a44",
+                            ConcurrencyStamp = "6c0081d2-4b83-46cc-b057-7622c5ebb836",
                             Email = "jane.smith@example.com",
                             EmailConfirmed = true,
                             FirstName = "Jane",
-                            ImgUrl = "https://example.com/images/jane.jpg",
+                            ImgUrl = "https://images.vexels.com/media/users/3/145908/raw/52eabf633ca6414e60a7677b0b917d92-male-avatar-maker.jpg",
                             IsActive = true,
                             LastName = "Smith",
                             LockoutEnabled = false,
@@ -269,14 +293,14 @@ namespace Messenger.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("2f7004e5-2fe7-47b6-8e34-cc20e139ab42"),
+                            Id = new Guid("82bc91a4-9fc8-4f94-8777-330bece3f1ea"),
                             AccessFailedCount = 0,
                             Bio = "Hey, I'm Michael.",
-                            ConcurrencyStamp = "16deaa1d-e229-44c8-8c0c-31ef3540de0f",
+                            ConcurrencyStamp = "c1afff84-718d-4fa4-a575-ec5d41bfa2e4",
                             Email = "michael.johnson@example.com",
                             EmailConfirmed = true,
                             FirstName = "Michael",
-                            ImgUrl = "https://example.com/images/michael.jpg",
+                            ImgUrl = "https://images.vexels.com/media/users/3/145908/raw/52eabf633ca6414e60a7677b0b917d92-male-avatar-maker.jpg",
                             IsActive = true,
                             LastName = "Johnson",
                             LockoutEnabled = false,
@@ -457,12 +481,19 @@ namespace Messenger.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Messenger.Infrastructure.Entities.Image", "Image")
+                        .WithOne("Message")
+                        .HasForeignKey("Messenger.Infrastructure.Entities.Message", "ImageId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("Messenger.Infrastructure.Entities.User", "Sender")
                         .WithMany("Messages")
                         .HasForeignKey("SenderId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Conversation");
+
+                    b.Navigation("Image");
 
                     b.Navigation("Sender");
                 });
@@ -567,6 +598,11 @@ namespace Messenger.Infrastructure.Migrations
             modelBuilder.Entity("Messenger.Infrastructure.Entities.Group", b =>
                 {
                     b.Navigation("Conversation");
+                });
+
+            modelBuilder.Entity("Messenger.Infrastructure.Entities.Image", b =>
+                {
+                    b.Navigation("Message");
                 });
 
             modelBuilder.Entity("Messenger.Infrastructure.Entities.User", b =>

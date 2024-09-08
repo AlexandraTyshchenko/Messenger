@@ -1,8 +1,6 @@
 <header class="p-3 mb-3 border-bottom">
   <div class="container">
-    <div
-      class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start"
-    >
+    <div class="d-flex flex-wrap align-items-center justify-content-between">
       <a
         [routerLink]="['/home']"
         class="d-flex align-items-center mb-2 mb-lg-0 text-dark text-decoration-none"
@@ -18,40 +16,17 @@
         />
       </a>
 
-      <ul
-        class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0"
-      >
+      <ul *ngIf="!authService.isAuthenticated()" class="nav col-12 col-lg-auto mb-2 justify-content-center mb-md-0">
         <li>
-          <a
-            href="#"
-            class="nav-link px-2 link-secondary"
-            [routerLink]="['/login']"
-            >Login</a
-          >
+          <a href="#" class="nav-link px-2 link-secondary" [routerLink]="['/login']">Login</a>
         </li>
         <li>
-          <a
-            href="#"
-            class="nav-link px-2 link-secondary"
-            [routerLink]="['/register']"
-            >Sign up</a
-          >
+          <a href="#" class="nav-link px-2 link-secondary" [routerLink]="['/register']">Sign up</a>
         </li>
       </ul>
 
-      <form
-        *ngIf="authService.isAuthenticated()"
-        class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3"
-      >
-        <input
-          type="search"
-          class="form-control"
-          placeholder="Search..."
-          aria-label="Search"
-        />
-      </form>
-
-      <div *ngIf="authService.isAuthenticated()" class="d-flex align-items-center">
+      <div class = "userInfo" *ngIf="authService.isAuthenticated()" class="d-flex align-items-center ms-auto">
+        <span *ngIf="userName">{{userName}}</span>
         <img
           *ngIf="imgUrl; else defaultImage"
           [src]="imgUrl"
@@ -69,7 +44,7 @@
             class="rounded-circle me-2"
           />
         </ng-template>
-        <div ngbDropdown>
+        <div ngbDropdown class="dropdown">
           <button
             ngbDropdownToggle
             class="btn btn-light"

@@ -18,7 +18,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Messenger.Client\Messanger.Image.Client.csproj" />
     <ProjectReference Include="..\Messenger.Infrastructure\Messenger.Infrastructure.csproj" />
+    <ProjectReference Include="..\Messenger.Shared\Messenger.Shared.csproj" />
   </ItemGroup>
 
 </Project>

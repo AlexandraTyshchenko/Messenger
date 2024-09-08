@@ -1,10 +1,11 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using System.Text.Json.Serialization;
 
 namespace Messenger.Infrastructure.Entities;
 
 public class User : IdentityUser<Guid>
 {
-    public string FirstName { get; set; } //todo for user configure set null property on deletion
+    public string FirstName { get; set; } 
     public string LastName { get; set; }
     public string PhoneNumber { get; set; } 
     public string ImgUrl { get; set; } = string.Empty;

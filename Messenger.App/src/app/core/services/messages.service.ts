@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
-import { environment } from '../../../environments/environment.development';
+import { environment } from '../../../environments/environment';
 import { PagedEntities } from '../classes/pagination.model';
 import { Message } from '../classes/message.model';
 import { MessageDto } from '../classes/message-dto.model';
@@ -31,6 +31,15 @@ export class MessagesService {
     messageDto: MessageDto
   ): Observable<Message> {
     const url = `${environment.apiUrl}api/Conversations/${conversationId}/Messages`;
-    return this.http.post<Message>(url, messageDto);
+
+    const formData = new FormData();
+    if( messageDto.text){
+      formData.append('text', messageDto.text);
+    }
+    if (messageDto.image) {
+      formData.append('image', messageDto.image);
+    }
+
+    return this.http.post<Message>(url, formData);
   }
 }

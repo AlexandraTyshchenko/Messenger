@@ -1,0 +1,62 @@
+version: '3.4'
+
+services:
+  messenger.api:
+    image: ${DOCKER_REGISTRY-}messengerapi
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_HTTP_PORTS=7000
+    ports:
+      - "7000:7000"
+    build:
+      context: .
+      dockerfile: Messenger.Api/Dockerfile
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+
+  messenger.image.api:
+    user: root
+    image: ${DOCKER_REGISTRY-}messengerimageapi
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_HTTP_PORTS=8000
+    ports:
+      - "8000:8000"
+
+    build:
+      context: .
+      dockerfile: Messenger.Image.Service/Dockerfile
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+
+  redis:
+    image: "redis:latest"
+    container_name: redis-cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  sqlserver:
+    image: "mcr.microsoft.com/mssql/server:2022-latest"
+    container_name: sql-server
+    environment:
+      SA_PASSWORD: "YourStrong!Passw0rd"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql
+
+  app:
+    build:
+      context: ../Messenger.App
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+
+volumes:
+  redis_data:
+  sql_data:

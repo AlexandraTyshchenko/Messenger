@@ -1,6 +1,5 @@
 ﻿using Messenger.Api.Hubs;
-using Messenger.Api.Middleware;
-using Messenger.Business.Extensions;
+using Messenger.Shared.Extensions;
 using Messenger.Business.Options;
 using Messenger.Infrastructure.Context;
 using Messenger.Infrastructure.Entities;
@@ -11,13 +10,26 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using System.Text;
+using Messenger.Business.Extensions;
+using Messanger.Image.Client.Extensions;
+using Messenger.Api.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddControllers();
-builder.Services.AddBusinessServices(builder.Configuration);
+
+var environment = builder.Environment.EnvironmentName;
+builder.Configuration
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{environment}.json", optional: true, reloadOnChange: true) 
+    .AddEnvironmentVariables();
+
+// Adding services
+builder.Services.AddBusinessServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(opt =>
 {
@@ -47,11 +59,20 @@ builder.Services.AddSwaggerGen(opt =>
     });
 });
 
+builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddStackExchangeRedisCache(option =>
+{
+    option.Configuration = builder.Configuration.GetConnectionString("redis");
+});
+
 var jwtSettings = builder.Configuration.GetSection("JwtConfig").Get<JwtSettings>();
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtConfig"));
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.Configure<EmailConfirmationSettings>(builder.Configuration.GetSection("EmailConfirmationSettings"));
+builder.Services.Configure<ImageFormatsSettings>(builder.Configuration.GetSection("ImageFormatsSettings"));
+builder.Services.AddClientServices(builder);
 
 builder.Services.AddIdentity<User, UserRole>(options =>
 {
@@ -90,35 +111,41 @@ builder.Services.AddAuthentication(opt =>
         }
     };
 });
+
 builder.Host.UseSerilog((context, configuration) =>
     configuration.ReadFrom.Configuration(context.Configuration));
 
 builder.Services.AddSignalR();
+builder.Services.AddHttpClient();
 
 var app = builder.Build();
 
+// Apply migrations
+app.ApplyMigrations();
+
+// Configure CORS
 app.UseCors(options =>
-  options.WithOrigins("http://localhost:4200")
-    .AllowAnyMethod()
-    .AllowAnyHeader()
-    .AllowCredentials() 
+    options.WithOrigins("http://localhost:4200", "http://localhost:80", "http://localhost")
+           .AllowAnyMethod()
+           .AllowAnyHeader()
+           .AllowCredentials()
 );
 
-
-// Configure the HTTP request pipeline
-app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseExceptionHandlingMiddleware();
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseHttpsRedirection();
 }
 
 app.UseSerilogRequestLogging();
 
-app.UseHttpsRedirection();
 app.UseRouting();
+app.UseAuthentication(); 
 app.UseAuthorization();
+
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllers();

@@ -10,10 +10,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   }
   if (authSvc.isAuthenticated()) {
     const authRequest = addAuthorizationHeader(req);
-    console.log('login is invoked');
     return next(authRequest);
   } else {
-    console.log('user is not authenticated');
     return next(req);
   }
 };

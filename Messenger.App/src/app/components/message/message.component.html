@@ -2,13 +2,27 @@
   <div class="chat">
     <div class="message">
       <div class="m-b-0">
-        <div *ngIf= "message.isJoinMessage===true; else simpleMessage" class="center-message">
+        <div
+          *ngIf="message.isJoinMessage === true; else simpleMessage"
+          class="center-message"
+        >
           <div class="message-data">{{ message.text }}</div>
           <span class="message-data-time">{{ sentAt }}</span>
         </div>
         <ng-template #simpleMessage>
-          <div  *ngIf="myMessage === true; else otherMessage" class="clearfix float-right">
+          <div
+            *ngIf="myMessage === true; else otherMessage"
+            class="clearfix float-right"
+          >
             <div class="message my-message">
+              <img
+                *ngIf="message.image"
+                [src]="url + message.image.imageUrl"
+                alt="Default image"
+                class="responsive-image"
+                role="img"
+              />
+
               <div class="message-data">{{ message.text }}</div>
             </div>
             <div>
@@ -16,11 +30,12 @@
             </div>
           </div>
         </ng-template>
-       
+
         <ng-template #otherMessage>
           <div class="clearfix">
             <div class="sender-info">
               <img
+                *ngIf="message.sender?.imgUrl; else defaultImage"
                 [src]="message.sender?.imgUrl"
                 alt="Logo"
                 width="30"
@@ -29,10 +44,28 @@
                 role="img"
                 aria-label="logo"
               />
+              <ng-template #defaultImage>
+                <img
+                  [src]="defaultImageUrl"
+                  alt="Default Logo"
+                  width="40"
+                  height="40"
+                  class="bi me-3 rounded-image sender-image"
+                  role="img"
+                  aria-label="default logo"
+                />
+              </ng-template>
               {{ getSenderDisplayText() }}
             </div>
             <div class="message-other-wrapper">
               <div class="message other-message">
+                <img
+                  *ngIf="message.image"
+                  [src]="url + message.image.imageUrl"
+                  alt="Default image"
+                  class="responsive-image"
+                  role="img"
+                />
                 {{ message.text }}
                 <div class="message-data"></div>
               </div>

@@ -20,6 +20,7 @@ public class ApplicationContext : IdentityDbContext<User, UserRole, Guid>
     public DbSet<UserRole> UserRoles { get; set; }
     public DbSet<UserConnection> UserConnections { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<Image> Images { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -49,10 +50,10 @@ public class ApplicationContext : IdentityDbContext<User, UserRole, Guid>
             FirstName = "John",
             LastName = "Doe",
             PhoneNumber = "1234567890",
-            ImgUrl = "https://example.com/images/john.jpg",
+            ImgUrl = "https://images.vexels.com/media/users/3/145908/raw/52eabf633ca6414e60a7677b0b917d92-male-avatar-maker.jpg",
             Bio = "Hello, I'm John.",
             IsActive = true,
-            EmailConfirmed = true
+            EmailConfirmed = true,
         };
 
         var jane = new User
@@ -65,7 +66,7 @@ public class ApplicationContext : IdentityDbContext<User, UserRole, Guid>
             FirstName = "Jane",
             LastName = "Smith",
             PhoneNumber = "9876543210",
-            ImgUrl = "https://example.com/images/jane.jpg",
+            ImgUrl = "https://images.vexels.com/media/users/3/145908/raw/52eabf633ca6414e60a7677b0b917d92-male-avatar-maker.jpg",
             Bio = "Hi, I'm Jane.",
             IsActive = true,
             EmailConfirmed = true
@@ -81,7 +82,7 @@ public class ApplicationContext : IdentityDbContext<User, UserRole, Guid>
             FirstName = "Michael",
             LastName = "Johnson",
             PhoneNumber = "5556667777",
-            ImgUrl = "https://example.com/images/michael.jpg",
+            ImgUrl = "https://images.vexels.com/media/users/3/145908/raw/52eabf633ca6414e60a7677b0b917d92-male-avatar-maker.jpg",
             Bio = "Hey, I'm Michael.",
             IsActive = true,
             EmailConfirmed = true

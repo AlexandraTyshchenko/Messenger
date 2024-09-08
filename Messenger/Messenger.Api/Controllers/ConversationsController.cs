@@ -48,7 +48,7 @@ public class ConversationsController : BaseController
     }
 
     [HttpPost("group")]
-    public async Task<IActionResult> CreateGroupConversation([FromBody] GroupModelDto groupModelDto)
+    public async Task<IActionResult> CreateGroupConversation([FromForm] GroupModelDto groupModelDto)
     {
         ResultDto<ConversationDto> response = await _mediatoR.Send(new CreateGroupConversationCommand
         {
