@@ -22,12 +22,11 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.x'
-
       - name: Build with dotnet
-        run: dotnet build Messenger/Messenger.Api/Messenger.Api.csproj --configuration Release
-      
+        run: dotnet build Messenger/Messenger --configuration Release
+
       - name: dotnet publish
-        run: dotnet publish Messenger/Messenger.Api/Messenger.Api.csproj -c Release -o "${{env.DOTNET_ROOT}}/myapp"
+        run: dotnet publish  Messenger/Messenger -c Release -o "${{env.DOTNET_ROOT}}/myapp"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -64,6 +63,7 @@ jobs:
           package: .
 
           
+
 
 
 
