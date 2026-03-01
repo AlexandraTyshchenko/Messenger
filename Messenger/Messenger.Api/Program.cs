@@ -130,10 +130,12 @@ app.UseCors(options =>
 
 app.UseExceptionHandlingMiddleware();
 
-app.UseSwagger();
-app.UseSwaggerUI();
-app.UseHttpsRedirection();
-
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+    app.UseHttpsRedirection();
+}
 
 app.UseSerilogRequestLogging();
 
