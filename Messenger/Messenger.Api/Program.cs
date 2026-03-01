@@ -120,9 +120,6 @@ builder.Services.AddHttpClient();
 
 var app = builder.Build();
 
-// Apply migrations
-app.ApplyMigrations();
-
 // Configure CORS
 app.UseCors(options =>
     options.WithOrigins("http://localhost:4200", "http://localhost:80", "http://localhost")
@@ -133,12 +130,10 @@ app.UseCors(options =>
 
 app.UseExceptionHandlingMiddleware();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-    app.UseHttpsRedirection();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
+app.UseHttpsRedirection();
+
 
 app.UseSerilogRequestLogging();
 
