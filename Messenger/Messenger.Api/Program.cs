@@ -16,33 +16,38 @@ using Messenger.Api.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container
-builder.Services.AddControllers();
+// ---------------- CONFIGURATION ----------------
 
 var environment = builder.Environment.EnvironmentName;
+
 builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddJsonFile($"appsettings.{environment}.json", optional: true, reloadOnChange: true) 
+    .AddJsonFile($"appsettings.{environment}.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
 
-// Adding services
+// ---------------- SERVICES ----------------
+
+builder.Services.AddControllers();
+
 builder.Services.AddBusinessServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(opt =>
 {
-    opt.SwaggerDoc("v1", new OpenApiInfo { Title = "MyAPI", Version = "v1" });
+    opt.SwaggerDoc("v1", new OpenApiInfo { Title = "Messenger API", Version = "v1" });
+
     opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
-        Description = "Please enter token",
+        Description = "Enter JWT token",
         Name = "Authorization",
         Type = SecuritySchemeType.Http,
         BearerFormat = "JWT",
         Scheme = "bearer"
     });
+
     opt.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -54,37 +59,37 @@ builder.Services.AddSwaggerGen(opt =>
                     Id = "Bearer"
                 }
             },
-            new string[]{}
+            Array.Empty<string>()
         }
     });
 });
 
 builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddStackExchangeRedisCache(option =>
+builder.Services.AddStackExchangeRedisCache(options =>
 {
-    option.Configuration = builder.Configuration.GetConnectionString("redis");
+    options.Configuration = builder.Configuration.GetConnectionString("redis");
 });
+
+// ---------------- JWT ----------------
 
 var jwtSettings = builder.Configuration.GetSection("JwtConfig").Get<JwtSettings>();
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtConfig"));
-builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
-builder.Services.Configure<EmailConfirmationSettings>(builder.Configuration.GetSection("EmailConfirmationSettings"));
-builder.Services.Configure<ImageFormatsSettings>(builder.Configuration.GetSection("ImageFormatsSettings"));
-builder.Services.AddClientServices(builder);
 
 builder.Services.AddIdentity<User, UserRole>(options =>
 {
     options.User.RequireUniqueEmail = true;
-}).AddEntityFrameworkStores<ApplicationContext>()
-  .AddDefaultTokenProviders();
+})
+.AddEntityFrameworkStores<ApplicationContext>()
+.AddDefaultTokenProviders();
 
-builder.Services.AddAuthentication(opt =>
+builder.Services.AddAuthentication(options =>
 {
-    opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(options =>
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -94,61 +99,87 @@ builder.Services.AddAuthentication(opt =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = jwtSettings.ValidIssuer,
         ValidAudience = jwtSettings.ValidAudience,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret))
+        IssuerSigningKey =
+            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret))
     };
+
     options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
         {
             var accessToken = context.Request.Query["access_token"];
             var path = context.HttpContext.Request.Path;
+
             if (!string.IsNullOrEmpty(accessToken) &&
-                (path.StartsWithSegments("/chathub")))
+                path.StartsWithSegments("/chathub"))
             {
                 context.Token = accessToken;
             }
+
             return Task.CompletedTask;
         }
     };
 });
 
-builder.Host.UseSerilog((context, configuration) =>
-    configuration.ReadFrom.Configuration(context.Configuration));
+// ---------------- OTHER SERVICES ----------------
 
 builder.Services.AddSignalR();
 builder.Services.AddHttpClient();
+builder.Services.AddClientServices(builder);
+
+// ---------------- CORS ----------------
+
+var allowedOrigins = builder.Configuration
+    .GetSection("AllowedOrigins")
+    .Get<string[]>();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("CorsPolicy", policy =>
+    {
+        policy.WithOrigins(allowedOrigins!)
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
+
+// ---------------- LOGGING ----------------
+
+builder.Host.UseSerilog((context, configuration) =>
+    configuration.ReadFrom.Configuration(context.Configuration));
+
+// ---------------- BUILD ----------------
 
 var app = builder.Build();
 
-// Configure CORS
-app.UseCors(options =>
-    options.WithOrigins("http://localhost:4200", "http://localhost:80", "http://localhost")
-           .AllowAnyMethod()
-           .AllowAnyHeader()
-           .AllowCredentials()
-);
+// ---------------- MIDDLEWARE ----------------
 
 app.UseExceptionHandlingMiddleware();
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 if (!app.Environment.IsProduction())
 {
     app.ApplyMigrations();
-
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.UseHttpsRedirection();
 }
 
 app.UseSerilogRequestLogging();
 
 app.UseRouting();
-app.UseAuthentication(); 
+
+
+app.UseCors("CorsPolicy");
+
+app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapControllers();
-    endpoints.MapHub<ChatHub>("/chathub").RequireAuthorization();
-});
+app.MapControllers();
+app.MapHub<ChatHub>("/chathub").RequireAuthorization();
 
 app.Run();
