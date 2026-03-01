@@ -48,14 +48,17 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: '22'   # Angular 16+ требует Node 20/22
   
       - name: Install dependencies
         run: npm ci
         working-directory: Messenger.App
   
+      - name: Install Angular CLI
+        run: npm install -g @angular/cli
+  
       - name: Build Angular
-        run: ng build --configuration production
+        run: npm run build -- --configuration production
         working-directory: Messenger.App
   
       - name: Upload Angular artifact
@@ -115,6 +118,7 @@ jobs:
           action: "upload"
           app_location: "dist/your-angular-app-name"  # <-- путь к сборке Angular
           output_location: "."
+
 
 
 
