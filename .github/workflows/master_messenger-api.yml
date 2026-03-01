@@ -23,10 +23,10 @@ jobs:
         with:
           dotnet-version: '8.x'
       - name: Build with dotnet
-        run: dotnet build Messenger/Messenger --configuration Release
+        run: dotnet build Messenger/Messenger.Api --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish  Messenger/Messenger -c Release -o "${{env.DOTNET_ROOT}}/myapp"
+        run: dotnet publish  Messenger/Messenger.Api -c Release -o "${{env.DOTNET_ROOT}}/myapp"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -63,6 +63,7 @@ jobs:
           package: .
 
           
+
 
 
 
