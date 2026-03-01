@@ -1,7 +1,4 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
-name: Build and deploy ASP.Net Core app to Azure Web App - messenger-api
+name: Build and deploy .NET Core to Azure
 
 on:
   push:
@@ -10,10 +7,13 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  # --------------------------
+  # 1️⃣ Build .NET Core API
+  # --------------------------
+  build-dotnet:
     runs-on: windows-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
@@ -22,31 +22,36 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.x'
-      - name: Build with dotnet
+
+      - name: Build .NET Core
         run: dotnet build Messenger/Messenger.Api --configuration Release
 
-      - name: dotnet publish
-        run: dotnet publish  Messenger/Messenger.Api -c Release -o "${{env.DOTNET_ROOT}}/myapp"
+      - name: Publish .NET Core
+        run: dotnet publish Messenger/Messenger.Api -c Release -o "${{env.DOTNET_ROOT}}/myapp"
 
-      - name: Upload artifact for deployment job
+      - name: Upload .NET artifact
         uses: actions/upload-artifact@v4
         with:
-          name: .net-app
+          name: dotnet-app
           path: ${{env.DOTNET_ROOT}}/myapp
 
-  deploy:
+
+  # --------------------------
+  # 3️⃣ Deploy .NET Core to Azure Web App
+  # --------------------------
+  deploy-dotnet:
     runs-on: windows-latest
-    needs: build
+    needs: build-dotnet
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+      id-token: write
+      contents: read
 
     steps:
-      - name: Download artifact from build job
+      - name: Download .NET artifact
         uses: actions/download-artifact@v4
         with:
-          name: .net-app
-      
+          name: dotnet-app
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -54,18 +59,10 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_B14A1E58E76947F2AD77F52E9FD67575 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_DA4E1AFF88FD4888A2BAEBD629805E89 }}
 
-      - name: Deploy to Azure Web App
-        id: deploy-to-webapp
+      - name: Deploy .NET Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'messenger-api'
           slot-name: 'Production'
           package: .
-
-          
-
-
-
-
-
 
