@@ -1,4 +1,4 @@
 export const environment = {
-    apiUrl: 'http://localhost:7000/', 
+    apiUrl: 'https://messenger-api-bwawa5czegepb3er.canadacentral-01.azurewebsites.net/', 
     baseImageUrl: 'http://localhost:8000/',
 };
