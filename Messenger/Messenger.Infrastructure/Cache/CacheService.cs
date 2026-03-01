@@ -17,58 +17,71 @@ namespace Messenger.Infrastructure.Cache
             _logger = logger;
         }
 
-        public async Task<T> GetAsync<T>(string key)
+        public async Task<T?> GetAsync<T>(string key)
         {
-            _logger.LogInformation($"Attempting to retrieve cache for key: {key}");
-
-            byte[] cachedData = await _cache.GetAsync(key);
-
-            if (cachedData != null)
+            try
             {
-                var cachedDataString = Encoding.UTF8.GetString(cachedData);
-                var cachedResult = JsonSerializer.Deserialize<T>(cachedDataString, new JsonSerializerOptions
+                _logger.LogInformation("Getting cache for key: {Key}", key);
+
+                var cachedData = await _cache.GetAsync(key);
+
+                if (cachedData == null)
+                {
+                    _logger.LogInformation("Cache miss for key: {Key}", key);
+                    return default;
+                }
+
+                var json = Encoding.UTF8.GetString(cachedData);
+
+                return JsonSerializer.Deserialize<T>(json, new JsonSerializerOptions
+                {
+                    ReferenceHandler = ReferenceHandler.Preserve
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Cache GET failed for key: {Key}", key);
+                return default; 
+            }
+        }
+
+        public async Task SetAsync<T>(string key, T value)
+        {
+            try
+            {
+                _logger.LogInformation("Setting cache for key: {Key}", key);
+
+                var json = JsonSerializer.Serialize(value, new JsonSerializerOptions
                 {
                     ReferenceHandler = ReferenceHandler.Preserve
                 });
 
-                _logger.LogInformation($"Successfully retrieved cache for key: {key}");
+                var data = Encoding.UTF8.GetBytes(json);
 
-                return cachedResult;
+                var options = new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
+                };
+
+                await _cache.SetAsync(key, data, options);
             }
-
-            _logger.LogInformation($"Cache not found for key: {key}");
-
-            return default;
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Cache SET failed for key: {Key}", key);
+            }
         }
 
         public async Task RemoveAsync(string key)
         {
-            _logger.LogInformation($"Attempting to remove cache for key: {key}");
-
-            await _cache.RemoveAsync(key);
-
-            _logger.LogInformation($"Cache removed for key: {key}");
-        }
-
-        public async Task SetAsync<T>(string key, T objectToCache)
-        {
-            _logger.LogInformation($"Attempting to set cache for key: {key}");
-
-            var serializedParticipants = JsonSerializer.Serialize(objectToCache, new JsonSerializerOptions
+            try
             {
-                ReferenceHandler = ReferenceHandler.Preserve
-            });
-
-            var newDataToCache = Encoding.UTF8.GetBytes(serializedParticipants);
-
-            var cacheOptions = new DistributedCacheEntryOptions
+                _logger.LogInformation("Removing cache for key: {Key}", key);
+                await _cache.RemoveAsync(key);
+            }
+            catch (Exception ex)
             {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
-            };
-
-            await _cache.SetAsync(key, newDataToCache, cacheOptions);
-
-            _logger.LogInformation($"Cache successfully set for key: {key}");
+                _logger.LogError(ex, "Cache REMOVE failed for key: {Key}", key);
+            }
         }
     }
 }
