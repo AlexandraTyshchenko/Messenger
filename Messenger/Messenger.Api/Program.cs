@@ -135,6 +135,7 @@ if (!app.Environment.IsProduction())
     app.UseSwagger();
     app.UseSwaggerUI();
     app.UseHttpsRedirection();
+    app.ApplyMigrations();
 }
 
 app.UseSerilogRequestLogging();
