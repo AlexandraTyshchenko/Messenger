@@ -12,7 +12,6 @@ public class CachedParticipantRepository : IParticipantRepository
     private readonly IParticipantRepository _innerRepository;
     private readonly ICacheService _cacheService;
     private readonly ICacheKeyBuilder _cacheKeyBuilder;
-    private readonly ApplicationContext _applicationContext;
 
     public CachedParticipantRepository(IParticipantRepository innerRepository,
                                        ICacheService cacheService,
@@ -22,7 +21,6 @@ public class CachedParticipantRepository : IParticipantRepository
         _innerRepository = innerRepository;
         _cacheService = cacheService;
         _cacheKeyBuilder = cacheKeyBuilderFactory.Create(typeof(ParticipantInConversation));
-        _applicationContext = applicationContext;
     }
 
     public async Task<IEnumerable<ParticipantInConversation>> AddParticipantsToConversationAsync(IEnumerable<User> users,
