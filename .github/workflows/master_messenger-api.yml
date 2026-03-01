@@ -65,7 +65,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: angular-app
-          path: Messenger.App/dist/your-angular-app-name
+          path: Messenger.App/dist/messenger.app
 
   # --------------------------
   # 3️⃣ Deploy .NET Core to Azure Web App
@@ -118,6 +118,7 @@ jobs:
           action: "upload"
           app_location: "dist/your-angular-app-name"  # <-- путь к сборке Angular
           output_location: "."
+
 
 
 
