@@ -1,4 +1,4 @@
-name: Build and deploy .NET Core + Angular apps to Azure
+name: Build and deploy .NET Core to Azure
 
 on:
   push:
@@ -65,3 +65,4 @@ jobs:
           app-name: 'messenger-api'
           slot-name: 'Production'
           package: .
+
