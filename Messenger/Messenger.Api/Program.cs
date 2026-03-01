@@ -144,6 +144,11 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.Configure<EmailConfirmationSettings>(
+    builder.Configuration.GetSection("EmailConfirmationSettings"));
+
+builder.Services.Configure<SmtpSettings>(
+    builder.Configuration.GetSection("SmtpSettings"));
 // ---------------- LOGGING ----------------
 
 builder.Host.UseSerilog((context, configuration) =>

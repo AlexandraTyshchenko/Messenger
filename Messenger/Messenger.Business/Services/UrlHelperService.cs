@@ -25,9 +25,14 @@ public class UrlHelperService : IUrlHelperService
         {
             Scheme = _emailconfirmationSettings.Scheme,
             Host = _emailconfirmationSettings.Host,
-            Path = _emailconfirmationSettings.Path,
-            Port = _emailconfirmationSettings.Port
+            Path = _emailconfirmationSettings.Path
         };
+
+        if (_emailconfirmationSettings.Port.HasValue)
+        {
+            uriBuilder.Port = _emailconfirmationSettings.Port.Value;
+        }
+
         byte[] tokenGeneratedBytes = Encoding.UTF8.GetBytes(token);
 
         string codeEncoded = WebEncoders.Base64UrlEncode(tokenGeneratedBytes);
