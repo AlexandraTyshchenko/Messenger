@@ -182,6 +182,7 @@ builder.Services.Configure<EmailConfirmationSettings>(
 builder.Services.Configure<SmtpSettings>(
     builder.Configuration.GetSection("SmtpSettings"));
 
+builder.Services.AddApplicationInsightsTelemetry();
 // ---------------- BUILD ----------------
 
 var app = builder.Build();
