@@ -156,7 +156,11 @@ builder.Services.Configure<SmtpSettings>(
 // ---------------- LOGGING ----------------
 
 builder.Host.UseSerilog((context, configuration) =>
-    configuration.ReadFrom.Configuration(context.Configuration));
+{
+    configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .WriteTo.Console();
+});
 
 // ---------------- BUILD ----------------
 
@@ -178,9 +182,9 @@ if (!app.Environment.IsProduction())
     app.UseSwaggerUI();
 }
 app.MapHealthChecks("/health");
-app.UseSerilogRequestLogging();
 
 app.UseRouting();
+app.UseSerilogRequestLogging();
 
 
 app.UseCors("CorsPolicy");
