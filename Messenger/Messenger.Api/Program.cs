@@ -14,10 +14,6 @@ using Messenger.Business.Extensions;
 using Messanger.Image.Client.Extensions;
 using Messenger.Api.Extensions;
 
-Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console()
-    .CreateBootstrapLogger();
-
 var builder = WebApplication.CreateBuilder(args);
 
 // ---------------- CONFIGURATION ----------------
@@ -159,6 +155,7 @@ builder.Host.UseSerilog((context, configuration) =>
 {
     configuration
         .ReadFrom.Configuration(context.Configuration)
+        .Enrich.FromLogContext()
         .WriteTo.Console();
 });
 
