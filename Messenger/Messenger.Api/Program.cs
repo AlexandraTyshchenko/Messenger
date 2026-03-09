@@ -26,6 +26,16 @@ builder.Configuration
     .AddJsonFile($"appsettings.{environment}.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
 
+// ---------------- SERILOG ----------------
+
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .CreateLogger();
+
+builder.Host.UseSerilog();
+
 // ---------------- SERVICES ----------------
 
 builder.Services.AddControllers();
@@ -34,9 +44,14 @@ builder.Services.AddBusinessServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen(opt =>
 {
-    opt.SwaggerDoc("v1", new OpenApiInfo { Title = "Messenger API", Version = "v1" });
+    opt.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Messenger API",
+        Version = "v1"
+    });
 
     opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
@@ -66,16 +81,21 @@ builder.Services.AddSwaggerGen(opt =>
 
 builder.Services.AddHttpContextAccessor();
 
+// ---------------- REDIS ----------------
+
 builder.Services.AddStackExchangeRedisCache(options =>
 {
-    options.Configuration = builder.Configuration.GetConnectionString("redis");
+    options.Configuration =
+        builder.Configuration.GetConnectionString("redis");
 });
 
 // ---------------- JWT ----------------
 
-var jwtSettings = builder.Configuration.GetSection("JwtConfig").Get<JwtSettings>();
+var jwtSettings =
+    builder.Configuration.GetSection("JwtConfig").Get<JwtSettings>();
 
-builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtConfig"));
+builder.Services.Configure<JwtSettings>(
+    builder.Configuration.GetSection("JwtConfig"));
 
 builder.Services.AddIdentity<User, UserRole>(options =>
 {
@@ -86,28 +106,37 @@ builder.Services.AddIdentity<User, UserRole>(options =>
 
 builder.Services.AddAuthentication(options =>
 {
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultAuthenticateScheme =
+        JwtBearerDefaults.AuthenticationScheme;
+
+    options.DefaultChallengeScheme =
+        JwtBearerDefaults.AuthenticationScheme;
 })
 .AddJwtBearer(options =>
 {
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtSettings.ValidIssuer,
-        ValidAudience = jwtSettings.ValidAudience,
-        IssuerSigningKey =
-            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret))
-    };
+    options.TokenValidationParameters =
+        new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+
+            ValidIssuer = jwtSettings.ValidIssuer,
+            ValidAudience = jwtSettings.ValidAudience,
+
+            IssuerSigningKey =
+                new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(jwtSettings.Secret))
+        };
 
     options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
         {
-            var accessToken = context.Request.Query["access_token"];
+            var accessToken =
+                context.Request.Query["access_token"];
+
             var path = context.HttpContext.Request.Path;
 
             if (!string.IsNullOrEmpty(accessToken) &&
@@ -125,6 +154,7 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddSignalR();
 builder.Services.AddHttpClient();
+
 builder.Services.AddClientServices(builder);
 
 // ---------------- CORS ----------------
@@ -138,26 +168,19 @@ builder.Services.AddCors(options =>
     options.AddPolicy("CorsPolicy", policy =>
     {
         policy.WithOrigins(allowedOrigins!)
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials();
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
     });
 });
+
+// ---------------- SETTINGS ----------------
 
 builder.Services.Configure<EmailConfirmationSettings>(
     builder.Configuration.GetSection("EmailConfirmationSettings"));
 
 builder.Services.Configure<SmtpSettings>(
     builder.Configuration.GetSection("SmtpSettings"));
-// ---------------- LOGGING ----------------
-
-builder.Host.UseSerilog((context, configuration) =>
-{
-    configuration
-        .ReadFrom.Configuration(context.Configuration)
-        .Enrich.FromLogContext()
-        .WriteTo.Console();
-});
 
 // ---------------- BUILD ----------------
 
@@ -175,27 +198,37 @@ if (!app.Environment.IsDevelopment())
 if (!app.Environment.IsProduction())
 {
     app.ApplyMigrations();
+
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
 app.MapHealthChecks("/health");
 
 app.UseRouting();
-app.UseSerilogRequestLogging();
 
+// Serilog HTTP logging
+app.UseSerilogRequestLogging();
 
 app.UseCors("CorsPolicy");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
+// ---------------- ENDPOINTS ----------------
+
 app.MapControllers();
-app.MapGet("/logtest", () =>
+
+app.MapGet("/logtest", (ILogger<Program> logger) =>
 {
-    Log.Information("TEST LOG");
-    Console.WriteLine("TEST CONSOLE");
-    return "ok";
+    logger.LogInformation("TEST LOG INFORMATION");
+    logger.LogWarning("TEST LOG WARNING");
+    logger.LogError("TEST LOG ERROR");
+
+    return "Log test completed";
 });
-app.MapHub<ChatHub>("/chathub").RequireAuthorization();
+
+app.MapHub<ChatHub>("/chathub")
+   .RequireAuthorization();
 
 app.Run();
