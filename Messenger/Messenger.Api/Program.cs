@@ -158,6 +158,8 @@ builder.Host.UseSerilog((context, configuration) =>
 
 var app = builder.Build();
 
+Log.Information("APPLICATION STARTED");
+
 // ---------------- MIDDLEWARE ----------------
 
 app.UseExceptionHandlingMiddleware();
