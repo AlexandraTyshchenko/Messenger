@@ -42,9 +42,11 @@ public class MessageWorker : BackgroundService
             var mu = _metrics.Mu();
             var rho = _metrics.Rho();
             var overloaded = rho > 1;
+            var queueLength = _queue.QueueLength();
 
             _logger.LogInformation(
-               "SYSTEM METRICS → ArrivalRate: {Lambda:F2} msg/sec | ServiceRate: {Mu:F2} msg/sec | ServerUtilization: {Rho:F2} | ServerOverloaded: {Overloaded}",
+               "SYSTEM METRICS → QueueLength: {QueueLength} | ArrivalRate: {Lambda:F2} msg/sec | ServiceRate: {Mu:F2} msg/sec | ServerUtilization: {Rho:F2} | ServerOverloaded: {Overloaded}",
+               queueLength,
                lambda,
                mu,
                rho,

@@ -8,6 +8,8 @@ public class MessageQueue
     private readonly Channel<ChatNotification> _channel;
     private readonly QueueMetricsService _metrics;
 
+    private int _queueLength = 0;
+
     public MessageQueue(QueueMetricsService metrics)
     {
         _metrics = metrics;
@@ -18,11 +20,22 @@ public class MessageQueue
     {
         _metrics.MessageReceived();
 
+        Interlocked.Increment(ref _queueLength);
+
         await _channel.Writer.WriteAsync(notification);
     }
 
-    public ValueTask<ChatNotification> DequeueAsync(CancellationToken token)
+    public async ValueTask<ChatNotification> DequeueAsync(CancellationToken token)
     {
-        return _channel.Reader.ReadAsync(token);
+        var item = await _channel.Reader.ReadAsync(token);
+
+        Interlocked.Decrement(ref _queueLength);
+
+        return item;
+    }
+
+    public int QueueLength()
+    {
+        return _queueLength;
     }
 }
