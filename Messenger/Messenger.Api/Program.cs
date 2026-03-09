@@ -162,8 +162,6 @@ builder.Host.UseSerilog((context, configuration) =>
 
 var app = builder.Build();
 
-Log.Information("APPLICATION STARTED");
-
 // ---------------- MIDDLEWARE ----------------
 
 app.UseExceptionHandlingMiddleware();
@@ -191,6 +189,12 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapGet("/logtest", () =>
+{
+    Log.Information("TEST LOG");
+    Console.WriteLine("TEST CONSOLE");
+    return "ok";
+});
 app.MapHub<ChatHub>("/chathub").RequireAuthorization();
 
 app.Run();
