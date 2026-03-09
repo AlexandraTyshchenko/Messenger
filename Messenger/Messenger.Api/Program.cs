@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Serilog;
 using System.Text;
 using Messenger.Business.Extensions;
 using Messanger.Image.Client.Extensions;
@@ -199,7 +198,6 @@ app.MapHealthChecks("/health");
 
 app.UseRouting();
 
-// Serilog HTTP logging
 
 app.UseCors("CorsPolicy");
 
