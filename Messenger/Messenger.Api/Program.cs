@@ -169,6 +169,7 @@ if (!app.Environment.IsDevelopment())
 
 if (!app.Environment.IsProduction())
 {
+    app.ApplyMigrations();
     app.UseSwagger();
     app.UseSwaggerUI();
 }
