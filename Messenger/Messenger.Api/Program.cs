@@ -26,15 +26,6 @@ builder.Configuration
     .AddJsonFile($"appsettings.{environment}.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
 
-// ---------------- SERILOG ----------------
-
-Log.Logger = new LoggerConfiguration()
-    .ReadFrom.Configuration(builder.Configuration)
-    .Enrich.FromLogContext()
-    .WriteTo.Console()
-    .CreateLogger();
-
-builder.Host.UseSerilog();
 
 // ---------------- SERVICES ----------------
 
@@ -209,7 +200,6 @@ app.MapHealthChecks("/health");
 app.UseRouting();
 
 // Serilog HTTP logging
-app.UseSerilogRequestLogging();
 
 app.UseCors("CorsPolicy");
 
