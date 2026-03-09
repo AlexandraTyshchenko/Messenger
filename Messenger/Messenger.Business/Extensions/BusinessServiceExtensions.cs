@@ -6,8 +6,10 @@ using Messenger.Business.Commands;
 using Messenger.Business.Interfaces;
 using Messenger.Business.Profiles;
 using Messenger.Business.Queries;
+using Messenger.Business.Queues;
 using Messenger.Business.Services;
 using Messenger.Business.ValidationPipelines;
+using Messenger.Business.Workers;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Messenger.Business.Extensions;
@@ -37,6 +39,9 @@ public static class BusinessServiceExtensions
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IHubService, HubService>();
 
+        services.AddSingleton<QueueMetricsService>();
+        services.AddSingleton<MessageQueue>();
+        services.AddHostedService<MessageWorker>();
         return services;
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Messenger.Infrastructure.Cache;
 using Messenger.Infrastructure.CachedRepositories;
 using Messenger.Infrastructure.Context;
+using Messenger.Infrastructure.Health;
 using Messenger.Infrastructure.Interfaces;
 using Messenger.Infrastructure.KeyBuilder;
 using Messenger.Infrastructure.Repositories;
@@ -8,6 +9,7 @@ using Messenger.Infrastructure.Repositories.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace Messenger.Infrastructure.Extensions;
 
@@ -35,6 +37,16 @@ public static class InfrastructureExtensions
         services.AddScoped<IUserRepository, UserRepository>();
         services.Decorate<IUserRepository, CachedUserRepository>();
 
+        services.AddHealthChecks()
+            .AddRedis(configuration.GetConnectionString("Redis")!, name: "redis");
+
+        services.Configure<HealthCheckPublisherOptions>(options =>
+        {
+            options.Delay = TimeSpan.FromSeconds(2);  
+            options.Period = TimeSpan.FromSeconds(30); 
+        });
+
+        services.AddSingleton<RedisStateService>();
         return services;
     }
 }

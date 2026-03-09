@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Caching.Distributed;
+﻿using Messenger.Infrastructure.Health;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using System.Text;
 using System.Text.Json;
@@ -10,65 +11,60 @@ namespace Messenger.Infrastructure.Cache
     {
         private readonly IDistributedCache _cache;
         private readonly ILogger<CacheService> _logger;
+        private readonly RedisStateService _redisState;
 
-        public CacheService(IDistributedCache cache, ILogger<CacheService> logger)
+        public CacheService(IDistributedCache cache, ILogger<CacheService> logger, RedisStateService redisState)
         {
             _cache = cache;
             _logger = logger;
+            _redisState = redisState;
         }
 
         public async Task<T?> GetAsync<T>(string key)
         {
-            try
+            if (!_redisState.IsAvailable)
             {
-                _logger.LogInformation("Getting cache for key: {Key}", key);
-
-                var cachedData = await _cache.GetAsync(key);
-
-                if (cachedData == null)
-                {
-                    _logger.LogInformation("Cache miss for key: {Key}", key);
-                    return default;
-                }
-
-                var json = Encoding.UTF8.GetString(cachedData);
-
-                return JsonSerializer.Deserialize<T>(json, new JsonSerializerOptions
-                {
-                    ReferenceHandler = ReferenceHandler.Preserve
-                });
+                _logger.LogWarning("Redis unavailable. Skipping cache GET for key: {Key}", key);
+                return default;
             }
-            catch (Exception ex)
+
+            _logger.LogInformation("Getting cache for key: {Key}", key);
+            var cachedData = await _cache.GetAsync(key);
+            if (cachedData == null)
             {
-                _logger.LogError(ex, "Cache GET failed for key: {Key}", key);
-                return default; 
+                _logger.LogInformation("Cache miss for key: {Key}", key);
+                return default;
             }
+            var json = Encoding.UTF8.GetString(cachedData);
+            return JsonSerializer.Deserialize<T>(json, new JsonSerializerOptions
+            {
+                ReferenceHandler = ReferenceHandler.Preserve
+            });
         }
 
         public async Task SetAsync<T>(string key, T value)
         {
-            try
+            if (!_redisState.IsAvailable)
             {
-                _logger.LogInformation("Setting cache for key: {Key}", key);
-
-                var json = JsonSerializer.Serialize(value, new JsonSerializerOptions
-                {
-                    ReferenceHandler = ReferenceHandler.Preserve
-                });
-
-                var data = Encoding.UTF8.GetBytes(json);
-
-                var options = new DistributedCacheEntryOptions
-                {
-                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
-                };
-
-                await _cache.SetAsync(key, data, options);
+                _logger.LogWarning("Redis unavailable. Skipping cache GET for key: {Key}", key);
+                return;
             }
-            catch (Exception ex)
+
+            _logger.LogInformation("Setting cache for key: {Key}", key);
+
+            var json = JsonSerializer.Serialize(value, new JsonSerializerOptions
             {
-                _logger.LogError(ex, "Cache SET failed for key: {Key}", key);
-            }
+                ReferenceHandler = ReferenceHandler.Preserve
+            });
+
+            var data = Encoding.UTF8.GetBytes(json);
+
+            var options = new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
+            };
+
+            await _cache.SetAsync(key, data, options);
         }
 
         public async Task RemoveAsync(string key)

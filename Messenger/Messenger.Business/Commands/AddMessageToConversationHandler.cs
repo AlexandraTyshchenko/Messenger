@@ -2,8 +2,8 @@
 using FluentValidation;
 using MediatR;
 using Messenger.Business.Dtos;
-using Messenger.Business.Interfaces;
 using Messenger.Business.Options;
+using Messenger.Business.Queues;
 using Messenger.Business.Validators;
 using Messenger.Client.Interfaces;
 using Messenger.Infrastructure;
@@ -55,14 +55,14 @@ public class AddMessageToConversationCommandHandler : IRequestHandler<AddMessage
 {
     private readonly IMapper _mapper;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IHubService _hubService;
+    private readonly MessageQueue _messageQueue;
     private readonly IImageClient _imageClient;
     public AddMessageToConversationCommandHandler(IUnitOfWork unitOfWork, IMapper mapper,
-        IHubService hubService, IImageClient imageClient)
+        MessageQueue messageQueue, IImageClient imageClient)
     {
         _mapper = mapper;
         _unitOfWork = unitOfWork;
-        _hubService = hubService;
+        _messageQueue = messageQueue;
         _imageClient = imageClient;
     }
 
@@ -121,7 +121,12 @@ public class AddMessageToConversationCommandHandler : IRequestHandler<AddMessage
 
         var mappedMessage = _mapper.Map<MessageWithSenderDto>(joinMessage);
 
-        await _hubService.NotifyGroupAsync(conversation.Id, mappedMessage, "ReceiveNotification");
+        await _messageQueue.EnqueueAsync(new ChatNotification
+        {
+            ConversationId = conversation.Id,
+            Message = mappedMessage,
+            ArrivalTime = DateTime.UtcNow
+        });
 
         return ResultDto.SuccessResult(mappedMessage, HttpStatusCode.Created);
     }

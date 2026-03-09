@@ -173,7 +173,7 @@ if (!app.Environment.IsProduction())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+app.MapHealthChecks("/health");
 app.UseSerilogRequestLogging();
 
 app.UseRouting();
