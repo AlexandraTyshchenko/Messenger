@@ -8,5 +8,7 @@ public class ChatNotification
 
     public MessageWithSenderDto Message { get; set; }
 
+    public DateTime StartProcessingTime { get; set; }
+
     public DateTime ArrivalTime { get; set; }
 }
