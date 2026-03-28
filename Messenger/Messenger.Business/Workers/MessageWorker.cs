@@ -104,19 +104,16 @@ public class MessageWorker : BackgroundService
         var L_real = queueLength + inProcessing;
 
         _logger.LogInformation(
-             "SYSTEM METRICS",
-             new Dictionary<string, object>
-             {
-                 ["WorkerId"] = id,
-                 ["QueueLength"] = queueLength,
-                 ["InProcessing"] = inProcessing,
-                 ["LReal"] = L_real,
-                 ["W"] = totalTime,
-                 ["Wq"] = queueWaitTime,
-                 ["S"] = serviceTime,
-                 ["Lambda"] = lambda,
-                 ["Mu"] = mu,
-                 ["Rho"] = rho
-             });
+            "SYSTEM METRICS | WorkerId: {WorkerId} | QueueLength: {QueueLength} | InProcessing: {InProcessing} | LReal: {LReal} | W: {W} | Wq: {Wq} | S: {S} | Lambda: {Lambda} | Mu: {Mu} | Rho: {Rho}",
+            id,
+            queueLength,
+            inProcessing,
+            L_real,
+            totalTime,
+            queueWaitTime,
+            serviceTime,
+            lambda,
+            mu,
+            rho);
     }
 }
