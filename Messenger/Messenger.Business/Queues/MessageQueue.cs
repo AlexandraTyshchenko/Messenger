@@ -19,8 +19,8 @@ public class MessageQueue
     public async ValueTask EnqueueAsync(ChatNotification notification)
     {
         _metrics.MessageReceived();
-
         Interlocked.Increment(ref _queueLength);
+        notification.ArrivalTime = DateTime.UtcNow;
 
         await _channel.Writer.WriteAsync(notification);
     }
@@ -28,9 +28,8 @@ public class MessageQueue
     public async ValueTask<ChatNotification> DequeueAsync(CancellationToken token)
     {
         var item = await _channel.Reader.ReadAsync(token);
-
         Interlocked.Decrement(ref _queueLength);
-
+        item.StartProcessingTime = DateTime.UtcNow;
         return item;
     }
 

@@ -1,63 +1,119 @@
 ﻿using Messenger.Business.Interfaces;
+using Messenger.Business.Options;
 using Messenger.Business.Queues;
+using Messenger.Business.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
-using Messenger.Business.Services;
-
-namespace Messenger.Business.Workers;
+using Microsoft.Extensions.Options;
+using System.Diagnostics;
 
 public class MessageWorker : BackgroundService
 {
     private readonly MessageQueue _queue;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<MessageWorker> _logger;
-    private readonly DateTime _start = DateTime.UtcNow;
     private readonly QueueMetricsService _metrics;
+    private readonly WorkerSettings _settings;
 
-    public MessageWorker(MessageQueue queue, IServiceScopeFactory scopeFactory, ILogger<MessageWorker> logger, QueueMetricsService metrics)
+    public MessageWorker(
+        MessageQueue queue,
+        IServiceScopeFactory scopeFactory,
+        ILogger<MessageWorker> logger,
+        QueueMetricsService metrics,
+        IOptions<WorkerSettings> options)
     {
         _queue = queue;
         _scopeFactory = scopeFactory;
         _logger = logger;
         _metrics = metrics;
+        _settings = options.Value;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("MessageWorker started.");
+        _logger.LogInformation("MessageWorker started with {Count} workers", _settings.WorkerCount);
 
-        while (!stoppingToken.IsCancellationRequested)
+        var tasks = Enumerable.Range(0, _settings.WorkerCount)
+            .Select(i => Task.Run(() => ProcessLoop
+            (i, stoppingToken), stoppingToken));
+
+        await Task.WhenAll(tasks);
+    }
+
+    private async Task ProcessLoop(int id, CancellationToken token)
+    {
+        while (!token.IsCancellationRequested)
         {
-            var notification = await _queue.DequeueAsync(stoppingToken);
+            var notification = await _queue.DequeueAsync(token);
 
-            using var scope = _scopeFactory.CreateScope();
+            _metrics.StartProcessing();
+            var sw = Stopwatch.StartNew();
 
-            var hubService = scope.ServiceProvider
-                .GetRequiredService<IHubService>();
+            _logger.LogInformation("Worker {Id} START", id);
 
-            _metrics.MessageProcessed();
+            try
+            {
+                await ProcessNotification(notification, token);
+            }
+            finally
+            {
+                sw.Stop();
 
-            var lambda = _metrics.Lambda();
-            var mu = _metrics.Mu();
-            var rho = _metrics.Rho();
-            var overloaded = rho > 1;
-            var queueLength = _queue.QueueLength();
+                LogMetrics(id, notification, sw.Elapsed.TotalSeconds);
 
-            _logger.LogInformation(
-               "SYSTEM METRICS → QueueLength: {QueueLength} | ArrivalRate: {Lambda:F2} msg/sec | ServiceRate: {Mu:F2} msg/sec | ServerUtilization: {Rho:F2} | ServerOverloaded: {Overloaded}",
-               queueLength,
-               lambda,
-               mu,
-               rho,
-               overloaded);
+                _metrics.EndProcessing();
 
-            await hubService.NotifyGroupAsync(
-                notification.ConversationId,
-                notification.Message,
-                "ReceiveNotification");
-
-            await Task.Delay(5000);
+                _logger.LogInformation("Worker {Id} END", id);
+            }
         }
+    }
+
+    private async Task ProcessNotification(ChatNotification notification, CancellationToken token)
+    {
+        using var scope = _scopeFactory.CreateScope();
+
+        var hubService = scope.ServiceProvider
+            .GetRequiredService<IHubService>();
+
+        await hubService.NotifyGroupAsync(
+            notification.ConversationId,
+            notification.Message,
+            "ReceiveNotification");
+
+        if (_settings.DelayMs > 0)
+        {
+            await Task.Delay(_settings.DelayMs, token);
+        }
+    }
+
+    private void LogMetrics(int id, ChatNotification notification, double serviceTime)
+    {
+        var totalTime = (DateTime.UtcNow - notification.ArrivalTime).TotalSeconds;
+        var queueWaitTime = (notification.StartProcessingTime - notification.ArrivalTime).TotalSeconds;
+
+        _metrics.AddServiceTime(serviceTime);
+        _metrics.MessageProcessed();
+
+        var inProcessing = _metrics.InProcessing();
+        var lambda = _metrics.Lambda();
+        var mu = _metrics.MuReal();
+        var rho = _metrics.Rho();
+        var queueLength = _queue.QueueLength();
+
+        var L_real = queueLength + inProcessing;
+
+        _logger.LogInformation(
+            "Worker {Id} | QueueLength: {QueueLength} | InProcessing: {InProcessing} | L(real): {Lreal} | W: {W:F2} | Wq: {Wq:F2} | S: {S:F2} | Lambda: {Lambda:F2} | μ: {Mu:F2} | p: {Rho:F2}",
+            id,
+            queueLength,
+            inProcessing,
+            L_real,
+            totalTime,
+            queueWaitTime,
+            serviceTime,
+            lambda,
+            mu,
+            rho);
     }
 }

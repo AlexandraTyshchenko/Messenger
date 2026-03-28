@@ -12,6 +12,7 @@ using System.Text;
 using Messenger.Business.Extensions;
 using Messanger.Image.Client.Extensions;
 using Messenger.Api.Extensions;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,7 +31,7 @@ builder.Configuration
 
 builder.Services.AddControllers();
 
-builder.Services.AddBusinessServices();
+builder.Services.AddBusinessServices(builder.Configuration);
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
 builder.Services.AddEndpointsApiExplorer();
@@ -164,21 +165,21 @@ builder.Services.AddCors(options =>
     });
 });
 
-// ---------------- SETTINGS ----------------
 
-builder.Services.Configure<EmailConfirmationSettings>(
-    builder.Configuration.GetSection("EmailConfirmationSettings"));
 
-builder.Services.Configure<SmtpSettings>(
-    builder.Configuration.GetSection("SmtpSettings"));
+builder.Host.UseSerilog((context, configuration) =>
+    configuration.ReadFrom.Configuration(context.Configuration));
 
-builder.Services.AddApplicationInsightsTelemetry();
+if (!builder.Environment.IsDevelopment())
+{
+    builder.Services.AddApplicationInsightsTelemetry();
+}
 // ---------------- BUILD ----------------
 
 var app = builder.Build();
 
 // ---------------- MIDDLEWARE ----------------
-
+app.UseSerilogRequestLogging();
 app.UseExceptionHandlingMiddleware();
 
 if (!app.Environment.IsDevelopment())

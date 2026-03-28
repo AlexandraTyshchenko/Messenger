@@ -124,8 +124,7 @@ public class AddMessageToConversationCommandHandler : IRequestHandler<AddMessage
         await _messageQueue.EnqueueAsync(new ChatNotification
         {
             ConversationId = conversation.Id,
-            Message = mappedMessage,
-            ArrivalTime = DateTime.UtcNow
+            Message = mappedMessage
         });
 
         return ResultDto.SuccessResult(mappedMessage, HttpStatusCode.Created);
