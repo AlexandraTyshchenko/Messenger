@@ -167,19 +167,25 @@ builder.Services.AddCors(options =>
 
 
 
-builder.Host.UseSerilog((context, configuration) =>
-    configuration.ReadFrom.Configuration(context.Configuration));
-
 if (!builder.Environment.IsDevelopment())
 {
     builder.Services.AddApplicationInsightsTelemetry();
+}
+else
+{
+    builder.Host.UseSerilog((context, configuration) => configuration.ReadFrom.Configuration(context.Configuration));
 }
 // ---------------- BUILD ----------------
 
 var app = builder.Build();
 
 // ---------------- MIDDLEWARE ----------------
-app.UseSerilogRequestLogging();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSerilogRequestLogging();
+}
+
 app.UseExceptionHandlingMiddleware();
 
 if (!app.Environment.IsDevelopment())
