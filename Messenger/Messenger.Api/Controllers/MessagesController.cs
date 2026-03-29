@@ -51,6 +51,23 @@ public class MessagesController : BaseController
         return response.ToHttpResponse();
     }
 
+    [HttpPost("spam")]
+    public async Task<IActionResult> StartSpam(
+        [FromRoute] Guid conversationId,
+        [FromBody] SpamRequestDto request)
+    {
+        await _mediator.Send(new StartSpamCommand
+        {
+            ConversationId = conversationId,
+            Text = request.Text,
+            Lambda = request.Lambda,
+            DurationSeconds = request.DurationSeconds,
+            SenderId = UserId
+        });
+
+        return Ok(new { message = "Spam finished successfully" });
+    }
+
     [HttpDelete("{messageId}")]
     [PermissionsToManageMessages]
     public async Task<IActionResult> DeleteMessageFromConversation([FromRoute] Guid messageId)
