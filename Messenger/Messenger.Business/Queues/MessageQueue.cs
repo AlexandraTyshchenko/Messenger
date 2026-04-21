@@ -16,21 +16,21 @@ public class MessageQueue
         _channel = Channel.CreateUnbounded<ChatNotification>();
     }
 
-    public async ValueTask EnqueueAsync(ChatNotification notification)
+    public async ValueTask EnqueueAsync(ChatNotification notification, CancellationToken cancellationToken = default)
     {
         _metrics.MessageReceived();
         Interlocked.Increment(ref _queueLength);
         notification.ArrivalTime = DateTime.UtcNow;
 
-        await _channel.Writer.WriteAsync(notification);
+        await _channel.Writer.WriteAsync(notification, cancellationToken);
     }
 
     public async ValueTask<ChatNotification> DequeueAsync(CancellationToken token)
     {
-        var item = await _channel.Reader.ReadAsync(token);
+        var notification = await _channel.Reader.ReadAsync(token);
         Interlocked.Decrement(ref _queueLength);
-        item.StartProcessingTime = DateTime.UtcNow;
-        return item;
+        notification.StartProcessingTime = DateTime.UtcNow;
+        return notification;
     }
 
     public int QueueLength()

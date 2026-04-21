@@ -48,6 +48,9 @@ public static class BusinessServiceExtensions
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IHubService, HubService>();
 
+        services.AddScoped<RealProcessor>();
+        services.AddScoped<TheoreticalProcessor>();
+
         services.AddSingleton<QueueMetricsService>();
         services.AddSingleton<MessageQueue>();
         services.AddHostedService<MessageWorker>();
