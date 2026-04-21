@@ -73,18 +73,12 @@ public class MessageWorker : BackgroundService
     {
         using var scope = _scopeFactory.CreateScope();
 
-        var hubService = scope.ServiceProvider
-            .GetRequiredService<IHubService>();
+        IMessageProcessor processor = notification.IsTheoretical
+            ? scope.ServiceProvider.GetRequiredService<TheoreticalProcessor>()
+            : scope.ServiceProvider.GetRequiredService<RealProcessor>();
 
-        await hubService.NotifyGroupAsync(
-            notification.ConversationId,
-            notification.Message,
-            "ReceiveNotification");
+        await processor.ProcessAsync(notification, token);
 
-        if (_settings.DelayMs > 0)
-        {
-            await Task.Delay(_settings.DelayMs, token);
-        }
     }
 
     private void LogMetrics(int id, ChatNotification notification, double serviceTime)
@@ -104,7 +98,8 @@ public class MessageWorker : BackgroundService
         var L_real = queueLength + inProcessing;
 
         _logger.LogInformation(
-            "SYSTEM METRICS | WorkerId: {WorkerId} | QueueLength: {QueueLength} | InProcessing: {InProcessing} | LReal: {LReal} | W: {W} | Wq: {Wq} | S: {S} | Lambda: {Lambda} | Mu: {Mu} | Rho: {Rho}",
+            "MODE={Mode} | SYSTEM METRICS | WorkerId: {WorkerId} | QueueLength: {QueueLength} | InProcessing: {InProcessing} | LReal: {LReal} | W: {W} | Wq: {Wq} | S: {S} | Lambda: {Lambda} | Mu: {Mu} | Rho: {Rho}",
+            notification.IsTheoretical ? "THEORETICAL" : "REAL",
             id,
             queueLength,
             inProcessing,

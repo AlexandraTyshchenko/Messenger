@@ -28,7 +28,7 @@ public class MessagesController : BaseController
     public async Task<IActionResult> GetMessagesByConversationId([FromRoute] Guid conversationId,
        [FromQuery] PaginationParams paginationParams)
     {
-        ResultDto<IPagedEntities<MessageWithSenderDto>> response = await _mediator
+        var response = await _mediator
             .Send(new GetMessagesByConversationIdQuery
             {
                 ConversationId = conversationId,
@@ -41,7 +41,7 @@ public class MessagesController : BaseController
     [HttpPost]
     public async Task<IActionResult> AddMessageToConversation([FromForm] MessageDto message, [FromRoute] Guid conversationId)
     {
-        ResultDto<MessageWithSenderDto> response = await _mediator.Send(new AddMessageToConversationCommand
+        var response = await _mediator.Send(new AddMessageToConversationCommand
         {
             Message = message,
             ConversationId = conversationId,
@@ -68,11 +68,28 @@ public class MessagesController : BaseController
         return Ok(new { message = "Spam finished successfully" });
     }
 
+    [HttpPost("spam-real")]
+    public async Task<IActionResult> StartRealSpam(
+    [FromRoute] Guid conversationId,
+    [FromBody] SpamRequestDto request)
+    {
+        await _mediator.Send(new StartRealSpamCommand
+        {
+            ConversationId = conversationId,
+            Text = request.Text,
+            Lambda = request.Lambda,
+            DurationSeconds = request.DurationSeconds,
+            SenderId = UserId
+        });
+
+        return Ok(new { message = "Real spam finished successfully" });
+    }
+
     [HttpDelete("{messageId}")]
     [PermissionsToManageMessages]
     public async Task<IActionResult> DeleteMessageFromConversation([FromRoute] Guid messageId)
     {
-        ResultDto response = await _mediator.Send(new DeleteMessageCommand { MessageId = messageId });
+        var response = await _mediator.Send(new DeleteMessageCommand { MessageId = messageId });
 
         return response.ToHttpResponse();
     }

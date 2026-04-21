@@ -8,13 +8,12 @@ public class QueueMetricsService
     private long _receivedMessages = 0;
     private long _processedMessages = 0;
 
-    private const int WindowSeconds = 10;
-    private const int ServiceWindowSize = 500;
+    private const int WindowSeconds = 30;
 
     private readonly Queue<DateTime> _arrivalTimes = new();
     private readonly object _arrivalLock = new();
 
-    private readonly Queue<double> _serviceTimes = new();
+    private readonly Queue<(DateTime time, double serviceTime)> _serviceTimes = new();
     private readonly object _serviceLock = new();
 
     private readonly WorkerSettings _settings;
@@ -58,26 +57,31 @@ public class QueueMetricsService
 
     public void AddServiceTime(double seconds)
     {
+        var now = DateTime.UtcNow;
+
         lock (_serviceLock)
         {
-            _serviceTimes.Enqueue(seconds);
+            _serviceTimes.Enqueue((now, seconds));
 
-            while (_serviceTimes.Count > ServiceWindowSize)
+            while (_serviceTimes.Count > 0 &&
+                   (now - _serviceTimes.Peek().time).TotalSeconds > WindowSeconds)
+            {
                 _serviceTimes.Dequeue();
+            }
         }
     }
 
-    public double MuReal()
+
+  public double MuReal()
+{
+    lock (_serviceLock)
     {
-        lock (_serviceLock)
-        {
-            if (_serviceTimes.Count == 0) return 0;
+        if (_serviceTimes.Count == 0) return 0;
 
-            var avg = _serviceTimes.Average();
-            return avg == 0 ? 0 : 1.0 / avg;
-        }
+        var avg = _serviceTimes.Average(x => x.serviceTime);
+        return avg == 0 ? 0 : 1.0 / avg;
     }
-
+}
 
     public void StartProcessing()
     {

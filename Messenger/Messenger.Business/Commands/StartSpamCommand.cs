@@ -4,9 +4,7 @@ using Messenger.Business.Dtos;
 using Messenger.Business.Queues;
 using Messenger.Infrastructure;
 using Messenger.Infrastructure.Entities;
-using Microsoft.VisualBasic;
 using System.Net;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Messenger.Business.Commands;
 
@@ -23,84 +21,95 @@ public class StartSpamCommandHandler : IRequestHandler<StartSpamCommand, ResultD
 {
     private readonly MessageQueue _queue;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
 
-    public StartSpamCommandHandler(MessageQueue queue, IMapper mapper, IUnitOfWork unitOfWork)
+    public StartSpamCommandHandler(MessageQueue queue, IUnitOfWork unitOfWork)
     {
         _queue = queue;
         _unitOfWork = unitOfWork;
-        _mapper = mapper;
     }
 
     public async Task<ResultDto> Handle(StartSpamCommand request, CancellationToken cancellationToken)
     {
-        User sender = await _unitOfWork.Users.GetUserByIdAsync(request.SenderId);
+        var rnd = Random.Shared;
 
-        if (sender == null)
+        double currentTime = 0.0;
+        double endTime = request.DurationSeconds;
+
+        var start = DateTime.UtcNow;
+
+        var message = new MessageDto
         {
-            return ResultDto.FailureResult<MessageWithSenderDto>(HttpStatusCode.NotFound,
-                "No sender was found.");
-        }
-
-        Conversation conversation = await _unitOfWork.Conversations.GetConversationByIdAsync(request.ConversationId);
-
-        if (conversation == null)
-        {
-            return ResultDto.FailureResult<MessageWithSenderDto>(HttpStatusCode.NotFound,
-                "No conversation was found.");
-        }
-
-        var user = _mapper.Map<UserBasicInfoDto>(sender);
-
-        await _unitOfWork.SaveChangesAsync();
-
-        var message = new Message()
-        {
-            Conversation = conversation,
             IsJoinMessage = false,
-            Sender = sender,
             Text = request.Text,
-            SentAt = DateTime.Now,
         };
 
-        var count = await Task.Run(async () =>
+        var tasks = new List<Task>();
+
+        while (currentTime < endTime)
         {
-            int messageSentCount = 0;
+            var dt = -Math.Log(1 - rnd.NextDouble()) / request.Lambda;
+            currentTime += dt;
 
-            var rnd = Random.Shared;
-            var end = DateTime.UtcNow.AddSeconds(request.DurationSeconds);
+            if (currentTime > endTime)
+                break;
 
-            while (DateTime.UtcNow < end)
+            var scheduledTime = start.AddSeconds(currentTime);
+
+            var task = Task.Run(async () =>
             {
-                var delay = -Math.Log(1 - rnd.NextDouble()) / request.Lambda;
+                var delay = scheduledTime - DateTime.UtcNow;
 
-                await Task.Delay(TimeSpan.FromSeconds(delay), cancellationToken);
+                if (delay > TimeSpan.Zero)
+                    await Task.Delay(delay, cancellationToken);
 
                 await _queue.EnqueueAsync(new ChatNotification
                 {
                     ConversationId = request.ConversationId,
-                    Message = new MessageWithSenderDto
-                    {
-                        ConversationId = request.ConversationId,
-                        IsJoinMessage = false,
-                        Sender = user,
-                        Text = request.Text,
-                        SentAt = DateTime.UtcNow,
-                    },
-                    ArrivalTime = DateTime.UtcNow
-                });
+                    Message = message,
+                    IsTheoretical = true,
+                }, cancellationToken);
+            });
 
-                messageSentCount++;
-            }
-
-            return messageSentCount;
-        }, cancellationToken);
-
-        var tasks = Enumerable.Range(0, count)
-            .Select(_ => _unitOfWork.Messages.AddMessageToConversationAsync(message));
+            tasks.Add(task);
+        }
 
         await Task.WhenAll(tasks);
+
+        var sender = await _unitOfWork.Users.GetUserByIdAsync(request.SenderId);
+        if (sender == null)
+        {
+            return ResultDto.FailureResult<MessageWithSenderDto>(
+                HttpStatusCode.NotFound,
+                "No sender was found.");
+        }
+
+        var conversation = await _unitOfWork.Conversations.GetConversationByIdAsync(request.ConversationId);
+        if (conversation == null)
+        {
+            return ResultDto.FailureResult<MessageWithSenderDto>(
+                HttpStatusCode.NotFound,
+                "No conversation was found.");
+        }
+
+        await SaveMessagesBatch(sender, conversation, request.Text, tasks.Count);
+        await _unitOfWork.SaveChangesAsync();
+
         return ResultDto.SuccessResult();
     }
 
+    private async Task SaveMessagesBatch(User sender, Conversation conversation, string text, int count)
+    {
+        var tasks = Enumerable.Range(0, count)
+            .Select(_ => _unitOfWork.Messages.AddMessageToConversationAsync(new Message
+            {
+                Conversation = conversation,
+                IsJoinMessage = false,
+                Sender = sender,
+                Text = text,
+                SentAt = DateTime.UtcNow,
+            }));
+
+        await Task.WhenAll(tasks);
+        await _unitOfWork.SaveChangesAsync();
+    }
 }
