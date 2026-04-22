@@ -67,6 +67,7 @@ public class StartSpamCommandHandler : IRequestHandler<StartSpamCommand, ResultD
                     ConversationId = request.ConversationId,
                     Message = message,
                     IsTheoretical = true,
+                    TheoreticalLambda = request.Lambda,
                 }, cancellationToken);
             });
 

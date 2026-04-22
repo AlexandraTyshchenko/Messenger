@@ -97,9 +97,15 @@ public class MessageWorker : BackgroundService
 
         var L_real = queueLength + inProcessing;
 
+        string tag = notification.IsTheoretical
+           ? $"THEORY_lambda={(notification.TheoreticalLambda?.ToString("F2") ?? "N/A")}_c={_settings.WorkerCount}_d={_settings.DelayMs}"
+           : $"REAL_lambda={(notification.TheoreticalLambda?.ToString("F2") ?? "N/A")}_c={_settings.WorkerCount}";
+        
         _logger.LogInformation(
-            "MODE={Mode} | SYSTEM METRICS | WorkerId: {WorkerId} | QueueLength: {QueueLength} | InProcessing: {InProcessing} | LReal: {LReal} | W: {W} | Wq: {Wq} | S: {S} | Lambda: {Lambda} | Mu: {Mu} | Rho: {Rho}",
+            "TAG={Tag} | MODE={Mode} | Workers={Workers} | WorkerId={WorkerId} | QueueLength={QueueLength} | InProcessing={InProcessing} | LReal={LReal} | W={W:F3} | Wq={Wq:F3} | S={S:F3} | Lambda={Lambda:F3} | Mu={Mu:F3} | Rho={Rho:F3}",
+            tag,
             notification.IsTheoretical ? "THEORETICAL" : "REAL",
+            _settings.WorkerCount,
             id,
             queueLength,
             inProcessing,
