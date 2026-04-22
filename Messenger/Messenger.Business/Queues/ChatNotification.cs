@@ -13,4 +13,5 @@ public class ChatNotification
 
     public DateTime ArrivalTime { get; set; }
     public bool IsTheoretical { get; set; }
+    public double? TheoreticalLambda { get; set; }
 }
