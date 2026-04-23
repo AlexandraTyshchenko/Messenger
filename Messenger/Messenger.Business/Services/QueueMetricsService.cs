@@ -8,7 +8,7 @@ public class QueueMetricsService
     private long _receivedMessages = 0;
     private long _processedMessages = 0;
 
-    private const int WindowSeconds = 30;
+    private const int WindowSeconds = 10;
 
     private readonly Queue<DateTime> _arrivalTimes = new();
     private readonly object _arrivalLock = new();
