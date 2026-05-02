@@ -7,13 +7,9 @@ namespace Messenger.Business.Services;
 
 public class TheoreticalProcessor : IMessageProcessor
 {
-    private readonly IServiceScopeFactory _scopeFactory;
     private static readonly Random _random = new();
 
-    public TheoreticalProcessor(IServiceScopeFactory scopeFactory)
-    {
-        _scopeFactory = scopeFactory;
-    }
+    public TheoreticalProcessor() {}
 
     public async Task ProcessAsync(EventMessage eventMessage, CancellationToken token)
     {
@@ -21,30 +17,6 @@ public class TheoreticalProcessor : IMessageProcessor
         
         var delayMs = GetExponentialDelayMs(mu);
         await Task.Delay(delayMs, token);
-
-        using var scope = _scopeFactory.CreateScope();
-        var hub = scope.ServiceProvider.GetRequiredService<IHubService>();
-
-        var messageWithSenderDto = new MessageWithSenderDto
-        {
-            Id = Guid.NewGuid(),
-            ConversationId = eventMessage.ConversationId,
-            Text = eventMessage.Message.Text,
-            IsJoinMessage = eventMessage.Message.IsJoinMessage,
-            SentAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-            Sender = new UserBasicInfoDto
-            {
-                Id = eventMessage.SenderId,
-                FirstName = "Spammer",
-                LastName = "Bot"
-            },
-        };
-
-        await hub.NotifyGroupAsync(
-            eventMessage.ConversationId,
-            messageWithSenderDto,
-            "ReceiveNotification");
     }
 
 
