@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using Messenger.Business.Dtos;
+using Messenger.Business.EventBus;
 using Messenger.Business.Interfaces;
-using Messenger.Business.Queues;
 using Messenger.Client.Interfaces;
 using Messenger.Infrastructure;
 using Messenger.Infrastructure.Entities;
@@ -21,7 +21,7 @@ public class RealProcessor : IMessageProcessor
         _logger = logger;
     }
 
-    public async Task ProcessAsync(ChatNotification notification, CancellationToken token)
+    public async Task ProcessAsync(MessageSentEvent notification, CancellationToken token)
     {
         using var scope = _scopeFactory.CreateScope();
 

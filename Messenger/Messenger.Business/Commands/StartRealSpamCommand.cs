@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Messenger.Business.Dtos;
-using Messenger.Business.Queues;
+using Messenger.Business.Enums;
+using Messenger.Business.EventBus;
 
 namespace Messenger.Business.Commands;
 
@@ -15,11 +16,11 @@ public class StartRealSpamCommand : IRequest<ResultDto>
 
 public class StartRealSpamCommandHandler : IRequestHandler<StartRealSpamCommand, ResultDto>
 {
-    private readonly MessageQueue _queue;
+    private readonly IEventPublisher _eventPublisher;
 
-    public StartRealSpamCommandHandler(MessageQueue queue)
+    public StartRealSpamCommandHandler(IEventPublisher eventBus)
     {
-        _queue = queue;
+        _eventPublisher = eventBus;
     }
 
     public async Task<ResultDto> Handle(StartRealSpamCommand request, CancellationToken cancellationToken)
@@ -56,13 +57,16 @@ public class StartRealSpamCommandHandler : IRequestHandler<StartRealSpamCommand,
                 if (delay > TimeSpan.Zero)
                     await Task.Delay(delay, cancellationToken);
 
-                await _queue.EnqueueAsync(new ChatNotification
+                await _eventPublisher.PublishAsync(new EventMessage
                 {
-                    SenderId = request.SenderId,
-                    ConversationId = request.ConversationId,
-                    Message = message,
-                    IsTheoretical = false,
-                    TheoreticalLambda = request.Lambda,
+                    Lambda = request.Lambda,
+                    Mode = ExecutionMode.Real,
+                    Payload = new MessageSentEvent
+                    {
+                        SenderId = request.SenderId,
+                        ConversationId = request.ConversationId,
+                        Message = message
+                    }
                 }, cancellationToken);
             });
 

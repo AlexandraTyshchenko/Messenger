@@ -1,40 +1,47 @@
-﻿using Messenger.Business.Services;
+﻿using Messenger.Business.EventBus;
+using Messenger.Business.Interfaces;
+using Messenger.Business.Services;
+using System.Threading;
 using System.Threading.Channels;
 
 namespace Messenger.Business.Queues;
 
 public class MessageQueue
 {
-    private readonly Channel<ChatNotification> _channel;
+    private readonly Channel<QueueItem> _channel;
     private readonly QueueMetricsService _metrics;
-
     private int _queueLength = 0;
 
     public MessageQueue(QueueMetricsService metrics)
     {
         _metrics = metrics;
-        _channel = Channel.CreateUnbounded<ChatNotification>();
+        _channel = Channel.CreateUnbounded<QueueItem>();
     }
 
-    public async ValueTask EnqueueAsync(ChatNotification notification, CancellationToken cancellationToken = default)
+    public async ValueTask EnqueueAsync(EventMessage message, CancellationToken cancellationToken)
     {
+        var item = new QueueItem
+        {
+            Message = message,
+            ArrivalTime = DateTime.UtcNow
+        };
+
         _metrics.MessageReceived();
         Interlocked.Increment(ref _queueLength);
-        notification.ArrivalTime = DateTime.UtcNow;
 
-        await _channel.Writer.WriteAsync(notification, cancellationToken);
+        await _channel.Writer.WriteAsync(item, cancellationToken);
     }
 
-    public async ValueTask<ChatNotification> DequeueAsync(CancellationToken token)
+    public async ValueTask<QueueItem> DequeueAsync(CancellationToken token)
     {
-        var notification = await _channel.Reader.ReadAsync(token);
+        var item = await _channel.Reader.ReadAsync(token);
+
         Interlocked.Decrement(ref _queueLength);
-        notification.StartProcessingTime = DateTime.UtcNow;
-        return notification;
+
+        item.StartProcessingTime = DateTime.UtcNow;
+
+        return item;
     }
 
-    public int QueueLength()
-    {
-        return _queueLength;
-    }
+    public int QueueLength() => Volatile.Read(ref _queueLength);
 }

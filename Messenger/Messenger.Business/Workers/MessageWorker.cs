@@ -1,4 +1,5 @@
-﻿using Messenger.Business.Interfaces;
+﻿using Messenger.Business.Dispatchers;
+using Messenger.Business.Enums;
 using Messenger.Business.Options;
 using Messenger.Business.Queues;
 using Messenger.Business.Services;
@@ -45,7 +46,7 @@ public class MessageWorker : BackgroundService
     {
         while (!token.IsCancellationRequested)
         {
-            var notification = await _queue.DequeueAsync(token);
+            var queueItem = await _queue.DequeueAsync(token);
 
             _metrics.StartProcessing();
             var sw = Stopwatch.StartNew();
@@ -54,13 +55,15 @@ public class MessageWorker : BackgroundService
 
             try
             {
-                await ProcessNotification(notification, token);
+                using var scope = _scopeFactory.CreateScope();
+                var dispatcher = scope.ServiceProvider.GetRequiredService<EventDispatcher>();
+                await dispatcher.DispatchAsync(queueItem.Message, token);
             }
             finally
             {
                 sw.Stop();
 
-                LogMetrics(id, notification, sw.Elapsed.TotalSeconds);
+                LogMetrics(id, queueItem, sw.Elapsed.TotalSeconds);
 
                 _metrics.EndProcessing();
 
@@ -69,22 +72,13 @@ public class MessageWorker : BackgroundService
         }
     }
 
-    private async Task ProcessNotification(ChatNotification notification, CancellationToken token)
+
+    private void LogMetrics(int id, QueueItem queueItem, double serviceTime)
     {
-        using var scope = _scopeFactory.CreateScope();
+        var message = queueItem.Message;
 
-        IMessageProcessor processor = notification.IsTheoretical
-            ? scope.ServiceProvider.GetRequiredService<TheoreticalProcessor>()
-            : scope.ServiceProvider.GetRequiredService<RealProcessor>();
-
-        await processor.ProcessAsync(notification, token);
-
-    }
-
-    private void LogMetrics(int id, ChatNotification notification, double serviceTime)
-    {
-        var totalTime = (DateTime.UtcNow - notification.ArrivalTime).TotalSeconds;
-        var queueWaitTime = (notification.StartProcessingTime - notification.ArrivalTime).TotalSeconds;
+        var totalTime = (DateTime.UtcNow - queueItem.ArrivalTime).TotalSeconds;
+        var queueWaitTime = (queueItem.StartProcessingTime - queueItem.ArrivalTime).TotalSeconds;
 
         _metrics.AddServiceTime(serviceTime);
         _metrics.MessageProcessed();
@@ -97,14 +91,16 @@ public class MessageWorker : BackgroundService
 
         var L_real = queueLength + inProcessing;
 
-        string tag = notification.IsTheoretical
-           ? $"THEORY_lambda={(notification.TheoreticalLambda?.ToString("F2") ?? "N/A")}_c={_settings.WorkerCount}_d={_settings.DelayMs}"
-           : $"REAL_lambda={(notification.TheoreticalLambda?.ToString("F2") ?? "N/A")}_c={_settings.WorkerCount}";
-        
+        var isTheoretical = message.Mode == ExecutionMode.Theoretical;
+
+        string tag = isTheoretical
+           ? $"THEORY_lambda={(message.Lambda?.ToString("F2") ?? "N/A")}_c={_settings.WorkerCount}_d={_settings.DelayMs}"
+           : $"REAL_lambda={(message.Lambda?.ToString("F2") ?? "N/A")}_c={_settings.WorkerCount}";
+
         _logger.LogInformation(
             "TAG={Tag} | MODE={Mode} | Workers={Workers} | WorkerId={WorkerId} | QueueLength={QueueLength} | InProcessing={InProcessing} | LReal={LReal} | W={W:F3} | Wq={Wq:F3} | S={S:F3} | Lambda={Lambda:F3} | Mu={Mu:F3} | Rho={Rho:F3}",
             tag,
-            notification.IsTheoretical ? "THEORETICAL" : "REAL",
+            isTheoretical ? "THEORETICAL" : "REAL",
             _settings.WorkerCount,
             id,
             queueLength,

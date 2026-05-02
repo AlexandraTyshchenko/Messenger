@@ -1,8 +1,8 @@
 ﻿using Messenger.Business.Dtos;
 
-namespace Messenger.Business.Queues;
+namespace Messenger.Business.EventBus;
 
-public class ChatNotification
+public class MessageSentEvent : IEvent
 {
     public Guid ConversationId { get; set; }
     public Guid SenderId { get; set; }
@@ -12,6 +12,4 @@ public class ChatNotification
     public DateTime StartProcessingTime { get; set; }
 
     public DateTime ArrivalTime { get; set; }
-    public bool IsTheoretical { get; set; }
-    public double? TheoreticalLambda { get; set; }
 }

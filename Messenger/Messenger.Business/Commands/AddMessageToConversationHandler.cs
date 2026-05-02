@@ -1,8 +1,8 @@
 ﻿using FluentValidation;
 using MediatR;
 using Messenger.Business.Dtos;
+using Messenger.Business.EventBus;
 using Messenger.Business.Options;
-using Messenger.Business.Queues;
 using Messenger.Business.Validators;
 using Microsoft.Extensions.Options;
 using System.Net;
@@ -48,19 +48,24 @@ public class AddMessageToConversationCommandValidator : AbstractValidator<AddMes
 
 public class AddMessageToConversationCommandHandler : IRequestHandler<AddMessageToConversationCommand, ResultDto<MessageDto>>
 {
-    private readonly MessageQueue _messageQueue;
-    public AddMessageToConversationCommandHandler(MessageQueue messageQueue)
+    private readonly IEventPublisher _eventPublisher;
+
+    public AddMessageToConversationCommandHandler(
+        IEventPublisher eventBus)
     {
-        _messageQueue = messageQueue;
+        _eventPublisher = eventBus;
     }
 
     public async Task<ResultDto<MessageDto>> Handle(AddMessageToConversationCommand request, CancellationToken cancellationToken)
     {
-        await _messageQueue.EnqueueAsync(new ChatNotification
+        await _eventPublisher.PublishAsync(new EventMessage
         {
-            SenderId = request.SenderId,
-            ConversationId = request.ConversationId,
-            Message = request.Message
+            Payload = new MessageSentEvent
+            {
+                SenderId = request.SenderId,
+                ConversationId = request.ConversationId,
+                Message = request.Message
+            }
         }, cancellationToken);
 
         return ResultDto.SuccessResult(request.Message, HttpStatusCode.Accepted);

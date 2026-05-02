@@ -2,6 +2,8 @@
 using FluentValidation;
 using MediatR;
 using Messenger.Business.Commands;
+using Messenger.Business.Dispatchers;
+using Messenger.Business.EventBus;
 using Messenger.Business.Interfaces;
 using Messenger.Business.Options;
 using Messenger.Business.Profiles;
@@ -50,7 +52,8 @@ public static class BusinessServiceExtensions
 
         services.AddScoped<RealProcessor>();
         services.AddScoped<TheoreticalProcessor>();
-
+        services.AddSingleton<IEventPublisher,InMemoryEventPublisher>();
+        services.AddScoped<EventDispatcher>();
         services.AddSingleton<QueueMetricsService>();
         services.AddSingleton<MessageQueue>();
         services.AddHostedService<MessageWorker>();

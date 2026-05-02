@@ -1,7 +1,7 @@
 ﻿using Messenger.Business.Dtos;
+using Messenger.Business.EventBus;
 using Messenger.Business.Interfaces;
 using Messenger.Business.Options;
-using Messenger.Business.Queues;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
@@ -18,7 +18,7 @@ public class TheoreticalProcessor : IMessageProcessor
         _scopeFactory = scopeFactory;
     }
 
-    public async Task ProcessAsync(ChatNotification notification, CancellationToken token)
+    public async Task ProcessAsync(MessageSentEvent notification, CancellationToken token)
     {
         using var scope = _scopeFactory.CreateScope();
         var hub = scope.ServiceProvider.GetRequiredService<IHubService>();

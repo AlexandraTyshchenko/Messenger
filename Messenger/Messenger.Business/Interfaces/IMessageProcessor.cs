@@ -1,8 +1,8 @@
-﻿using Messenger.Business.Queues;
+﻿using Messenger.Business.EventBus;
 
 namespace Messenger.Business.Interfaces;
 
 public interface IMessageProcessor
 {
-    Task ProcessAsync(ChatNotification notification, CancellationToken token);
+    Task ProcessAsync(MessageSentEvent notification, CancellationToken token);
 }

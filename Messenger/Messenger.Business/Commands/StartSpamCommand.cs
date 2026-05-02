@@ -1,7 +1,7 @@
-﻿using AutoMapper;
-using MediatR;
+﻿using MediatR;
 using Messenger.Business.Dtos;
-using Messenger.Business.Queues;
+using Messenger.Business.Enums;
+using Messenger.Business.EventBus;
 using Messenger.Infrastructure;
 using Messenger.Infrastructure.Entities;
 using System.Net;
@@ -19,12 +19,12 @@ public class StartSpamCommand : IRequest<ResultDto>
 
 public class StartSpamCommandHandler : IRequestHandler<StartSpamCommand, ResultDto>
 {
-    private readonly MessageQueue _queue;
+    private readonly IEventPublisher _eventPublisher;
     private readonly IUnitOfWork _unitOfWork;
 
-    public StartSpamCommandHandler(MessageQueue queue, IUnitOfWork unitOfWork)
+    public StartSpamCommandHandler(IEventPublisher eventBus, IUnitOfWork unitOfWork)
     {
-        _queue = queue;
+        _eventPublisher = eventBus;
         _unitOfWork = unitOfWork;
     }
 
@@ -62,12 +62,16 @@ public class StartSpamCommandHandler : IRequestHandler<StartSpamCommand, ResultD
                 if (delay > TimeSpan.Zero)
                     await Task.Delay(delay, cancellationToken);
 
-                await _queue.EnqueueAsync(new ChatNotification
+                await _eventPublisher.PublishAsync(new EventMessage
                 {
-                    ConversationId = request.ConversationId,
-                    Message = message,
-                    IsTheoretical = true,
-                    TheoreticalLambda = request.Lambda,
+                    Lambda = request.Lambda,
+                    Mode = ExecutionMode.Theoretical,
+                    Payload = new MessageSentEvent
+                    {
+                        SenderId = request.SenderId,
+                        ConversationId = request.ConversationId,
+                        Message = message
+                    }
                 }, cancellationToken);
             });
 
