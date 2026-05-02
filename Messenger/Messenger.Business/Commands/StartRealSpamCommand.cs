@@ -60,13 +60,11 @@ public class StartRealSpamCommandHandler : IRequestHandler<StartRealSpamCommand,
                 await _eventPublisher.PublishAsync(new EventMessage
                 {
                     Lambda = request.Lambda,
-                    Mode = ExecutionMode.Real,
-                    Payload = new MessageSentEvent
-                    {
-                        SenderId = request.SenderId,
-                        ConversationId = request.ConversationId,
-                        Message = message
-                    }
+                    Mode = ExecutionMode.Theoretical,
+                    SenderId = request.SenderId,
+                    ConversationId = request.ConversationId,
+                    Message = message
+                   
                 }, cancellationToken);
             });
 

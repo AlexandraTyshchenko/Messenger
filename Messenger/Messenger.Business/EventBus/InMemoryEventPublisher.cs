@@ -1,4 +1,6 @@
 ﻿using Messenger.Business.Queues;
+using Messenger.Infrastructure.Entities;
+using Newtonsoft.Json.Linq;
 
 namespace Messenger.Business.EventBus;
 
@@ -11,8 +13,9 @@ public class InMemoryEventPublisher : IEventPublisher
         _queue = queue;
     }
 
-    public async Task PublishAsync(EventMessage message, CancellationToken token = default)
+
+    public async Task PublishAsync(EventMessage eventMessage, CancellationToken cancellationToken)
     {
-        await _queue.EnqueueAsync(message, token);
+        await _queue.EnqueueAsync(eventMessage, cancellationToken);
     }
 }

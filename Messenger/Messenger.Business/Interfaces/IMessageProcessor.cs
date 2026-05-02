@@ -4,5 +4,5 @@ namespace Messenger.Business.Interfaces;
 
 public interface IMessageProcessor
 {
-    Task ProcessAsync(MessageSentEvent notification, CancellationToken token);
+    Task ProcessAsync(EventMessage message, CancellationToken token);
 }

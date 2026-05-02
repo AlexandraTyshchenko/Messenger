@@ -13,6 +13,8 @@ public class StartSpamCommand : IRequest<ResultDto>
     public Guid ConversationId { get; set; }
     public string Text { get; set; }
     public double Lambda { get; set; }
+    public double Mu { get; set; }
+
     public int DurationSeconds { get; set; }
     public Guid SenderId { get; set; }
 }
@@ -65,13 +67,11 @@ public class StartSpamCommandHandler : IRequestHandler<StartSpamCommand, ResultD
                 await _eventPublisher.PublishAsync(new EventMessage
                 {
                     Lambda = request.Lambda,
+                    Mu = request.Mu,
                     Mode = ExecutionMode.Theoretical,
-                    Payload = new MessageSentEvent
-                    {
-                        SenderId = request.SenderId,
-                        ConversationId = request.ConversationId,
-                        Message = message
-                    }
+                    SenderId = request.SenderId,
+                    ConversationId = request.ConversationId,
+                    Message = message
                 }, cancellationToken);
             });
 

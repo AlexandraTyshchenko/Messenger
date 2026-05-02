@@ -1,52 +1,50 @@
 ﻿using Messenger.Business.Dtos;
 using Messenger.Business.EventBus;
 using Messenger.Business.Interfaces;
-using Messenger.Business.Options;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 
 namespace Messenger.Business.Services;
 
 public class TheoreticalProcessor : IMessageProcessor
 {
-    private readonly WorkerSettings _settings;
     private readonly IServiceScopeFactory _scopeFactory;
     private static readonly Random _random = new();
 
-    public TheoreticalProcessor(IOptions<WorkerSettings> options, IServiceScopeFactory scopeFactory)
+    public TheoreticalProcessor(IServiceScopeFactory scopeFactory)
     {
-        _settings = options.Value;
         _scopeFactory = scopeFactory;
     }
 
-    public async Task ProcessAsync(MessageSentEvent notification, CancellationToken token)
+    public async Task ProcessAsync(EventMessage eventMessage, CancellationToken token)
     {
+        var mu = eventMessage.Mu.HasValue ? eventMessage.Mu.Value : 2.0;
+        
+        var delayMs = GetExponentialDelayMs(mu);
+        await Task.Delay(delayMs, token);
+
         using var scope = _scopeFactory.CreateScope();
         var hub = scope.ServiceProvider.GetRequiredService<IHubService>();
 
         var messageWithSenderDto = new MessageWithSenderDto
         {
             Id = Guid.NewGuid(),
-            ConversationId = notification.ConversationId,
-            Text = notification.Message.Text,
-            IsJoinMessage = notification.Message.IsJoinMessage,
+            ConversationId = eventMessage.ConversationId,
+            Text = eventMessage.Message.Text,
+            IsJoinMessage = eventMessage.Message.IsJoinMessage,
             SentAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
-            Sender =  new UserBasicInfoDto
+            Sender = new UserBasicInfoDto
             {
-                Id = notification.SenderId,
+                Id = eventMessage.SenderId,
                 FirstName = "Spammer",
                 LastName = "Bot"
             },
         };
 
         await hub.NotifyGroupAsync(
-            notification.ConversationId,
+            eventMessage.ConversationId,
             messageWithSenderDto,
             "ReceiveNotification");
-
-        var delayMs = GetExponentialDelayMs(_settings.Mu);
-        await Task.Delay(delayMs, token);
     }
 
 

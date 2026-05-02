@@ -16,11 +16,11 @@ public class MessageQueue
         _channel = Channel.CreateUnbounded<QueueItem>();
     }
 
-    public async ValueTask EnqueueAsync(EventMessage message, CancellationToken cancellationToken)
+    public async Task EnqueueAsync(EventMessage eventMessage, CancellationToken cancellationToken)
     {
         var item = new QueueItem
         {
-            Message = message,
+            Message = eventMessage,
             ArrivalTime = DateTime.UtcNow
         };
 

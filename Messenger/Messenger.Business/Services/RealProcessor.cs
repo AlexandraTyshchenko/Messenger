@@ -3,37 +3,40 @@ using Messenger.Business.Dtos;
 using Messenger.Business.EventBus;
 using Messenger.Business.Interfaces;
 using Messenger.Client.Interfaces;
-using Messenger.Infrastructure;
 using Messenger.Infrastructure.Entities;
-using Microsoft.Extensions.DependencyInjection;
+using Messenger.Infrastructure;
 using Microsoft.Extensions.Logging;
 
 namespace Messenger.Business.Services;
 
 public class RealProcessor : IMessageProcessor
 {
-    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IHubService _hub;
+    private readonly IUnitOfWork _db;
+    private readonly IImageClient _imageClient;
+    private readonly IMapper _mapper;
     private readonly ILogger<RealProcessor> _logger;
 
-    public RealProcessor(IServiceScopeFactory scopeFactory, ILogger<RealProcessor> logger)
+    public RealProcessor(
+        IHubService hub,
+        IUnitOfWork db,
+        IImageClient imageClient,
+        IMapper mapper,
+        ILogger<RealProcessor> logger)
     {
-        _scopeFactory = scopeFactory;
+        _hub = hub;
+        _db = db;
+        _imageClient = imageClient;
+        _mapper = mapper;
         _logger = logger;
     }
 
-    public async Task ProcessAsync(MessageSentEvent notification, CancellationToken token)
+    public async Task ProcessAsync(EventMessage eventMessage, CancellationToken token)
     {
-        using var scope = _scopeFactory.CreateScope();
-
-        var hub = scope.ServiceProvider.GetRequiredService<IHubService>();
-        var db = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-        var imageClient = scope.ServiceProvider.GetRequiredService<IImageClient>();
-        var mapper = scope.ServiceProvider.GetRequiredService<IMapper>();
-
         try
         {
-            var sender = await db.Users.GetUserByIdAsync(notification.SenderId);
-            var conversation = await db.Conversations.GetConversationByIdAsync(notification.ConversationId);
+            var sender = await _db.Users.GetUserByIdAsync(eventMessage.SenderId);
+            var conversation = await _db.Conversations.GetConversationByIdAsync(eventMessage.ConversationId);
 
             if (sender == null || conversation == null)
             {
@@ -43,9 +46,11 @@ public class RealProcessor : IMessageProcessor
 
             Image image = null;
 
-            if (notification.Message.Image != null)
+            if (eventMessage.Message.Image != null)
             {
-                var response = await imageClient.UploadImageAsync(notification.Message.Image, notification.ConversationId);
+                var response = await _imageClient.UploadImageAsync(
+                    eventMessage.Message.Image,
+                    eventMessage.ConversationId);
 
                 if (!response.Success)
                 {
@@ -65,17 +70,17 @@ public class RealProcessor : IMessageProcessor
                 Image = image,
                 Conversation = conversation,
                 Sender = sender,
-                Text = notification.Message.Text,
+                Text = eventMessage.Message.Text,
                 SentAt = DateTime.UtcNow
             };
 
-            var savedMessage = await db.Messages.AddMessageToConversationAsync(message);
-            await db.SaveChangesAsync();
+            var savedMessage = await _db.Messages.AddMessageToConversationAsync(message);
+            await _db.SaveChangesAsync();
 
-            var mapped = mapper.Map<MessageWithSenderDto>(savedMessage);
+            var mapped = _mapper.Map<MessageWithSenderDto>(savedMessage);
 
-            await hub.NotifyGroupAsync(
-                notification.ConversationId,
+            await _hub.NotifyGroupAsync(
+                eventMessage.ConversationId,
                 mapped,
                 "ReceiveNotification");
         }

@@ -61,6 +61,7 @@ public class MessagesController : BaseController
             ConversationId = conversationId,
             Text = request.Text,
             Lambda = request.Lambda,
+            Mu = request.Mu,
             DurationSeconds = request.DurationSeconds,
             SenderId = UserId
         });

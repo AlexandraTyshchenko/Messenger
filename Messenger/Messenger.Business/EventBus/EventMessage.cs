@@ -1,11 +1,16 @@
-﻿using Messenger.Business.Enums;
-using Messenger.Business.Interfaces;
+﻿using Messenger.Business.Dtos;
+using Messenger.Business.Enums;
 
 namespace Messenger.Business.EventBus;
 
-public class EventMessage
+public class EventMessage : IEvent
 {
-    public IEvent Payload { get; set; }
+    public Guid ConversationId { get; set; }
+    public Guid SenderId { get; set; }
+    public MessageDto Message { get; set; }
+
     public double? Lambda { get; set; }
+    public double? Mu { get; set; }
+
     public ExecutionMode Mode { get; set; }
 }

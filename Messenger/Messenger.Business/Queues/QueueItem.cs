@@ -1,5 +1,4 @@
 ﻿using Messenger.Business.EventBus;
-using Messenger.Business.Interfaces;
 
 namespace Messenger.Business.Queues;
 

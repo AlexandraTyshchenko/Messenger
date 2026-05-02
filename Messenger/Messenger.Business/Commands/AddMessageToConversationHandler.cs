@@ -60,12 +60,9 @@ public class AddMessageToConversationCommandHandler : IRequestHandler<AddMessage
     {
         await _eventPublisher.PublishAsync(new EventMessage
         {
-            Payload = new MessageSentEvent
-            {
-                SenderId = request.SenderId,
-                ConversationId = request.ConversationId,
-                Message = request.Message
-            }
+            SenderId = request.SenderId,
+            ConversationId = request.ConversationId,
+            Message = request.Message
         }, cancellationToken);
 
         return ResultDto.SuccessResult(request.Message, HttpStatusCode.Accepted);

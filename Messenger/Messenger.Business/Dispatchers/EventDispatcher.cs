@@ -16,12 +16,14 @@ public class EventDispatcher
     }
 
     public async Task DispatchAsync(EventMessage message, CancellationToken token)
+       
     {
         using var scope = _scopeFactory.CreateScope();
+
         IMessageProcessor processor = message.Mode == ExecutionMode.Theoretical
             ? scope.ServiceProvider.GetRequiredService<TheoreticalProcessor>()
             : scope.ServiceProvider.GetRequiredService<RealProcessor>();
 
-        await processor.ProcessAsync((MessageSentEvent)message.Payload, token);
+        await processor.ProcessAsync(message, token);
     }
 }

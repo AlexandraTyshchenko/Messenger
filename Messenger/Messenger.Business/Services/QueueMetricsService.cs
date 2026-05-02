@@ -92,9 +92,6 @@ public class QueueMetricsService
     {
         lock (_serviceLock)
         {
-            if (_totalProcessed < 5)
-                return _settings.Mu;
-
             return _totalProcessed / _totalServiceTime;
         }
     }
