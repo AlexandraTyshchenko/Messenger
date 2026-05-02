@@ -34,9 +34,9 @@ public class MessageQueue
     {
         var item = await _channel.Reader.ReadAsync(token);
 
-        Interlocked.Decrement(ref _queueLength);
-
         item.StartProcessingTime = DateTime.UtcNow;
+
+        Interlocked.Decrement(ref _queueLength);
 
         return item;
     }

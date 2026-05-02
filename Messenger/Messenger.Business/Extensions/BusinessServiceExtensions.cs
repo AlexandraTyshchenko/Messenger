@@ -11,6 +11,7 @@ using Messenger.Business.Queries;
 using Messenger.Business.Queues;
 using Messenger.Business.Services;
 using Messenger.Business.ValidationPipelines;
+using Messenger.Business.Workers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -57,6 +58,7 @@ public static class BusinessServiceExtensions
         services.AddSingleton<QueueMetricsService>();
         services.AddSingleton<MessageQueue>();
         services.AddHostedService<MessageWorker>();
+        services.AddHostedService<MetricsAggregator>();
         return services;
     }
 }

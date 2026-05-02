@@ -1,126 +1,122 @@
-﻿namespace Messenger.Business.Services;
+﻿using System.Collections.Concurrent;
 
-using Messenger.Business.Options;
-using Microsoft.Extensions.Options;
+namespace Messenger.Business.Services;
 
 public class QueueMetricsService
 {
-    private long _receivedMessages = 0;
-    private long _processedMessages = 0;
+    private readonly ConcurrentQueue<DateTime> _arrivals = new();
 
-    private const int WindowSeconds = 15;
+    private readonly ConcurrentQueue<(DateTime time, double value)> _serviceTimes = new();
+    private readonly ConcurrentQueue<(DateTime time, double value)> _totalTimes = new();
+    private readonly ConcurrentQueue<(DateTime time, double value)> _waitTimes = new();
+    private readonly ConcurrentQueue<(DateTime time, double value)> _lSamples = new();
 
-    private readonly Queue<DateTime> _arrivalTimes = new();
-    private readonly object _arrivalLock = new();
-
-    private readonly Queue<(DateTime time, double serviceTime)> _serviceTimes = new();
-    private readonly object _serviceLock = new();
-
-    private readonly WorkerSettings _settings;
+    private readonly TimeSpan _window = TimeSpan.FromSeconds(20);
 
     private int _inProcessing = 0;
 
-    private double _totalServiceTime = 0;
-    private int _totalProcessed = 0;
-    private double _lambdaEma = 0;
-    private const double Alpha = 0.15;
-    public QueueMetricsService(IOptions<WorkerSettings> options)
-    {
-        _settings = options.Value;
-    }
+    // ======================
+    // EVENTS
+    // ======================
 
     public void MessageReceived()
     {
+        _arrivals.Enqueue(DateTime.UtcNow);
+        Cleanup(_arrivals);
+    }
+
+    public void AddServiceTime(double s)
+    {
+        _serviceTimes.Enqueue((DateTime.UtcNow, s));
+        Cleanup(_serviceTimes);
+    }
+
+    public void AddTimes(double total, double wait)
+    {
         var now = DateTime.UtcNow;
 
-        lock (_arrivalLock)
-        {
-            _arrivalTimes.Enqueue(now);
+        _totalTimes.Enqueue((now, total));
+        _waitTimes.Enqueue((now, wait));
 
-            while (_arrivalTimes.Count > 0 &&
-                   (now - _arrivalTimes.Peek()).TotalSeconds > WindowSeconds)
-            {
-                _arrivalTimes.Dequeue();
-            }
-        }
-
-        Interlocked.Increment(ref _receivedMessages);
+        Cleanup(_totalTimes);
+        Cleanup(_waitTimes);
     }
 
-    public void MessageProcessed()
+    public void AddLSample(double l)
     {
-        Interlocked.Increment(ref _processedMessages);
+        _lSamples.Enqueue((DateTime.UtcNow, l));
+        Cleanup(_lSamples);
     }
+
+    public void StartProcessing() => Interlocked.Increment(ref _inProcessing);
+    public void EndProcessing() => Interlocked.Decrement(ref _inProcessing);
+
+    public int InProcessing() => _inProcessing;
+
+    // ======================
+    // METRICS
+    // ======================
 
     public double Lambda()
     {
-        double raw;
-
-        lock (_arrivalLock)
-        {
-            raw = _arrivalTimes.Count / (double)WindowSeconds;
-        }
-
-        if (_lambdaEma == 0)
-            _lambdaEma = raw;
-        else
-            _lambdaEma = Alpha * raw + (1 - Alpha) * _lambdaEma;
-
-        return _lambdaEma;
+        Cleanup(_arrivals);
+        return _arrivals.Count / _window.TotalSeconds;
     }
 
-    public void AddServiceTime(double seconds)
+    public double Mu()
+    {
+        Cleanup(_serviceTimes);
+        if (_serviceTimes.IsEmpty) return 0;
+
+        var avg = _serviceTimes.Average(x => x.value);
+        return avg > 0 ? 1.0 / avg : 0;
+    }
+
+    public double AvgTotalTime()
+    {
+        Cleanup(_totalTimes);
+        return _totalTimes.Any() ? _totalTimes.Average(x => x.value) : 0;
+    }
+
+    public double AvgWaitTime()
+    {
+        Cleanup(_waitTimes);
+        return _waitTimes.Any() ? _waitTimes.Average(x => x.value) : 0;
+    }
+
+    public double AvgL()
+    {
+        Cleanup(_lSamples);
+        return _lSamples.Any() ? _lSamples.Average(x => x.value) : 0;
+    }
+
+    // ======================
+    // CLEANUP
+    // ======================
+
+    private void Cleanup(ConcurrentQueue<DateTime> queue)
     {
         var now = DateTime.UtcNow;
 
-        lock (_serviceLock)
+        while (queue.TryPeek(out var item))
         {
-            _serviceTimes.Enqueue((now, seconds));
-
-            while (_serviceTimes.Count > 0 &&
-                   (now - _serviceTimes.Peek().time).TotalSeconds > WindowSeconds)
-            {
-                _serviceTimes.Dequeue();
-            }
-
-            _totalServiceTime += seconds;
-            _totalProcessed++;
+            if (now - item > _window)
+                queue.TryDequeue(out _);
+            else
+                break;
         }
     }
 
-    public double MuReal()
+    private void Cleanup(ConcurrentQueue<(DateTime time, double value)> queue)
     {
-        lock (_serviceLock)
+        var now = DateTime.UtcNow;
+
+        while (queue.TryPeek(out var item))
         {
-            return _totalProcessed / _totalServiceTime;
+            if (now - item.time > _window)
+                queue.TryDequeue(out _);
+            else
+                break;
         }
-    }
-
-    public void StartProcessing()
-    {
-        Interlocked.Increment(ref _inProcessing);
-    }
-
-    public void EndProcessing()
-    {
-        Interlocked.Decrement(ref _inProcessing);
-    }
-
-    public int InProcessing()
-    {
-        return _inProcessing;
-    }
-
-    public double Rho()
-    {
-        var lambda = Lambda();
-        var mu = MuReal();
-
-        return lambda / (_settings.WorkerCount * mu);
-    }
-
-    public bool IsOverloaded()
-    {
-        return Rho() > 1;
     }
 }
