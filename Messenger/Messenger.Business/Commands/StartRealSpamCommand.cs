@@ -60,7 +60,7 @@ public class StartRealSpamCommandHandler : IRequestHandler<StartRealSpamCommand,
                 await _eventPublisher.PublishAsync(new EventMessage
                 {
                     Lambda = request.Lambda,
-                    Mode = ExecutionMode.Theoretical,
+                    Mode = ExecutionMode.Real,
                     SenderId = request.SenderId,
                     ConversationId = request.ConversationId,
                     Message = message

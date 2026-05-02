@@ -44,6 +44,11 @@ public class MessageWorker : BackgroundService
         {
             var queueItem = await _queue.DequeueAsync(token);
 
+            _metrics.SetInputParams(
+                queueItem.Message.Lambda,
+                queueItem.Message.Mu,
+                queueItem.Message.Mode);
+
             _metrics.StartProcessing();
             var sw = Stopwatch.StartNew();
 

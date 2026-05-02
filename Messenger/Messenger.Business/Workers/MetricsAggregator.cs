@@ -1,4 +1,5 @@
-﻿using Messenger.Business.Options;
+﻿using Messenger.Business.Enums;
+using Messenger.Business.Options;
 using Messenger.Business.Queues;
 using Messenger.Business.Services;
 using Microsoft.Extensions.Hosting;
@@ -39,9 +40,9 @@ public class MetricsAggregator : BackgroundService
             var inProcessing = _metrics.InProcessing();
 
             var isActive =
-             lambda > 0 ||
-             _metrics.AvgTotalTime() > 0 ||
-             inProcessing > 0;
+                lambda > 0 ||
+                _metrics.AvgTotalTime() > 0 ||
+                inProcessing > 0;
 
             if (!isActive)
                 continue;
@@ -60,14 +61,27 @@ public class MetricsAggregator : BackgroundService
 
             var lambdaW = lambda * W;
 
+            var lambdaInput = _metrics.LambdaInput();
+            var muInput = _metrics.MuInput();
+            var mode = _metrics.ModeInput();
+
+            var lambdaInputStr = lambdaInput.HasValue ? lambdaInput.Value.ToString("F2") : "N/A";
+            var muInputStr = muInput.HasValue ? muInput.Value.ToString("F2") : "N/A";
+
+            var modeStr = mode == ExecutionMode.Theoretical ? "Theoretical" : "Real";
+
+            var tag = $"MODE={modeStr}_lambda={lambdaInputStr}_mu={muInputStr}_c={_settings.WorkerCount}";
+
             _logger.LogInformation(
-                "METRICS | L={L:F3} | Lraw={Lraw} | Lambda={Lambda:F3} | Mu={Mu:F3} | Rho={Rho:F3} | W={W:F3} | lambdaW={LW:F3}",
+                "TAG={Tag} | L={L:F3} | Lraw={Lraw} | LambdaReal={Lambda:F3} | MuReal={Mu:F3} | Rho={Rho:F3} | W={W:F3} | Wq={Wq:F3} | lambdaW={LW:F3}",
+                tag,
                 L,
                 Lraw,
                 lambda,
                 mu,
                 rho,
                 W,
+                Wq,
                 lambdaW);
         }
     }

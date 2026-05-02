@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using Messenger.Business.Enums;
+using System.Collections.Concurrent;
 
 namespace Messenger.Business.Services;
 
@@ -18,6 +19,24 @@ public class QueueMetricsService
     // ======================
     // EVENTS
     // ======================
+    private double? _lambdaInput;
+    private double? _muInput;
+    private ExecutionMode _modeInput;
+
+    public void SetInputParams(double? lambda, double? mu, ExecutionMode mode)
+    {
+        if (lambda.HasValue)
+            _lambdaInput = lambda;
+
+        if (mu.HasValue)
+            _muInput = mu;
+        
+        _modeInput = mode;
+    }
+    public ExecutionMode ModeInput() => _modeInput;
+
+    public double? LambdaInput() => _lambdaInput;
+    public double? MuInput() => _muInput;
 
     public void MessageReceived()
     {
