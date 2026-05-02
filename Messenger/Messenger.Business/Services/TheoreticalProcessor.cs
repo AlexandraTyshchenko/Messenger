@@ -11,6 +11,7 @@ public class TheoreticalProcessor : IMessageProcessor
 {
     private readonly WorkerSettings _settings;
     private readonly IServiceScopeFactory _scopeFactory;
+    private static readonly Random _random = new();
 
     public TheoreticalProcessor(IOptions<WorkerSettings> options, IServiceScopeFactory scopeFactory)
     {
@@ -44,6 +45,15 @@ public class TheoreticalProcessor : IMessageProcessor
             messageWithSenderDto,
             "ReceiveNotification");
 
-        await Task.Delay(_settings.DelayMs, token);
+        var delayMs = GetExponentialDelayMs(_settings.Mu);
+        await Task.Delay(delayMs, token);
+    }
+
+
+    private int GetExponentialDelayMs(double mu)
+    {
+        var u = _random.NextDouble();
+        var delaySeconds = -Math.Log(u) / mu;
+        return (int)(delaySeconds * 1000);
     }
 }

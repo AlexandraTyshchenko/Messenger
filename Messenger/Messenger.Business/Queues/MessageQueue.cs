@@ -1,7 +1,5 @@
 ﻿using Messenger.Business.EventBus;
-using Messenger.Business.Interfaces;
 using Messenger.Business.Services;
-using System.Threading;
 using System.Threading.Channels;
 
 namespace Messenger.Business.Queues;

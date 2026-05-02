@@ -8,7 +8,7 @@ public class QueueMetricsService
     private long _receivedMessages = 0;
     private long _processedMessages = 0;
 
-    private const int WindowSeconds = 10;
+    private const int WindowSeconds = 15;
 
     private readonly Queue<DateTime> _arrivalTimes = new();
     private readonly object _arrivalLock = new();
@@ -17,8 +17,13 @@ public class QueueMetricsService
     private readonly object _serviceLock = new();
 
     private readonly WorkerSettings _settings;
+
     private int _inProcessing = 0;
 
+    private double _totalServiceTime = 0;
+    private int _totalProcessed = 0;
+    private double _lambdaEma = 0;
+    private const double Alpha = 0.15;
     public QueueMetricsService(IOptions<WorkerSettings> options)
     {
         _settings = options.Value;
@@ -49,10 +54,19 @@ public class QueueMetricsService
 
     public double Lambda()
     {
+        double raw;
+
         lock (_arrivalLock)
         {
-            return _arrivalTimes.Count / (double)WindowSeconds;
+            raw = _arrivalTimes.Count / (double)WindowSeconds;
         }
+
+        if (_lambdaEma == 0)
+            _lambdaEma = raw;
+        else
+            _lambdaEma = Alpha * raw + (1 - Alpha) * _lambdaEma;
+
+        return _lambdaEma;
     }
 
     public void AddServiceTime(double seconds)
@@ -68,20 +82,22 @@ public class QueueMetricsService
             {
                 _serviceTimes.Dequeue();
             }
+
+            _totalServiceTime += seconds;
+            _totalProcessed++;
         }
     }
 
-
-  public double MuReal()
-{
-    lock (_serviceLock)
+    public double MuReal()
     {
-        if (_serviceTimes.Count == 0) return 0;
+        lock (_serviceLock)
+        {
+            if (_totalProcessed < 5)
+                return _settings.Mu;
 
-        var avg = _serviceTimes.Average(x => x.serviceTime);
-        return avg == 0 ? 0 : 1.0 / avg;
+            return _totalProcessed / _totalServiceTime;
+        }
     }
-}
 
     public void StartProcessing()
     {
@@ -102,8 +118,6 @@ public class QueueMetricsService
     {
         var lambda = Lambda();
         var mu = MuReal();
-
-        if (mu == 0) return 0;
 
         return lambda / (_settings.WorkerCount * mu);
     }

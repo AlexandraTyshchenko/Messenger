@@ -94,7 +94,7 @@ public class MessageWorker : BackgroundService
         var isTheoretical = message.Mode == ExecutionMode.Theoretical;
 
         string tag = isTheoretical
-           ? $"THEORY_lambda={(message.Lambda?.ToString("F2") ?? "N/A")}_c={_settings.WorkerCount}_d={_settings.DelayMs}"
+           ? $"THEORY_lambda={(message.Lambda?.ToString("F2") ?? "N/A")}_c={_settings.WorkerCount}_d={_settings.Mu}"
            : $"REAL_lambda={(message.Lambda?.ToString("F2") ?? "N/A")}_c={_settings.WorkerCount}";
 
         _logger.LogInformation(
