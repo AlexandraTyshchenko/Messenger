@@ -137,10 +137,12 @@ public class QueueMetricsService
     {
         Cleanup(_serviceTimes);
 
-        if (_serviceTimes.IsEmpty && _muSmooth.HasValue)
-            return _muSmooth.Value;
+        var items = _serviceTimes.ToArray();
 
-        var avg = _serviceTimes.Average(x => x.value);
+        if (items.Length == 0)
+            return _muSmooth ?? 0;
+
+        var avg = items.Average(x => x.value);
         var raw = avg > 0 ? 1.0 / avg : 0;
 
         return Smooth(ref _muSmooth, raw);
