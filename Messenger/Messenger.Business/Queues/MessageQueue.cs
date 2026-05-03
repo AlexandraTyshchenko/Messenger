@@ -23,9 +23,11 @@ public class MessageQueue
             Message = eventMessage,
             ArrivalTime = DateTime.UtcNow
         };
+        _metrics.MessageReceived(_queueLength);
 
-        _metrics.MessageReceived();
         Interlocked.Increment(ref _queueLength);
+
+        // ВАЖНО: передаём длину очереди
 
         await _channel.Writer.WriteAsync(item, cancellationToken);
     }

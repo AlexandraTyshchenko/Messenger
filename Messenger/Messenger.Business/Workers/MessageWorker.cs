@@ -1,7 +1,10 @@
 ﻿using Messenger.Business.Dispatchers;
+using Messenger.Business.Enums;
+using Messenger.Business.EventBus;
 using Messenger.Business.Options;
 using Messenger.Business.Queues;
 using Messenger.Business.Services;
+using Messenger.Infrastructure.Entities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -44,12 +47,9 @@ public class MessageWorker : BackgroundService
         {
             var queueItem = await _queue.DequeueAsync(token);
 
-            _metrics.SetInputParams(
-                queueItem.Message.Lambda,
-                queueItem.Message.Mu,
-                queueItem.Message.Mode);
+            var queueLength = _queue.QueueLength();
+            _metrics.StartProcessing(queueLength);
 
-            _metrics.StartProcessing();
             var sw = Stopwatch.StartNew();
 
             try
@@ -62,15 +62,66 @@ public class MessageWorker : BackgroundService
             {
                 sw.Stop();
 
-                var serviceTime = sw.Elapsed.TotalSeconds;
                 var totalTime = (DateTime.UtcNow - queueItem.ArrivalTime).TotalSeconds;
                 var waitTime = (queueItem.StartProcessingTime - queueItem.ArrivalTime).TotalSeconds;
 
-                _metrics.AddServiceTime(serviceTime);
-                _metrics.AddTimes(totalTime, waitTime);
+                _metrics.AddTimes(totalTime, waitTime, sw.Elapsed.TotalSeconds);
 
-                _metrics.EndProcessing();
+                LogMetrics(id, queueItem.Message);
+                var queueLengthAfter = _queue.QueueLength();
+
+                _metrics.EndProcessing(queueLengthAfter);
+
             }
         }
+    }
+
+    private void LogMetrics(int id, EventMessage message)
+    {
+        var lambda = _metrics.Lambda();
+        var mu = _metrics.Mu();
+        var rho = _metrics.Rho();
+
+        var W = _metrics.W();
+        var Wq = _metrics.Wq();
+        var L = _metrics.L();
+        var Lq = _metrics.Lq();
+
+        var littleL = lambda * W;
+        var littleLq = lambda * Wq;
+
+        var queueLength = _queue.QueueLength();
+        var inProcessing = _metrics.InProcessing();
+        var L_real = queueLength + inProcessing;
+
+        var isTheoretical = message.Mode == ExecutionMode.Theoretical;
+
+        var mode = isTheoretical ? "THEORY" : "REAL";
+
+        string tag = isTheoretical
+            ? $"THEORY_lambda={(message.Lambda?.ToString("F2") ?? "N/A")}_c={_settings.WorkerCount}_d={(message.Mu?.ToString("F2") ?? "N/A")}"
+            : $"REAL_lambda={(message.Lambda?.ToString("F2") ?? "N/A")}_c={_settings.WorkerCount}";
+
+        _logger.LogInformation(
+            "Mode={Mode} | Tag={Tag} | Worker={WorkerId} | " +
+            "L={L:F3} | lambdaW={LittleL:F3} | Lq={Lq:F3} | lambdaWq={LittleLq:F3} | " +
+            "W={W:F3} | Wq={Wq:F3} | " +
+            "lambda={Lambda:F3} | mu={Mu:F3} | p={Rho:F3} | " +
+            "Queue={QueueLength} | InProc={InProcessing} | L_inst={LReal}",
+            mode,
+            tag,
+            id,
+            L,
+            littleL,
+            Lq,
+            littleLq,
+            W,
+            Wq,
+            lambda,
+            mu,
+            rho,
+            queueLength,
+            inProcessing,
+            L_real);
     }
 }
