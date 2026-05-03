@@ -137,8 +137,8 @@ public class QueueMetricsService
     {
         Cleanup(_serviceTimes);
 
-        if (_serviceTimes.IsEmpty)
-            return 0;
+        if (_serviceTimes.IsEmpty && _muSmooth.HasValue)
+            return _muSmooth.Value;
 
         var avg = _serviceTimes.Average(x => x.value);
         var raw = avg > 0 ? 1.0 / avg : 0;

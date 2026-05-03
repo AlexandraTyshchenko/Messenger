@@ -40,10 +40,9 @@ public class MetricsAggregator : BackgroundService
             var inProcessing = _metrics.InProcessing();
 
             var isActive =
-                lambda > 0 ||
-                _metrics.AvgTotalTime() > 0 ||
-                inProcessing > 0;
-
+                 lambda > 0 &&
+                 mu > 0 &&
+                 (queueLength > 0 || inProcessing > 0);
             if (!isActive)
                 continue;
 
