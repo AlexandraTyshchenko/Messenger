@@ -14,7 +14,6 @@ namespace Messenger.Api.Controllers;
 [Authorize]
 [ApiController]
 [Route("api/Conversations/{conversationId}/[controller]")]
-[ConversationRoleFilter(Role.Participant)]
 public class MessagesController : BaseController
 {
     private readonly IMediator _mediator;
@@ -39,6 +38,8 @@ public class MessagesController : BaseController
     }
 
     [HttpPost]
+    [ConversationRoleFilter(Role.Participant)]
+
     public async Task<IActionResult> AddMessageToConversation([FromForm] MessageDto message, [FromRoute] Guid conversationId)
     {
         var response = await _mediator.Send(new AddMessageToConversationCommand
@@ -52,6 +53,8 @@ public class MessagesController : BaseController
     }
 
     [HttpPost("spam")]
+    [AllowAnonymous]
+
     public async Task<IActionResult> StartSpam(
         [FromRoute] Guid conversationId,
         [FromBody] SpamRequestDto request)
@@ -63,13 +66,14 @@ public class MessagesController : BaseController
             Lambda = request.Lambda,
             Mu = request.Mu,
             DurationSeconds = request.DurationSeconds,
-            SenderId = UserId
         });
 
         return Ok(new { message = "Spam finished successfully" });
     }
 
     [HttpPost("spam-real")]
+    [ConversationRoleFilter(Role.Participant)]
+
     public async Task<IActionResult> StartRealSpam(
     [FromRoute] Guid conversationId,
     [FromBody] SpamRequestDto request)
@@ -87,6 +91,8 @@ public class MessagesController : BaseController
     }
 
     [HttpDelete("{messageId}")]
+    [ConversationRoleFilter(Role.Participant)]
+
     [PermissionsToManageMessages]
     public async Task<IActionResult> DeleteMessageFromConversation([FromRoute] Guid messageId)
     {

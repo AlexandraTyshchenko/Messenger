@@ -16,7 +16,6 @@ public class StartSpamCommand : IRequest<ResultDto>
     public double Mu { get; set; }
 
     public int DurationSeconds { get; set; }
-    public Guid SenderId { get; set; }
 }
 
 public class StartSpamCommandHandler : IRequestHandler<StartSpamCommand, ResultDto>
@@ -69,7 +68,6 @@ public class StartSpamCommandHandler : IRequestHandler<StartSpamCommand, ResultD
                     Lambda = request.Lambda,
                     Mu = request.Mu,
                     Mode = ExecutionMode.Theoretical,
-                    SenderId = request.SenderId,
                     ConversationId = request.ConversationId,
                     Message = message
                 }, cancellationToken);
@@ -80,41 +78,7 @@ public class StartSpamCommandHandler : IRequestHandler<StartSpamCommand, ResultD
 
         await Task.WhenAll(tasks);
 
-        var sender = await _unitOfWork.Users.GetUserByIdAsync(request.SenderId);
-        if (sender == null)
-        {
-            return ResultDto.FailureResult<MessageWithSenderDto>(
-                HttpStatusCode.NotFound,
-                "No sender was found.");
-        }
-
-        var conversation = await _unitOfWork.Conversations.GetConversationByIdAsync(request.ConversationId);
-        if (conversation == null)
-        {
-            return ResultDto.FailureResult<MessageWithSenderDto>(
-                HttpStatusCode.NotFound,
-                "No conversation was found.");
-        }
-
-        await SaveMessagesBatch(sender, conversation, request.Text, tasks.Count);
-        await _unitOfWork.SaveChangesAsync();
 
         return ResultDto.SuccessResult();
-    }
-
-    private async Task SaveMessagesBatch(User sender, Conversation conversation, string text, int count)
-    {
-        var tasks = Enumerable.Range(0, count)
-            .Select(_ => _unitOfWork.Messages.AddMessageToConversationAsync(new Message
-            {
-                Conversation = conversation,
-                IsJoinMessage = false,
-                Sender = sender,
-                Text = text,
-                SentAt = DateTime.UtcNow,
-            }));
-
-        await Task.WhenAll(tasks);
-        await _unitOfWork.SaveChangesAsync();
     }
 }
