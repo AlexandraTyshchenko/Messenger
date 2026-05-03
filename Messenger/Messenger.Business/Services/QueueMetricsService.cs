@@ -140,10 +140,17 @@ public class QueueMetricsService
         var items = _serviceTimes.ToArray();
 
         if (items.Length == 0)
+        {
+            // если нет данных — НЕ считаем μ
             return _muSmooth ?? 0;
+        }
 
         var avg = items.Average(x => x.value);
-        var raw = avg > 0 ? 1.0 / avg : 0;
+
+        if (avg <= 0)
+            return _muSmooth ?? 0;
+
+        var raw = 1.0 / avg;
 
         return Smooth(ref _muSmooth, raw);
     }
