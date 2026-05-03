@@ -124,10 +124,9 @@ public class QueueMetricsService
     {
         Cleanup(_arrivals);
 
-        if (_arrivals.IsEmpty)
+        if (_arrivals.IsEmpty && _lambdaSmooth.HasValue)
         {
-            _lambdaSmooth = 0;
-            return 0;
+            return _lambdaSmooth.Value;
         }
 
         var raw = _arrivals.Count / _window.TotalSeconds;
