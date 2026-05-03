@@ -12,12 +12,53 @@ public class QueueMetricsService
     private readonly ConcurrentQueue<(DateTime time, double value)> _waitTimes = new();
     private readonly ConcurrentQueue<(DateTime time, double value)> _lSamples = new();
 
-    private readonly TimeSpan _window = TimeSpan.FromSeconds(20);
+    private readonly TimeSpan _window = TimeSpan.FromSeconds(40);
 
     private int _inProcessing = 0;
 
     // ======================
-    // EVENTS
+    // SMOOTHING λ, μ
+    // ======================
+    private double? _lambdaSmooth;
+    private double? _muSmooth;
+
+    private const double Alpha = 0.3;
+
+    private double Smooth(ref double? prev, double current)
+    {
+        if (prev == null)
+            prev = current;
+        else
+            prev = Alpha * current + (1 - Alpha) * prev.Value;
+
+        return prev.Value;
+    }
+
+    // ======================
+    // ERROR SMOOTHING
+    // ======================
+    private double? _errLSmooth;
+    private double? _errWSmooth;
+    private double? _errWqSmooth;
+
+    private const double ErrAlpha = 0.2;
+
+    private double SmoothError(ref double? prev, double current)
+    {
+        if (prev == null)
+            prev = current;
+        else
+            prev = ErrAlpha * current + (1 - ErrAlpha) * prev.Value;
+
+        return prev.Value;
+    }
+
+    public double SmoothErrL(double err) => SmoothError(ref _errLSmooth, err);
+    public double SmoothErrW(double err) => SmoothError(ref _errWSmooth, err);
+    public double SmoothErrWq(double err) => SmoothError(ref _errWqSmooth, err);
+
+    // ======================
+    // INPUT PARAMS
     // ======================
     private double? _lambdaInput;
     private double? _muInput;
@@ -30,14 +71,17 @@ public class QueueMetricsService
 
         if (mu.HasValue)
             _muInput = mu;
-        
+
         _modeInput = mode;
     }
-    public ExecutionMode ModeInput() => _modeInput;
 
+    public ExecutionMode ModeInput() => _modeInput;
     public double? LambdaInput() => _lambdaInput;
     public double? MuInput() => _muInput;
 
+    // ======================
+    // EVENTS
+    // ======================
     public void MessageReceived()
     {
         _arrivals.Enqueue(DateTime.UtcNow);
@@ -79,16 +123,28 @@ public class QueueMetricsService
     public double Lambda()
     {
         Cleanup(_arrivals);
-        return _arrivals.Count / _window.TotalSeconds;
+
+        if (_arrivals.IsEmpty)
+        {
+            _lambdaSmooth = 0;
+            return 0;
+        }
+
+        var raw = _arrivals.Count / _window.TotalSeconds;
+        return Smooth(ref _lambdaSmooth, raw);
     }
 
     public double Mu()
     {
         Cleanup(_serviceTimes);
-        if (_serviceTimes.IsEmpty) return 0;
+
+        if (_serviceTimes.IsEmpty)
+            return 0;
 
         var avg = _serviceTimes.Average(x => x.value);
-        return avg > 0 ? 1.0 / avg : 0;
+        var raw = avg > 0 ? 1.0 / avg : 0;
+
+        return Smooth(ref _muSmooth, raw);
     }
 
     public double AvgTotalTime()
@@ -112,7 +168,6 @@ public class QueueMetricsService
     // ======================
     // CLEANUP
     // ======================
-
     private void Cleanup(ConcurrentQueue<DateTime> queue)
     {
         var now = DateTime.UtcNow;
